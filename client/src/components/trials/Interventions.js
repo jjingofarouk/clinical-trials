@@ -1,222 +1,165 @@
-import React, { useState, useEffect } from 'react';
-import { Element } from 'react-scroll';
-import { FaChevronDown, FaPills, FaBox, FaUsers, FaRunning, FaClock, FaCalendar, FaArrowRight, FaExclamationCircle } from 'react-icons/fa';
-import { LinearGradient } from 'react-gradient';
+import React from 'react';
+import { ChevronDown, Pill, Box, Users, Activity, Clock, Calendar, ArrowRight, AlertCircle } from 'lucide-react';
 
-// Individual InterventionCard component
+const getStatusStyle = (status) => {
+  const styleMap = {
+    'ACTIVE': {
+      background: '#00A9B5',
+      color: '#FFFFFF',
+      iconBg: '#008891'
+    },
+    'PENDING': {
+      background: '#FFB648',
+      color: '#2D3C4E',
+      iconBg: '#F59E0B'
+    },
+    'COMPLETED': {
+      background: '#4A90E2',
+      color: '#FFFFFF',
+      iconBg: '#2563EB'
+    },
+    'SUSPENDED': {
+      background: '#FF6B6B',
+      color: '#FFFFFF',
+      iconBg: '#DC2626'
+    }
+  };
+  return styleMap[status?.toUpperCase()] || {
+    background: '#5B6B7C',
+    color: '#FFFFFF',
+    iconBg: '#4A5568'
+  };
+};
+
+const getInterventionIcon = (type) => {
+  const iconMap = {
+    'DRUG': Pill,
+    'DEVICE': Box,
+    'PROCEDURE': Activity,
+    'BEHAVIORAL': Users,
+    'OTHER': Box,
+  };
+  const IconComponent = iconMap[type?.toUpperCase()] || Box;
+  return <IconComponent className="w-5 h-5" />;
+};
+
 const InterventionCard = ({ intervention, isLast }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [fadeAnim, setFadeAnim] = useState(0);
-  const [translateY, setTranslateY] = useState(20);
-  const rotateAnim = expanded ? 1 : 0;
-
-  const rotate = rotateAnim === 1 ? '180deg' : '0deg';
-
-  useEffect(() => {
-    setFadeAnim(1);
-    setTranslateY(0);
-  }, []);
-
-  const toggleExpand = () => {
-    setExpanded(!expanded);
-  };
-
-  const getInterventionIcon = (type) => {
-    const iconMap = {
-      'DRUG': <FaPills />,
-      'DEVICE': <FaBox />,
-      'PROCEDURE': <FaRunning />,
-      'BEHAVIORAL': <FaUsers />,
-      'OTHER': <FaBox />
-    };
-    return iconMap[type?.toUpperCase()] || <FaBox />;
-  };
-
-  const getGradientColors = (status) => {
-    const gradientMap = {
-      'ACTIVE': ['#059669', '#047857'],
-      'PENDING': ['#D97706', '#B45309'],
-      'COMPLETED': ['#2563EB', '#1D4ED8'],
-      'SUSPENDED': ['#DC2626', '#B91C1C']
-    };
-    return gradientMap[status?.toUpperCase()] || ['#6B7280', '#4B5563'];
-  };
+  const [expanded, setExpanded] = React.useState(false);
+  const statusStyle = getStatusStyle(intervention.status);
 
   return (
-    <div
-      style={{
-        opacity: fadeAnim,
-        transform: `translateY(${translateY}px)`,
-        marginBottom: !isLast ? '16px' : 0,
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-        transition: 'opacity 0.6s, transform 0.6s',
-      }}
-    >
-      <div onClick={toggleExpand} style={{ cursor: 'pointer' }}>
-        <LinearGradient
-          gradients={[getGradientColors(intervention.status)]}
-          style={{
-            padding: '16px',
-            borderRadius: '12px',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '8px',
-          }}
-        >
-          {/* Header Section */}
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '20px',
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px',
-              }}
-            >
-              {getInterventionIcon(intervention.type)}
-            </div>
-            <div>
-              <h3 style={{ margin: 0, color: '#FFF' }}>{intervention.name || 'Unnamed Intervention'}</h3>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginRight: '8px' }}>
-                  {intervention.type || 'Type not specified'}
+    <div className={`
+      bg-white rounded-xl shadow-sm
+      ${!isLast ? 'mb-4' : ''}
+      transition-all duration-200 hover:shadow-md
+    `}>
+      <div
+        onClick={() => setExpanded(!expanded)}
+        className={`
+          cursor-pointer p-4 rounded-xl
+          flex items-center justify-between
+          transition-colors duration-200
+        `}
+        style={{ backgroundColor: statusStyle.background }}
+      >
+        <div className="flex items-center space-x-4">
+          <div className={`
+            w-10 h-10 rounded-full
+            flex items-center justify-center
+            text-white
+          `}
+          style={{ backgroundColor: statusStyle.iconBg }}>
+            {getInterventionIcon(intervention.type)}
+          </div>
+          
+          <div>
+            <h3 className={`
+              font-medium text-lg
+              ${statusStyle.color === '#FFFFFF' ? 'text-white' : 'text-[#2D3C4E]'}
+            `}>
+              {intervention.name || 'Unnamed Intervention'}
+            </h3>
+            
+            <div className="flex items-center space-x-3 mt-1">
+              <span className={`
+                text-sm
+                ${statusStyle.color === '#FFFFFF' ? 'text-white/90' : 'text-[#5B6B7C]'}
+              `}>
+                {intervention.type || 'Type not specified'}
+              </span>
+              
+              {intervention.status && (
+                <span className={`
+                  px-3 py-1 rounded-full text-xs font-medium
+                  ${statusStyle.color === '#FFFFFF' ? 'bg-white/20 text-white' : 'bg-[#2D3C4E]/10 text-[#2D3C4E]'}
+                `}>
+                  {intervention.status}
                 </span>
-                {intervention.status && (
-                  <div
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: '#FFF',
-                    }}
-                  >
-                    {intervention.status}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div style={{ transform: `rotate(${rotate})`, transition: 'transform 0.3s' }}>
-              <FaChevronDown size={20} color="#FFF" />
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Expanded Content */}
-          {expanded && (
-            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
-              {intervention.dosage && (
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <FaPills size={16} color="#FFF" />
-                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginLeft: '8px' }}>Dosage:</span>
-                  <span style={{ fontSize: '14px', color: '#FFF', flex: 1 }}>{intervention.dosage}</span>
-                </div>
-              )}
-              {intervention.route && (
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <FaArrowRight size={16} color="#FFF" />
-                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginLeft: '8px' }}>Route:</span>
-                  <span style={{ fontSize: '14px', color: '#FFF', flex: 1 }}>{intervention.route}</span>
-                </div>
-              )}
-              {intervention.frequency && (
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <FaClock size={16} color="#FFF" />
-                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginLeft: '8px' }}>Frequency:</span>
-                  <span style={{ fontSize: '14px', color: '#FFF', flex: 1 }}>{intervention.frequency}</span>
-                </div>
-              )}
-              {intervention.duration && (
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <FaCalendar size={16} color="#FFF" />
-                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginLeft: '8px' }}>Duration:</span>
-                  <span style={{ fontSize: '14px', color: '#FFF', flex: 1 }}>{intervention.duration}</span>
-                </div>
-              )}
-              {intervention.description && (
-                <div style={{ marginTop: '8px', padding: '12px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '14px', color: '#FFF', lineHeight: '20px' }}>{intervention.description}</span>
-                </div>
-              )}
+        <ChevronDown 
+          className={`
+            w-5 h-5 transition-transform duration-200
+            ${expanded ? 'rotate-180' : ''}
+            ${statusStyle.color === '#FFFFFF' ? 'text-white' : 'text-[#2D3C4E]'}
+          `}
+        />
+      </div>
+
+      {expanded && (
+        <div className="p-4 border-t border-[#E4EEF1]">
+          {intervention.dosage && (
+            <div className="flex items-center mb-3 text-[#2D3C4E]">
+              <Pill className="w-4 h-4 mr-3 text-[#00A9B5]" />
+              <span className="font-medium mr-2">Dosage:</span>
+              <span>{intervention.dosage}</span>
             </div>
           )}
-        </LinearGradient>
-      </div>
+          
+          {intervention.route && (
+            <div className="flex items-center text-[#2D3C4E]">
+              <ArrowRight className="w-4 h-4 mr-3 text-[#00A9B5]" />
+              <span className="font-medium mr-2">Route:</span>
+              <span>{intervention.route}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-// Main Interventions component
-const Interventions = ({ interventions }) => {
-  const [fadeAnim, setFadeAnim] = useState(0);
-  const [scaleAnim, setScaleAnim] = useState(0.95);
-
-  useEffect(() => {
-    setFadeAnim(1);
-    setScaleAnim(1);
-  }, []);
-
-  if (!interventions || interventions.length === 0) {
+const Interventions = ({ interventions = [] }) => {
+  if (interventions.length === 0) {
     return (
-      <div style={{ opacity: fadeAnim, transform: `scale(${scaleAnim})`, transition: 'opacity 0.6s, transform 0.6s' }}>
-        <LinearGradient
-          gradients={['#4A90E2', '#357ABD']}
-          style={{
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-          }}
-        >
-          <FaExclamationCircle size={28} color="#FFF" style={{ marginRight: '12px' }} />
-          <span style={{ fontSize: '24px', fontWeight: '800', color: '#FFF', flex: 1, letterSpacing: '0.5px' }}>
-            Trial Interventions
-          </span>
-        </LinearGradient>
-        <div style={{ padding: '32px', textAlign: 'center' }}>
-          <FaExclamationCircle size={24} color="#94A3B8" />
-          <span style={{ fontSize: '16px', color: '#94A3B8', marginTop: '8px' }}>No intervention data available</span>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-[#00A9B5] p-5 flex items-center">
+          <AlertCircle className="w-6 h-6 text-white mr-3" />
+          <h2 className="text-xl font-semibold text-white">Trial Interventions</h2>
+        </div>
+        
+        <div className="p-8 flex flex-col items-center justify-center text-[#5B6B7C]">
+          <AlertCircle className="w-8 h-8 mb-3 text-[#C5D5DA]" />
+          <span className="text-sm">No intervention data available</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ opacity: fadeAnim, transform: `scale(${scaleAnim})`, transition: 'opacity 0.6s, transform 0.6s' }}>
-      <LinearGradient
-        gradients={['#4A90E2', '#357ABD']}
-        style={{
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        <FaExclamationCircle size={28} color="#FFF" style={{ marginRight: '12px' }} />
-        <span style={{ fontSize: '24px', fontWeight: '800', color: '#FFF', flex: 1, letterSpacing: '0.5px' }}>
-          Trial Interventions
-        </span>
-        <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: '6px 12px', borderRadius: '12px' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#FFF' }}>
-            {interventions.length}
-          </span>
-        </div>
-      </LinearGradient>
-
-      <div style={{ padding: '16px', backgroundColor: '#FFF' }}>
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-[#00A9B5] p-5 flex items-center">
+        <AlertCircle className="w-6 h-6 text-white mr-3" />
+        <h2 className="text-xl font-semibold text-white">Trial Interventions</h2>
+      </div>
+      
+      <div className="p-4">
         {interventions.map((intervention, index) => (
-          <InterventionCard
-            key={index}
+          <InterventionCard 
+            key={intervention.id || index}
             intervention={intervention}
             isLast={index === interventions.length - 1}
           />

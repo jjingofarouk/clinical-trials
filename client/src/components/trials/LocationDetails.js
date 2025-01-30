@@ -1,20 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Dimensions, 
-  ActivityIndicator, 
-  Linking, 
-  Button
-} from 'react';
-import { useHistory } from 'react-router-dom'; // Web navigation alternative to react-navigation
-import { FaArrowLeft } from 'react-icons/fa'; // Web icon for back arrow
-import Map from 'react-leaflet'; // Web alternative for Map (assuming React-Leaflet)
-import { TileLayer, Marker, Popup } from 'react-leaflet';
-
-const { width, height } = Dimensions.get('window');
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const LocationDetail = ({ location }) => {
   const [state, setState] = useState({
@@ -23,7 +11,7 @@ const LocationDetail = ({ location }) => {
     error: null
   });
 
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const facilityName = location?.facility_name || location?.name || 'Location Details';
   const fullAddress = [
@@ -34,8 +22,8 @@ const LocationDetail = ({ location }) => {
   ].filter(Boolean).join(', ');
 
   const coordinates = {
-    latitude: location?.latitude || location?.coordinates?.lat || 37.7749,
-    longitude: location?.longitude || location?.coordinates?.lon || -122.4194,
+    lat: location?.latitude || location?.coordinates?.lat || 37.7749,
+    lng: location?.longitude || location?.coordinates?.lon || -122.4194,
   };
 
   const fetchWikiData = useCallback(async () => {
@@ -45,11 +33,8 @@ const LocationDetail = ({ location }) => {
     }
 
     try {
-      // Search for Wikipedia page
       const searchResponse = await fetch(
-        `https://en.wikipedia.org/w/api.php?` + 
-        `action=query&list=search&srsearch=${encodeURIComponent(facilityName)}` +
-        `&format=json&origin=*&srlimit=1`
+        `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(facilityName)}&format=json&origin=*&srlimit=1`
       );
       
       const searchData = await searchResponse.json();
@@ -64,11 +49,8 @@ const LocationDetail = ({ location }) => {
         return;
       }
 
-      // Fetch detailed page information
       const detailsResponse = await fetch(
-        `https://en.wikipedia.org/w/api.php?` +
-        `action=query&pageids=${firstResult.pageid}&prop=extracts|info|coordinates|extlinks` +
-        `&inprop=url&exintro=1&explaintext=1&format=json&origin=*`
+        `https://en.wikipedia.org/w/api.php?action=query&pageids=${firstResult.pageid}&prop=extracts|info|coordinates|extlinks&inprop=url&exintro=1&explaintext=1&format=json&origin=*`
       );
       
       const detailsData = await detailsResponse.json();
@@ -104,172 +86,130 @@ const LocationDetail = ({ location }) => {
 
   const handleOpenWiki = useCallback(() => {
     if (state.wikiData?.fullUrl) {
-      Linking.openURL(state.wikiData.fullUrl);
+      window.open(state.wikiData.fullUrl, '_blank');
     }
   }, [state.wikiData]);
 
   const handleOpenLink = useCallback((url) => {
-    Linking.openURL(url);
+    window.open(url, '_blank');
   }, []);
 
   const renderContent = () => {
     if (state.loading) {
-      return <ActivityIndicator size="large" color="#4F46E5" />;
+      return (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      );
     }
 
     if (state.error) {
       return (
-        <View style={styles.section}>
-          <Text style={styles.errorText}>{state.error}</Text>
-        </View>
+        <div className="p-4 bg-red-50 rounded-lg">
+          <p className="text-red-600">{state.error}</p>
+        </div>
       );
     }
 
     if (!state.wikiData?.extract) {
       return (
-        <View style={styles.section}>
-          <Text style={styles.sectionText}>
-            No additional information is available for this location.
-          </Text>
-        </View>
+        <p className="text-gray-600">
+          No additional information is available for this location.
+        </p>
       );
     }
 
     return (
-      <>
+      <div className="space-y-6">
         {fullAddress && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Address</Text>
-            <Text style={styles.sectionText}>{fullAddress}</Text>
-          </View>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Address</h3>
+            <p className="text-gray-600">{fullAddress}</p>
+          </div>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.sectionText}>{state.wikiData.extract}</Text>
-        </View>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">About</h3>
+          <p className="text-gray-600 leading-relaxed">{state.wikiData.extract}</p>
+        </div>
 
         {state.wikiData.extlinks?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Related Links</Text>
-            {state.wikiData.extlinks.slice(0, 3).map((link, index) => (
-              <Pressable 
-                key={index}
-                onClick={() => handleOpenLink(link['*'])}
-                style={styles.linkItem}
-              >
-                <Text style={styles.linkText} numberOfLines={1}>
-                  {link['*']}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Related Links</h3>
+            <div className="space-y-2">
+              {state.wikiData.extlinks.slice(0, 3).map((link, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleOpenLink(link['*'])}
+                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  <span className="truncate">{link['*']}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
-        <Pressable onClick={handleOpenWiki} style={styles.wikiButton}>
-          <Text style={styles.wikiButtonText}>Read More on Wikipedia</Text>
-        </Pressable>
-      </>
+        <button
+          onClick={handleOpenWiki}
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+        >
+          <span>Read More on Wikipedia</span>
+          <ExternalLink className="w-4 h-4" />
+        </button>
+      </div>
     );
   };
 
   return (
-    <ScrollView style={styles.container} bounces={false}>
-      <div className={styles.header}>
-        <button onClick={() => history.goBack()} className="back-button">
-          <FaArrowLeft size={24} color="#4F46E5" />
-        </button>
-        <Text style={styles.title} numberOfLines={1}>
-          {facilityName}
-        </Text>
-        <div style={{ width: 24 }} /> {/* Spacer for layout balance */}
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900 truncate max-w-2xl">
+              {facilityName}
+            </h1>
+            <div className="w-8" /> {/* Spacer */}
+          </div>
+        </div>
+      </header>
 
-      <div className={styles.mapContainer}>
-        <Map center={coordinates} zoom={13} style={{ width: '100%', height: '100%' }}>
-          <Marker position={coordinates}>
+      <div className="h-72 bg-gray-200">
+        <MapContainer
+          center={[coordinates.lat, coordinates.lng]}
+          zoom={13}
+          className="h-full w-full"
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker position={[coordinates.lat, coordinates.lng]}>
             <Popup>{facilityName}</Popup>
           </Marker>
-        </Map>
+        </MapContainer>
       </div>
 
-      <div className={styles.details}>
-        {renderContent()}
-      </div>
-    </ScrollView>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold text-gray-900">
+              Location Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {renderContent()}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-  },
-  header: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: '16px',
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  title: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
-    marginHorizontal: '16px',
-    textAlign: 'center',
-  },
-  mapContainer: {
-    width: '100%',
-    height: '30vh',
-    backgroundColor: '#E5E7EB',
-  },
-  details: {
-    padding: '16px',
-  },
-  section: {
-    marginBottom: '16px',
-  },
-  sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: '8px',
-  },
-  sectionText: {
-    fontSize: '14px',
-    color: '#6B7280',
-    lineHeight: '20px',
-  },
-  errorText: {
-    fontSize: '14px',
-    color: '#DC2626',
-    lineHeight: '20px',
-  },
-  linkItem: {
-    paddingVertical: '8px',
-    borderBottomWidth: '1px',
-    borderBottomColor: '#E5E7EB',
-  },
-  linkText: {
-    fontSize: '14px',
-    color: '#4F46E5',
-  },
-  wikiButton: {
-    backgroundColor: '#4F46E5',
-    padding: '12px',
-    borderRadius: '6px',
-    alignItems: 'center',
-    marginTop: '16px',
-  },
-  wikiButtonText: {
-    fontSize: '14px',
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
 
 export default LocationDetail;

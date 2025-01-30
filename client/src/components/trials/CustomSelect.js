@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { FaChevronDown, FaChevronUp, FaCheck } from 'react-icons/fa'; // For icons
-import styled from 'styled-components';
+import React from 'react';
+import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 const CustomSelect = ({
   options = [],
@@ -8,9 +7,11 @@ const CustomSelect = ({
   onSelect = () => {},
   label = '',
   value = null,
+  className = ''
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(value);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedOption, setSelectedOption] = React.useState(value);
+  const containerRef = React.useRef(null);
 
   const handleSelect = (option) => {
     setSelectedOption(option);
@@ -23,120 +24,81 @@ const CustomSelect = ({
     return typeof option === 'object' ? option.label : option;
   };
 
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <Container>
-      {label && <Label>{label}</Label>}
-      <SelectButton onClick={() => setIsOpen(!isOpen)}>
-        <SelectText isSelected={!!selectedOption}>
+    <div ref={containerRef} className="relative mb-6">
+      {label && (
+        <label className="block text-sm font-medium text-white mb-2">
+          {label}
+        </label>
+      )}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          w-full h-14 px-4
+          flex items-center justify-between
+          bg-[#002432] border border-[#003a4f]
+          rounded-lg shadow-sm
+          focus:outline-none focus:ring-2 focus:ring-[#004b66] focus:border-[#004b66]
+          transition-colors duration-200
+          ${isOpen ? 'border-[#004b66] ring-2 ring-[#004b66]' : 'hover:border-[#003a4f]'}
+          ${className}
+        `}
+      >
+        <span className={`text-sm ${selectedOption ? 'text-white' : 'text-gray-400'}`}>
           {getDisplayText(selectedOption)}
-        </SelectText>
-        <IconContainer>
+        </span>
+        <div className="flex items-center justify-center w-8 h-8">
           {isOpen ? (
-            <FaChevronUp size={24} color="#94A3B8" />
+            <ChevronUp className="w-5 h-5 text-gray-400" />
           ) : (
-            <FaChevronDown size={24} color="#94A3B8" />
+            <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
-        </IconContainer>
-      </SelectButton>
+        </div>
+      </button>
 
       {isOpen && (
-        <OptionsContainer>
-          {options.map((option, index) => {
-            const optionValue = typeof option === 'object' ? option.value : option;
-            const optionLabel = typeof option === 'object' ? option.label : option;
-            const isSelected = selectedOption === option;
-            const isLast = index === options.length - 1;
+        <div className="absolute w-full mt-2 bg-[#002432] border border-[#003a4f] rounded-lg shadow-lg z-50">
+          <div className="max-h-60 overflow-y-auto">
+            {options.map((option, index) => {
+              const optionValue = typeof option === 'object' ? option.value : option;
+              const optionLabel = typeof option === 'object' ? option.label : option;
+              const isSelected = selectedOption === option;
 
-            return (
-              <Option
-                key={optionValue}
-                onClick={() => handleSelect(option)}
-                isSelected={isSelected}
-                isLast={isLast}
-              >
-                <OptionText isSelected={isSelected}>{optionLabel}</OptionText>
-                {isSelected && <FaCheck size={20} color="#3B82F6" />}
-              </Option>
-            );
-          })}
-        </OptionsContainer>
+              return (
+                <div
+                  key={optionValue}
+                  onClick={() => handleSelect(option)}
+                  className={`
+                    flex items-center justify-between
+                    px-4 py-3 cursor-pointer
+                    ${index !== options.length - 1 ? 'border-b border-[#003a4f]' : ''}
+                    ${isSelected ? 'bg-[#003a4f]' : 'hover:bg-[#003a4f]'}
+                    transition-colors duration-150
+                  `}
+                >
+                  <span className={`text-sm ${isSelected ? 'text-white font-medium' : 'text-gray-300'}`}>
+                    {optionLabel}
+                  </span>
+                  {isSelected && <Check className="w-5 h-5 text-white" />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
-    </Container>
+    </div>
   );
 };
 
 export default CustomSelect;
-
-const Container = styled.div`
-  margin-bottom: 24px;
-  position: relative;
-`;
-
-const Label = styled.label`
-  font-size: 16px;
-  font-weight: 500;
-  color: #475569;
-  margin-bottom: 8px;
-`;
-
-const SelectButton = styled.button`
-  height: 56px;
-  background-color: #f8fafc;
-  border-radius: 12px;
-  padding: 0 16px;
-  border: 1px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  cursor: pointer;
-`;
-
-const SelectText = styled.span`
-  font-size: 16px;
-  color: ${({ isSelected }) => (isSelected ? '#1E293B' : '#94A3B8')};
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const IconContainer = styled.div`
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const OptionsContainer = styled.div`
-  margin-top: 8px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  max-height: 200px;
-  overflow-y: auto;
-  position: absolute;
-  width: 100%;
-  z-index: 999;
-`;
-
-const Option = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-  background-color: ${({ isSelected }) => (isSelected ? '#F1F5F9' : 'transparent')};
-  cursor: pointer;
-  &:hover {
-    background-color: #f1f5f9;
-  }
-  ${({ isLast }) => isLast && `border-bottom: none;`}
-`;
-
-const OptionText = styled.span`
-  font-size: 16px;
-  color: ${({ isSelected }) => (isSelected ? '#3B82F6' : '#1E293B')};
-  font-weight: ${({ isSelected }) => (isSelected ? '500' : 'normal')};
-`;
