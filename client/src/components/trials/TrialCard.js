@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, ExternalLink, Clock, Users, BeakerIcon, MapPin, Target, ChartBar, Shield, FileText } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import StudyDetails from './StudyDetails';
-import StudyDesign from './StudyDesign';
-import Participants from './Participants';
-import Interventions from './Interventions';
-import Locations from './Locations';
-import Outcomes from './Outcomes';
-import Statistics from './Statistics';
-import RegulatoryInfo from './RegulatoryInfo';
-import Results from './Results';
+import { Card, CardHeader, CardContent, Button, Badge, Tabs, TabList, Tab, TabPanel, Box, Text } from '@shadcn/ui';
 
 const TrialCard = ({ trial }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -19,13 +10,12 @@ const TrialCard = ({ trial }) => {
   const nctId = protocolSection?.identificationModule?.nctId;
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
-  
+
   const openTrialDetails = (e) => {
     e.stopPropagation();
     window.open(`https://clinicaltrials.gov/study/${nctId}`, '_blank');
   };
 
-  // Data extraction code remains the same...
   const studyData = {
     title: protocolSection?.identificationModule?.briefTitle,
     type: protocolSection?.designModule?.studyType,
@@ -60,92 +50,73 @@ const TrialCard = ({ trial }) => {
   ];
 
   return (
-    <Card className="bg-white overflow-hidden transition-all duration-200 hover:shadow-lg">
-      <CardContent className="p-0">
-        <div 
-          onClick={toggleExpand}
-          className="cursor-pointer transition-colors hover:bg-gray-50"
+    <Card className="bg-white overflow-hidden shadow-sm border rounded-md p-4">
+      <CardHeader className="flex justify-between items-center">
+        <div>
+          <Badge className={`mr-2 ${getStatusColor(studyData.status)} text-sm font-medium`}>
+            {studyData.status}
+          </Badge>
+          {studyData.phase && (
+            <Badge className="bg-purple-100 text-purple-800 text-sm font-medium">
+              Phase {studyData.phase}
+            </Badge>
+          )}
+          <Text className="font-semibold text-xl mt-2">{studyData.title}</Text>
+        </div>
+        <Button
+          onClick={openTrialDetails}
+          className="p-2 hover:bg-gray-100 rounded-full"
+          aria-label="View on ClinicalTrials.gov"
         >
-          <div className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-grow">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(studyData.status)}`}>
-                    {studyData.status}
-                  </span>
-                  {studyData.phase && (
-                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                      Phase {studyData.phase}
-                    </span>
-                  )}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {studyData.title}
-                </h3>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Clock size={16} />
-                    <span>{studyData.startDate} - {studyData.completionDate || 'Ongoing'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users size={16} />
-                    <span>NCT{nctId}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={openTrialDetails}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  aria-label="View on ClinicalTrials.gov"
-                >
-                  <ExternalLink size={20} className="text-gray-500" />
-                </button>
-                {isExpanded ? (
-                  <ChevronUp size={24} className="text-gray-500" />
-                ) : (
-                  <ChevronDown size={24} className="text-gray-500" />
-                )}
-              </div>
-            </div>
-            {studyData.description && (
-              <p className="text-gray-600 line-clamp-2">{studyData.description}</p>
-            )}
-          </div>
+          <ExternalLink size={20} className="text-gray-500" />
+        </Button>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <Text className="text-sm text-gray-600">
+            <Clock size={16} className="inline-block mr-1" />
+            {studyData.startDate} - {studyData.completionDate || 'Ongoing'}
+          </Text>
+          <Text className="text-sm text-gray-600">
+            <Users size={16} className="inline-block mr-1" />
+            NCT{nctId}
+          </Text>
         </div>
 
+        <Text className="text-gray-600 mt-2 line-clamp-2">{studyData.description}</Text>
+
         {isExpanded && (
-          <div className="border-t border-gray-200">
-            <div className="border-b border-gray-200 px-4 overflow-x-auto">
-              <div className="flex space-x-4">
-                {tabs.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setActiveTab(id)}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                      ${activeTab === id 
-                        ? 'border-blue-600 text-blue-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                  >
-                    <Icon size={16} />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="p-6">
-              {activeTab === 'design' && <StudyDesign design={designData} />}
-              {activeTab === 'participants' && <Participants participants={participantsData} />}
-              {activeTab === 'interventions' && <Interventions interventions={interventionsData} />}
-              {activeTab === 'locations' && <Locations locations={locationsData} />}
-              {activeTab === 'outcomes' && <Outcomes outcomes={outcomesData} />}
-              {activeTab === 'regulatory' && <RegulatoryInfo regulatory={regulatoryData} />}
-              {activeTab === 'results' && <Results results={resultsData} />}
-            </div>
-          </div>
+          <Tabs defaultValue="design" value={activeTab} onValueChange={setActiveTab}>
+            <TabList className="mt-4 flex justify-between space-x-2 overflow-x-auto">
+              {tabs.map(({ id, label, icon: Icon }) => (
+                <Tab key={id} value={id} className={`text-sm font-medium flex items-center gap-2 py-1 px-3 transition-colors rounded-md
+                  ${activeTab === id ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                  <Icon size={16} />
+                  {label}
+                </Tab>
+              ))}
+            </TabList>
+
+            <Box className="mt-6">
+              {activeTab === 'design' && <StudyDesign design={studyData} />}
+              {activeTab === 'participants' && <Participants participants={studyData} />}
+              {activeTab === 'interventions' && <Interventions interventions={studyData} />}
+              {activeTab === 'locations' && <Locations locations={studyData} />}
+              {activeTab === 'outcomes' && <Outcomes outcomes={studyData} />}
+              {activeTab === 'regulatory' && <RegulatoryInfo regulatory={studyData} />}
+              {activeTab === 'results' && <Results results={studyData} />}
+            </Box>
+          </Tabs>
         )}
+
+        <Button 
+          onClick={toggleExpand} 
+          className="w-full mt-4 text-blue-600 text-sm font-medium flex items-center justify-center gap-2 py-2 hover:bg-blue-50"
+        >
+          {isExpanded ? 'Collapse' : 'Expand'}
+          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </Button>
       </CardContent>
     </Card>
   );
