@@ -1,0 +1,97 @@
+.container {
+    background-color: #fff;
+    border-radius: 16px;
+    margin: 16px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .headerGradient {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1e40af, #1e3a8a);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .headerIcon {
+    margin-right: 12px;
+  }
+  
+  .headerText {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+  }
+  
+  .scrollContainer {
+    padding: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .outcomeSection {
+    margin-bottom: 16px;
+  }
+  
+  .withSeparator {
+    margin-bottom: 16px;
+  }
+  
+  .sectionContent {
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    background-color: #f8fafc;
+  }
+  
+  .sectionHeader {
+    display: flex;
+    align-items: center;
+  }
+  
+  .iconContainer {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background-color: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+  }
+  
+  .sectionTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e3a8a;
+  }
+  
+  .expandedContent {
+    padding-top: 8px;
+    background-color: #fff;
+  }
+  
+  .outcomeText {
+    font-size: 15px;
+    line-height: 24px;
+    color: #334155;
+  }
+  
+  .noDataContainer {
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  
+  .noDataText {
+    font-size: 16px;
+    color: #94a3b8;
+    margin-top: 8px;
+  }
+  
