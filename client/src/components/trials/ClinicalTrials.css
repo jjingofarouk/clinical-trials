@@ -1,8 +1,8 @@
 /* Mobile First Base Styles */
 
-/* Default styling for all screen sizes */
+/* CSS Custom Properties */
 :root {
-    --primary: #00A9B5; 
+    --primary: #00A9B5;
     --primary-light: #40C4CC;
     --primary-dark: #008891;
     --secondary: #4A90E2;
@@ -31,73 +31,106 @@
     --hygiene: #F0F9FA;
     --chart: #6E9DEA;
     --neutral: #F5F8FA;
+    
+    /* Fluid typography variables */
+    --base-font-size: clamp(14px, 2.5vw, 16px);
+    --spacing-unit: clamp(0.5rem, 2vw, 1rem);
+}
+
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background);
     color: var(--text);
-    margin: 0;
-    padding: 0;
+    font-size: var(--base-font-size);
+    line-height: 1.6;
+    min-height: 100vh;
 }
 
-/* Container to hold all content */
+/* Container */
 .container {
-    padding: 1rem;
+    padding: var(--spacing-unit);
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: calc(var(--spacing-unit) * 1.5);
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
-/* Mobile-first: search container styles */
+/* Search Container */
 .search-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    display: grid;
+    gap: var(--spacing-unit);
+    width: 100%;
 }
 
 .search-input-container {
     display: flex;
     flex-direction: column;
+    gap: calc(var(--spacing-unit) / 2);
 }
 
 input[type="text"] {
-    padding: 0.75rem;
+    padding: calc(var(--spacing-unit) * 0.75);
     border: 1px solid var(--border);
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: var(--base-font-size);
+    width: 100%;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 4px var(--shadow);
 }
 
 button {
-    padding: 0.75rem;
+    padding: calc(var(--spacing-unit) * 0.75);
     background-color: var(--primary);
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: var(--base-font-size);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
 }
 
 button:hover {
     background-color: var(--hover);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
 }
 
 button:disabled {
     background-color: var(--disabled);
+    cursor: not-allowed;
+    transform: none;
 }
 
-/* Styling for filter modal */
+/* Modal */
 .modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal.visible {
@@ -107,45 +140,48 @@ button:disabled {
 
 .modal-content {
     background-color: var(--surface);
-    padding: 1.5rem;
+    padding: var(--spacing-unit);
     border-radius: 8px;
-    margin: 2rem auto;
-    width: 90%;
-    max-width: 500px;
+    width: calc(100% - 2 * var(--spacing-unit));
+    max-height: 90vh;
+    overflow-y: auto;
     position: relative;
 }
 
 .modal-header h3 {
-    font-size: 1.25rem;
+    font-size: clamp(1.1rem, 3vw, 1.25rem);
+    margin-bottom: var(--spacing-unit);
 }
 
 .modal-footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding-top: 1rem;
+    display: grid;
+    gap: calc(var(--spacing-unit) / 2);
+    padding-top: var(--spacing-unit);
 }
 
 .filter-section select {
     width: 100%;
-    padding: 0.75rem;
+    padding: calc(var(--spacing-unit) * 0.75);
     border: 1px solid var(--border);
     border-radius: 4px;
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-unit);
+    font-size: var(--base-font-size);
 }
 
-/* Card styling for trials */
+/* Card */
 .card {
     background-color: var(--surface);
-    padding: 1rem;
+    padding: var(--spacing-unit);
     border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: var(--shadow);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
 }
 
 .card:hover {
-    transform: scale(1.05);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px var(--shadow);
 }
 
 .card-header {
@@ -153,29 +189,11 @@ button:disabled {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+    gap: calc(var(--spacing-unit) / 2);
 }
 
 .expanded-content {
-    padding-top: 1rem;
-}
-
-/* Empty text when no trials are found */
-.empty-text {
-    text-align: center;
-    font-size: 1.2rem;
-    color: var(--text-secondary);
-}
-
-/* Loading state */
-.loader {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-}
-
-/* Hide sections by default on mobile */
-.expanded-content {
+    padding-top: var(--spacing-unit);
     display: none;
 }
 
@@ -183,36 +201,75 @@ button:disabled {
     display: block;
 }
 
-/* Media Queries */
+/* Utility Classes */
+.empty-text {
+    text-align: center;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    color: var(--text-secondary);
+    padding: var(--spacing-unit);
+}
 
-/* For tablets and larger screens */
+.loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    padding: var(--spacing-unit);
+}
+
+/* Breakpoints */
+@media (min-width: 480px) {
+    .modal-footer {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (min-width: 768px) {
-    .search-container {
-        flex-direction: row;
-        align-items: center;
-        gap: 1rem;
+    :root {
+        --base-font-size: clamp(15px, 2vw, 18px);
+        --spacing-unit: clamp(0.75rem, 1.5vw, 1.25rem);
     }
 
-    .card {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+    .container {
+        padding: calc(var(--spacing-unit) * 2);
+        max-width: 90%;
+    }
+
+    .search-container {
+        grid-template-columns: 2fr 1fr;
+        align-items: center;
     }
 
     .modal-content {
         width: 70%;
+        max-width: 600px;
+    }
+
+    .card {
+        padding: calc(var(--spacing-unit) * 1.5);
     }
 }
 
-/* For larger screens like desktops */
 @media (min-width: 1024px) {
     .container {
-        padding: 2rem;
         max-width: 1200px;
-        margin: 0 auto;
+        padding: calc(var(--spacing-unit) * 2);
     }
 
     .search-container {
-        gap: 2rem;
+        grid-template-columns: 3fr 1fr;
+        gap: calc(var(--spacing-unit) * 2);
+    }
+
+    .modal-content {
+        width: 50%;
+        max-width: 700px;
+    }
+}
+
+@media (min-width: 1440px) {
+    :root {
+        --base-font-size: 18px;
+        --spacing-unit: 1.5rem;
     }
 }
