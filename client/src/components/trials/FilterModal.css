@@ -1,120 +1,228 @@
 /* FilterModal.css */
 
+/* Base styles with mobile-first approach */
+:root {
+    /* Reusing variables from previous design for consistency */
+    --spacing-unit: clamp(0.5rem, 2vw, 1rem);
+    --base-font-size: clamp(14px, 2.5vw, 16px);
+    --border-color: #eeeeee;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --primary: #0066cc;
+    --neutral: #f5f5f5;
+    --surface: #ffffff;
+    --text: #2D3C4E;
+    --text-secondary: #5B6B7C;
+}
+
 .modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0; /* Modern alternative to top/left/width/height */
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    justify-content: center;
+    align-items: flex-end; /* Bottom-aligned for mobile */
     visibility: hidden;
-  }
-  
-  .modal.visible {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.modal.visible {
     visibility: visible;
-  }
-  
-  .modal-content {
-    background-color: #ffffff;
-    border-radius: 16px 16px 0 0;
-    max-height: 90%;
+    opacity: 1;
+}
+
+.modal-content {
+    background-color: var(--surface);
+    border-radius: clamp(8px, 2vw, 16px) clamp(8px, 2vw, 16px) 0 0;
     width: 100%;
-    max-width: 400px;
+    max-width: clamp(300px, 90vw, 400px);
+    max-height: 90vh;
     overflow-y: auto;
-  }
-  
-  .modal-header {
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal.visible .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #eeeeee;
-  }
-  
-  .modal-header h3 {
+    padding: var(--spacing-unit);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background-color: var(--surface);
+    z-index: 1;
+}
+
+.modal-header h3 {
+    font-size: clamp(1rem, 3vw, 1.25rem);
     margin: 0;
-  }
-  
-  .modal-header button {
+    color: var(--text);
+}
+
+.modal-header button {
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     cursor: pointer;
-  }
-  
-  .filter-scroll {
-    max-height: 70%;
+    color: var(--text-secondary);
+    padding: calc(var(--spacing-unit) / 2);
+    transition: color 0.2s ease;
+}
+
+.modal-header button:hover {
+    color: var(--text);
+}
+
+.filter-scroll {
+    max-height: 70vh;
     overflow-y: auto;
-  }
-  
-  .filter-section {
-    padding: 16px;
-    border-bottom: 1px solid #eeeeee;
-  }
-  
-  .filter-section h4 {
-    margin-bottom: 8px;
-  }
-  
-  .filter-section select,
-  .filter-section input {
+    padding: var(--spacing-unit);
+}
+
+.filter-section {
+    padding: var(--spacing-unit) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-section h4 {
+    margin-bottom: calc(var(--spacing-unit) / 2);
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    color: var(--text);
+}
+
+.filter-section select,
+.filter-section input {
     width: 100%;
-    padding: 8px;
-    margin-bottom: 8px;
-    border: 1px solid #eeeeee;
+    padding: calc(var(--spacing-unit) * 0.75);
+    margin-bottom: calc(var(--spacing-unit) / 2);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-  }
-  
-  .range-input-container {
-    margin: 16px 0;
-  }
-  
-  .range-inputs {
-    display: flex;
+    font-size: var(--base-font-size);
+    transition: border-color 0.3s ease;
+}
+
+.filter-section select:focus,
+.filter-section input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 4px var(--shadow);
+}
+
+.range-input-container {
+    margin: var(--spacing-unit) 0;
+}
+
+.range-inputs {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: 8px;
-  }
-  
-  .range-inputs input {
-    flex: 1;
-  }
-  
-  .checkbox-container {
+    gap: calc(var(--spacing-unit) / 2);
+}
+
+.range-inputs input {
+    width: 100%;
+}
+
+.checkbox-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-  }
-  
-  .checkbox-container label {
+    gap: calc(var(--spacing-unit) / 2);
+}
+
+.checkbox-container label {
     display: flex;
     align-items: center;
-    gap: 8px;
-  }
-  
-  .modal-footer {
-    display: flex;
-    justify-content: space-between;
-    padding: 16px;
-    border-top: 1px solid #eeeeee;
-  }
-  
-  .modal-footer button {
-    flex: 1;
-    padding: 8px;
+    gap: calc(var(--spacing-unit) / 2);
+    font-size: var(--base-font-size);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(var(--spacing-unit) / 2);
+    padding: var(--spacing-unit);
+    border-top: 1px solid var(--border-color);
+    position: sticky;
+    bottom: 0;
+    background-color: var(--surface);
+}
+
+.modal-footer button {
+    padding: calc(var(--spacing-unit) * 0.75);
     border: none;
     border-radius: 8px;
+    font-size: var(--base-font-size);
     cursor: pointer;
-  }
-  
-  .reset-button {
-    background-color: #f5f5f5;
-    margin-right: 8px;
-  }
-  
-  .apply-button {
-    background-color: #0066cc;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-footer button:hover {
+    transform: translateY(-1px);
+}
+
+.modal-footer button:active {
+    transform: translateY(0);
+}
+
+.reset-button {
+    background-color: var(--neutral);
+    color: var(--text);
+}
+
+.apply-button {
+    background-color: var(--primary);
     color: #ffffff;
-  }
+}
+
+/* Breakpoints for larger screens */
+@media (min-width: 480px) {
+    .modal {
+        align-items: center;
+        justify-content: flex-end; /* Side panel on larger screens */
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        width: clamp(350px, 40vw, 450px);
+        max-height: 85vh;
+        transform: translateX(100%);
+    }
+
+    .modal.visible .modal-content {
+        transform: translateX(0);
+    }
+}
+
+@media (min-width: 768px) {
+    :root {
+        --spacing-unit: clamp(0.75rem, 1.5vw, 1.25rem);
+        --base-font-size: clamp(15px, 2vw, 18px);
+    }
+
+    .modal-content {
+        width: clamp(400px, 35vw, 500px);
+    }
+
+    .filter-scroll {
+        max-height: 60vh;
+    }
+}
+
+@media (min-width: 1024px) {
+    .modal-content {
+        width: clamp(450px, 30vw, 600px);
+    }
+}
