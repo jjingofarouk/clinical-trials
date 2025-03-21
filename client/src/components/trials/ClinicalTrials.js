@@ -1,7 +1,7 @@
+// ClinicalTrials.jsx
 import React, { useState, useEffect } from 'react';
-import './ClinicalTrials.css'; // Import the CSS file
+import './ClinicalTrials.css';
 
-// Import all components
 import Interventions from './Interventions';
 import Locations from './Locations';
 import Outcomes from './Outcomes';
@@ -17,8 +17,8 @@ const ClinicalTrials = () => {
   const [trials, setTrials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedTrialId, setExpandedTrialId] = useState(null);
-
   const [showFilters, setShowFilters] = useState(false);
+
   const [filters, setFilters] = useState({
     status: 'RECRUITING',
     phase: '',
@@ -103,6 +103,7 @@ const ClinicalTrials = () => {
       const queryParams = new URLSearchParams({
         'query.term': searchQuery,
         'filter.overallStatus': filters.status,
+        'pageSize': '50',
       });
 
       if (filters.phase) queryParams.append('filter.phase', filters.phase);
@@ -112,23 +113,28 @@ const ClinicalTrials = () => {
       if (filters.healthyVolunteers) queryParams.append('filter.healthyVolunteers', 'true');
       if (filters.hasResults) queryParams.append('filter.hasResults', 'true');
       if (filters.fundingType) queryParams.append('filter.fundingType', filters.fundingType);
-
-      if (filters.enrollmentCount.min || filters.enrollmentCount.max) {
-        queryParams.append('filter.enrollment.min', filters.enrollmentCount.min || '0');
-        if (filters.enrollmentCount.max) {
-          queryParams.append('filter.enrollment.max', filters.enrollmentCount.max);
-        }
-      }
+      if (filters.interventionType) queryParams.append('filter.interventionType', filters.interventionType);
+      if (filters.startDate) queryParams.append('filter.startDate', filters.startDate);
+      if (filters.completionDate) queryParams.append('filter.completionDate', filters.completionDate);
+      if (filters.conditions.length) queryParams.append('filter.conditions', filters.conditions.join(','));
+      if (filters.locations.length) queryParams.append('filter.locations', filters.locations.join(','));
+      if (filters.participantAge.min) queryParams.append('filter.minimumAge', filters.participantAge.min);
+      if (filters.participantAge.max) queryParams.append('filter.maximumAge', filters.participantAge.max);
+      if (filters.enrollmentCount.min) queryParams.append('filter.enrollment.min', filters.enrollmentCount.min);
+      if (filters.enrollmentCount.max) queryParams.append('filter.enrollment.max', filters.enrollmentCount.max);
 
       const response = await fetch(
         `https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`
       );
+      if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setTrials(data.studies || []);
     } catch (error) {
       console.error('Error fetching trials:', error);
+      setTrials([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const TrialCard = ({ trial }) => {
@@ -138,11 +144,6 @@ const ClinicalTrials = () => {
 
     const toggleExpand = () => {
       setExpandedTrialId(isExpanded ? null : nctId);
-    };
-
-    const openTrialDetails = () => {
-      const url = `https://clinicaltrials.gov/study/${nctId}`;
-      window.open(url, '_blank');
     };
 
     const studyData = {
@@ -196,22 +197,24 @@ const ClinicalTrials = () => {
     };
 
     return (
-      <div className="card">
-        <div className="card-header" onClick={toggleExpand}>
+      <div className="trial-card">
+        <div className="trial-card-header" onClick={toggleExpand}>
           <StudyDetails study={studyData} />
-          <span className="icon">{isExpanded ? "▲" : "▼"}</span>
+          <span className="expand-icon">{isExpanded ? '▲' : '▼'}</span>
         </div>
 
         {isExpanded && (
-          <div className="expanded-content">
-            <StudyDesign design={designData} />
-            <Participants participants={participantsData} />
-            <Interventions interventions={interventionsData} />
-            <Locations locations={locationsData} />
-            <Outcomes outcomes={outcomesData} />
-            <Statistics stats={statsData} />
-            <RegulatoryInfo regulatory={regulatoryData} />
-            <Results results={resultsData} />
+          <div className="trial-expanded-content">
+            <div className="trial-grid">
+              <StudyDesign design={designData} />
+              <Participants participants={participantsData} />
+              <Interventions interventions={interventionsData} />
+              <Locations locations={locationsData} />
+              <Outcomes outcomes={outcomesData} />
+              <Statistics stats={statsData} />
+              <RegulatoryInfo regulatory={regulatoryData} />
+              <Results results={resultsData} />
+            </div>
           </div>
         )}
       </div>
@@ -219,16 +222,17 @@ const ClinicalTrials = () => {
   };
 
   const FilterModal = () => (
-    <div className={`modal ${showFilters ? 'visible' : ''}`}>
+    <div className={`filter-modal ${showFilters ? 'active' : ''}`}>
+      <div className="modal-overlay" onClick={() => setShowFilters(false)}></div>
       <div className="modal-content">
         <div className="modal-header">
           <h3>Advanced Filters</h3>
-          <button onClick={() => setShowFilters(false)}>×</button>
+          <button className="close-btn" onClick={() => setShowFilters(false)}>×</button>
         </div>
 
-        <div className="filter-scroll">
-          <div className="filter-section">
-            <h4>Basic Information</h4>
+        <div className="filter-grid">
+          <div className="filter-group">
+            <label>Status</label>
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -239,12 +243,197 @@ const ClinicalTrials = () => {
                 </option>
               ))}
             </select>
-            {/* Add other filter inputs similarly */}
+          </div>
+
+          <div className="filter-group">
+            <label>Phase</label>
+            <select
+              value={filters.phase}
+              onChange={(e) => setFilters({ ...filters, phase: e.target.value })}
+            >
+              {filterOptions.phase.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Study Type</label>
+            <select
+              value={filters.studyType}
+              onChange={(e) => setFilters({ ...filters, studyType: e.target.value })}
+            >
+              {filterOptions.studyType.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Age Group</label>
+            <select
+              value={filters.ageGroup}
+              onChange={(e) => setFilters({ ...filters, ageGroup: e.target.value })}
+            >
+              {filterOptions.ageGroup.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Gender</label>
+            <select
+              value={filters.gender}
+              onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+            >
+              {filterOptions.gender.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Funding Type</label>
+            <select
+              value={filters.fundingType}
+              onChange={(e) => setFilters({ ...filters, fundingType: e.target.value })}
+            >
+              {filterOptions.fundingType.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Intervention Type</label>
+            <select
+              value={filters.interventionType}
+              onChange={(e) => setFilters({ ...filters, interventionType: e.target.value })}
+            >
+              {filterOptions.interventionType.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Healthy Volunteers</label>
+            <input
+              type="checkbox"
+              checked={filters.healthyVolunteers}
+              onChange={(e) => setFilters({ ...filters, healthyVolunteers: e.target.checked })}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Has Results</label>
+            <input
+              type="checkbox"
+              checked={filters.hasResults}
+              onChange={(e) => setFilters({ ...filters, hasResults: e.target.checked })}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Start Date</label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Completion Date</label>
+            <input
+              type="date"
+              value={filters.completionDate}
+              onChange={(e) => setFilters({ ...filters, completionDate: e.target.value })}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Conditions (comma-separated)</label>
+            <input
+              type="text"
+              value={filters.conditions.join(',')}
+              onChange={(e) => setFilters({ ...filters, conditions: e.target.value.split(',') })}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Locations (comma-separated)</label>
+            <input
+              type="text"
+              value={filters.locations.join(',')}
+              onChange={(e) => setFilters({ ...filters, locations: e.target.value.split(',') })}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Participant Age Range</label>
+            <div className="range-inputs">
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters.participantAge.min}
+                onChange={(e) => setFilters({ 
+                  ...filters, 
+                  participantAge: { ...filters.participantAge, min: e.target.value }
+                })}
+              />
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters.participantAge.max}
+                onChange={(e) => setFilters({ 
+                  ...filters, 
+                  participantAge: { ...filters.participantAge, max: e.target.value }
+                })}
+              />
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <label>Enrollment Count Range</label>
+            <div className="range-inputs">
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters.enrollmentCount.min}
+                onChange={(e) => setFilters({ 
+                  ...filters, 
+                  enrollmentCount: { ...filters.enrollmentCount, min: e.target.value }
+                })}
+              />
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters.enrollmentCount.max}
+                onChange={(e) => setFilters({ 
+                  ...filters, 
+                  enrollmentCount: { ...filters.enrollmentCount, max: e.target.value }
+                })}
+              />
+            </div>
           </div>
         </div>
 
         <div className="modal-footer">
-          <button onClick={() => setFilters({
+          <button className="btn btn-secondary" onClick={() => setFilters({
             status: 'RECRUITING',
             phase: '',
             distance: '',
@@ -263,9 +452,9 @@ const ClinicalTrials = () => {
             participantAge: { min: '', max: '' },
             enrollmentCount: { min: '', max: '' },
           })}>
-            Reset
+            Reset Filters
           </button>
-          <button onClick={() => { searchTrials(); setShowFilters(false); }}>
+          <button className="btn btn-primary" onClick={() => { searchTrials(); setShowFilters(false); }}>
             Apply Filters
           </button>
         </div>
@@ -274,32 +463,48 @@ const ClinicalTrials = () => {
   );
 
   return (
-    <div className="container">
-      <div className="search-container">
-        <div className="search-input-container">
+    <div className="clinical-trials-container">
+      <header className="search-header">
+        <div className="search-bar">
           <input
             type="text"
             placeholder="Search clinical trials..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && searchTrials()}
           />
+          <button className="btn btn-filter" onClick={() => setShowFilters(true)}>
+            <span className="filter-icon">⚙️</span> Filters
+          </button>
+          <button className="btn btn-primary" onClick={searchTrials}>
+            Search
+          </button>
         </div>
-        <button onClick={() => setShowFilters(true)}>Filter</button>
-        <button onClick={searchTrials}>Search</button>
-      </div>
+      </header>
 
       <FilterModal />
-      {loading ? (
-        <div className="loader">Loading...</div>
-      ) : (
-        <div className="list-container">
-          {trials.length > 0 ? (
-            trials.map((trial) => <TrialCard key={trial.protocolSection?.identificationModule?.nctId} trial={trial} />)
-          ) : (
-            <div className="empty-text">No trials found. Try adjusting your search criteria.</div>
-          )}
-        </div>
-      )}
+      
+      <main className="trials-content">
+        {loading ? (
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            Loading trials...
+          </div>
+        ) : trials.length > 0 ? (
+          <div className="trials-grid">
+            {trials.map((trial) => (
+              <TrialCard 
+                key={trial.protocolSection?.identificationModule?.nctId} 
+                trial={trial} 
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="no-results">
+            No trials found. Try adjusting your search criteria.
+          </div>
+        )}
+      </main>
     </div>
   );
 };
