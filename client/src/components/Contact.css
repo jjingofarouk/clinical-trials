@@ -1,19 +1,20 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 .contact-container {
   max-width: 896px;
   margin: 32px auto;
   padding: 24px;
-  background: #ffffff;
+  background: #F5F1E9; /* Secondary: Soft Beige */
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(26, 74, 79, 0.1); /* Shadow with a hint of Primary: Dark Teal */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .contact-title {
   font-size: 28px;
   font-weight: 700;
-  color: #000000;
+  color: #1A4A4F; /* Primary: Dark Teal */
   margin-bottom: 24px;
   line-height: 1.3;
 }
@@ -33,7 +34,7 @@
 .contact-text {
   font-size: 16px;
   font-weight: 400;
-  color: #333333;
+  color: #374151; /* Text on Secondary: Dark Gray */
   line-height: 1.6;
 }
 
@@ -50,20 +51,20 @@
 }
 
 .contact-icon {
-  color: #555555;
+  color: #2D6A6F; /* Accent/Hover: Light Teal */
 }
 
 .contact-link {
   font-size: 14px;
   font-weight: 400;
-  color: #333333;
+  color: #374151; /* Text on Secondary: Dark Gray */
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .contact-link:hover,
 .contact-link:focus {
-  color: #000000;
+  color: #2D6A6F; /* Accent/Hover: Light Teal */
   outline: none;
 }
 
@@ -82,7 +83,7 @@
 .form-label {
   font-size: 14px;
   font-weight: 500;
-  color: #000000;
+  color: #1A4A4F; /* Primary: Dark Teal */
 }
 
 .form-input-wrapper {
@@ -94,19 +95,19 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #999999;
+  color: #2D6A6F; /* Accent/Hover: Light Teal */
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
   padding: 10px 12px 10px 36px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #E5E7EB; /* Borders: Light Gray */
   border-radius: 12px;
   font-size: 14px;
   font-weight: 400;
-  color: #000000;
-  background: #fafafa;
+  color: #374151; /* Text on Secondary: Dark Gray */
+  background: #FFFFFF; /* Text on Primary: White (for input background) */
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -118,8 +119,8 @@
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #000000;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  border-color: #1A4A4F; /* Primary: Dark Teal */
+  box-shadow: 0 0 0 2px rgba(26, 74, 79, 0.1); /* Primary: Dark Teal with transparency */
 }
 
 .form-submit {
@@ -128,8 +129,8 @@
   justify-content: center;
   gap: 8px;
   padding: 10px 16px;
-  background: #000000;
-  color: #ffffff;
+  background: #1A4A4F; /* Primary: Dark Teal */
+  color: #FFFFFF; /* Text on Primary: White */
   font-size: 14px;
   font-weight: 500;
   border: none;
@@ -140,14 +141,14 @@
 
 .form-submit:hover,
 .form-submit:focus {
-  background: #333333;
+  background: #2D6A6F; /* Accent/Hover: Light Teal */
   outline: none;
 }
 
 .form-status {
   font-size: 13px;
   font-weight: 400;
-  color: #333333;
+  color: #374151; /* Text on Secondary: Dark Gray */
   text-align: center;
 }
 
