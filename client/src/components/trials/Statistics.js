@@ -1,5 +1,114 @@
 import React, { useEffect, useState } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { Activity, Users, Target, Layers } from 'lucide-react';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+`;
+
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: ${fadeIn} 0.3s ease-out;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const HeaderText = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const StatsGrid = styled.div`
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+    flex-direction: column;
+    gap: 8px;
+  }
+`;
+
+const StatCardWrapper = styled.div`
+  flex: 1;
+  background-color: #000000;
+  border-radius: 12px;
+  transition: all 0.3s ease-out;
+  opacity: ${props => (props.isVisible ? 1 : 0)};
+  transform: translateY(${props => (props.isVisible ? 0 : '4px')});
+  @media (max-width: 640px) {
+    border-radius: 10px;
+  }
+`;
+
+const StatContent = styled.div`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 120px;
+  @media (max-width: 640px) {
+    padding: 12px;
+    height: 110px;
+  }
+`;
+
+const IconWrapper = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
+const StatValue = styled.span`
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 22px;
+  }
+`;
+
+const StatLabel = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
 
 const AnimatedCounter = ({ endValue, duration = 2000 }) => {
   const [count, setCount] = useState(0);
@@ -30,10 +139,10 @@ const AnimatedCounter = ({ endValue, duration = 2000 }) => {
   }, [endValue, duration]);
 
   return (
-    <span className="text-2xl font-semibold text-white">
+    <StatValue>
       {count}
-      <span className="text-base font-medium ml-1">+</span>
-    </span>
+      <span style={{ fontSize: '14px', fontWeight: 500, marginLeft: '4px' }}>+</span>
+    </StatValue>
   );
 };
 
@@ -46,40 +155,26 @@ const StatCard = ({ Icon, value, label, delay = 0 }) => {
   }, [delay]);
 
   return (
-    <div
-      className={`flex-1 rounded-xl transition-all duration-300 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      } bg-[#000000]`}
-    >
-      <div className="p-4 flex flex-col items-center justify-between h-28">
-        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-2">
-          <Icon className="w-5 h-5 text-white" />
-        </div>
+    <StatCardWrapper isVisible={isVisible}>
+      <StatContent>
+        <IconWrapper>
+          <Icon size={18} color="#ffffff" />
+        </IconWrapper>
         <AnimatedCounter endValue={value} />
-        <span className="text-xs font-medium text-white/90 text-center">{label}</span>
-      </div>
-    </div>
+        <StatLabel>{label}</StatLabel>
+      </StatContent>
+    </StatCardWrapper>
   );
 };
 
 const Statistics = ({ stats = { enrollment: 0, primary: 0, secondary: 0 } }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   return (
-    <div
-      className={`bg-white rounded-2xl my-3 overflow-hidden transition-all duration-300 max-w-7xl mx-auto ${
-        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-      }`}
-    >
-      <div className="flex items-center p-3 bg-[#000000]">
-        <Activity className="w-5 h-5 text-white mr-2" />
-        <h2 className="text-lg font-semibold text-white">Study Analytics</h2>
-      </div>
-      <div className="p-4 flex gap-3">
+    <Container>
+      <Header>
+        <Activity size={20} color="#ffffff" />
+        <HeaderText>Study Analytics</HeaderText>
+      </Header>
+      <StatsGrid>
         <StatCard
           Icon={Users}
           value={stats.enrollment}
@@ -98,91 +193,8 @@ const Statistics = ({ stats = { enrollment: 0, primary: 0, secondary: 0 } }) => 
           label="Secondary Outcomes"
           delay={200}
         />
-      </div>
-      <style jsx>{`
-        * {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        @media (max-width: 640px) {
-          .rounded-2xl {
-            border-radius: 12px;
-          }
-
-          .my-3 {
-            margin-top: 12px;
-            margin-bottom: 12px;
-          }
-
-          .p-3 {
-            padding: 10px;
-          }
-
-          .p-4 {
-            padding: 12px;
-          }
-
-          .flex {
-            flex-direction: column;
-          }
-
-          .gap-3 {
-            gap: 8px;
-          }
-
-          .h-28 {
-            height: 110px;
-          }
-
-          .text-2xl {
-            font-size: 1.5rem;
-          }
-
-          .text-base {
-            font-size: 14px;
-          }
-
-          .text-xs {
-            font-size: 11px;
-          }
-
-          .w-8 {
-            width: 28px;
-          }
-
-          .h-8 {
-            height: 28px;
-          }
-
-          .w-5 {
-            width: 18px;
-          }
-
-          .h-5 {
-            height: 18px;
-          }
-
-          .text-lg {
-            font-size: 16px;
-          }
-
-          .max-w-7xl {
-            margin-left: 12px;
-            margin-right: 12px;
-          }
-        }
-
-        @media (min-width: 641px) and (max-width: 1023px) {
-          .rounded-2xl {
-            border-radius: 14px;
-          }
-
-          .h-28 {
-            height: 120px;
-          }
-        }
-      `}</style>
-    </div>
+      </StatsGrid>
+    </Container>
   );
 };
 
