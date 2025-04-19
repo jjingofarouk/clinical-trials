@@ -2,26 +2,41 @@ import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Shield, Hash, CheckSquare, Briefcase, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
+// Keyframes for fade-in and pulse animation
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+`;
+
 const Container = styled.div`
-  background-color: #ffffff;
-  border-radius: 16px;
+  background-color: #F5F1E9; /* Secondary: Soft Beige */
+  border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  animation: ${fadeIn} 0.3s ease-out;
+  animation: ${fadeIn} 0.4s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+
   @media (max-width: 640px) {
-    border-radius: 12px;
-    margin-bottom: 12px;
+    border-radius: 16px;
+    margin-bottom: 16px;
   }
 `;
 
 const Header = styled.div`
-  background-color: #000000;
+  background-color: #1A4A4F; /* Primary: Dark Teal */
   padding: 16px;
   display: flex;
   align-items: center;
@@ -34,7 +49,8 @@ const Header = styled.div`
 const HeaderText = styled.h2`
   font-size: 18px;
   font-weight: 600;
-  color: #ffffff;
+  color: #FFFFFF; /* Text on Primary: White */
+  letter-spacing: -0.02em;
   @media (max-width: 640px) {
     font-size: 16px;
   }
@@ -46,7 +62,7 @@ const NoDataContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 32px;
-  gap: 8px;
+  gap: 10px;
   @media (max-width: 640px) {
     padding: 24px;
   }
@@ -54,7 +70,8 @@ const NoDataContainer = styled.div`
 
 const NoDataText = styled.p`
   font-size: 14px;
-  color: #6b7280;
+  color: #374151; /* Text on Secondary: Dark Gray */
+  opacity: 0.8;
   @media (max-width: 640px) {
     font-size: 13px;
   }
@@ -71,26 +88,35 @@ const ItemWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 0;
+  border-bottom: 1px solid #E5E7EB; /* Borders: Light Gray */
+  transition: background-color 0.2s ease;
+  animation: ${fadeIn} 0.5s ease-out;
+
   &:last-child {
     border-bottom: none;
   }
+
+  &:hover {
+    background-color: rgba(45, 106, 111, 0.05); /* Accent/Hover: Light Teal with opacity */
+  }
+
   @media (max-width: 640px) {
-    padding: 10px 0;
+    padding: 12px 0;
   }
 `;
 
 const ItemLabel = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 `;
 
 const LabelText = styled.span`
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #374151; /* Text on Secondary: Dark Gray */
+  letter-spacing: -0.01em;
   @media (max-width: 640px) {
     font-size: 13px;
   }
@@ -98,9 +124,10 @@ const LabelText = styled.span`
 
 const ValueText = styled.span`
   font-size: 14px;
-  color: #6b7280;
+  color: #374151; /* Text on Secondary: Dark Gray */
   text-align: right;
   max-width: 50%;
+  opacity: 0.9;
   @media (max-width: 640px) {
     font-size: 12px;
   }
@@ -109,19 +136,20 @@ const ValueText = styled.span`
 const StatusBadge = styled.div`
   display: flex;
   align-items: center;
-  padding: 4px 8px;
-  border-radius: 10px;
-  background-color: rgba(0, 0, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
+  background-color: ${props => (props.isYes ? '#10B981' : '#EF4444')}; /* Green for Yes, Red for No */
+  animation: ${pulse} 0.5s ease-in-out;
   @media (max-width: 640px) {
-    padding: 3px 6px;
+    padding: 3px 8px;
   }
 `;
 
 const StatusText = styled.span`
   font-size: 12px;
   font-weight: 500;
-  color: #111827;
-  margin-left: 4px;
+  color: #FFFFFF; /* White for contrast */
+  margin-left: 6px;
   @media (max-width: 640px) {
     font-size: 11px;
   }
@@ -130,15 +158,15 @@ const StatusText = styled.span`
 const RegulatoryItem = ({ label, value, icon: Icon, isStatus = false }) => (
   <ItemWrapper>
     <ItemLabel>
-      <Icon size={16} color="#6b7280" />
+      <Icon size={18} color="#2D6A6F" /> {/* Accent/Hover: Light Teal */}
       <LabelText>{label}</LabelText>
     </ItemLabel>
     {isStatus ? (
-      <StatusBadge>
+      <StatusBadge isYes={value === 'Yes'}>
         {value === 'Yes' ? (
-          <CheckCircle size={12} color="#111827" />
+          <CheckCircle size={14} color="#FFFFFF" />
         ) : (
-          <XCircle size={12} color="#111827" />
+          <XCircle size={14} color="#FFFFFF" />
         )}
         <StatusText>{value}</StatusText>
       </StatusBadge>
@@ -152,12 +180,12 @@ const RegulatoryInfo = ({ regulatory }) => {
   return (
     <Container>
       <Header>
-        <Shield size={20} color="#ffffff" />
+        <Shield size={20} color="#FFFFFF" />
         <HeaderText>Regulatory Information</HeaderText>
       </Header>
       {!regulatory ? (
         <NoDataContainer>
-          <AlertCircle size={20} color="#6b7280" />
+          <AlertCircle size={20} color="#374151" />
           <NoDataText>No regulatory data available</NoDataText>
         </NoDataContainer>
       ) : (
