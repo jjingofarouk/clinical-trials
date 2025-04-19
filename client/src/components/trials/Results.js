@@ -1,90 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { AlertOctagon, FileText, BookOpen, Clipboard, AlertCircle, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { AlertOctagon, FileText, BookOpen, AlertCircle } from 'lucide-react';
 
-const Card = ({ children, className = '' }) => (
-  <div className={`bg-white rounded-2xl overflow-hidden ${className}`}>
-    {children}
-  </div>
-);
-
-const CardHeader = ({ icon: Icon, title }) => (
-  <div className="bg-[#000000] px-4 py-3 flex items-center gap-2">
-    <Icon size={20} className="text-white" />
-    <h2 className="text-lg font-semibold text-white">{title}</h2>
-  </div>
-);
-
-const ResultSection = ({ label, content, icon: Icon, isLast }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className={`rounded-xl overflow-hidden ${isLast ? '' : 'mb-3'}`}>
-      <button onClick={() => setExpanded(!expanded)} className="w-full text-left">
-        <div className="bg-white p-3 flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-            <Icon size={16} className="text-gray-600" />
-          </div>
-          <span className="flex-1 text-sm font-semibold text-gray-900">{label}</span>
-          <ChevronDown
-            size={16}
-            className={`text-gray-600 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-          />
-        </div>
-        {expanded && (
-          <div className="p-3 pt-2 bg-white">
-            <p className="text-sm text-gray-600 leading-relaxed">{content}</p>
-          </div>
-        )}
-      </button>
+const Section = ({ icon: Icon, title, content }) => (
+  <div className="section">
+    <div className="section-header">
+      <div className="section-icon">
+        <Icon size={16} className="text-gray-600" />
+      </div>
+      <h3 className="section-title">{title}</h3>
     </div>
-  );
-};
+    <p className="section-content">{content}</p>
+  </div>
+);
 
 const Results = ({ results }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   return (
-    <Card
-      className={`
-        transform transition-all duration-300 ease-out max-w-7xl mx-auto
-        ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95'}
-        my-3
-      `}
-    >
-      <CardHeader icon={Clipboard} title="Study Results" />
+    <div className="results-container">
+      <h2 className="results-title">Study Results</h2>
       {!results || Object.keys(results).length === 0 ? (
-        <div className="flex flex-col items-center py-6">
+        <div className="no-results">
           <AlertCircle size={20} className="text-gray-400" />
           <p className="text-sm text-gray-400 mt-2">No results available at this time.</p>
         </div>
       ) : (
-        <div className="p-4">
+        <div className="results-content">
           {results.adverseEvents && (
-            <ResultSection
-              label="Adverse Events"
-              content={results.adverseEvents}
+            <Section
               icon={AlertOctagon}
-              isLast={!results.studyResults && !results.publications}
+              title="Adverse Events"
+              content={results.adverseEvents}
             />
           )}
           {results.studyResults && (
-            <ResultSection
-              label="Study Results"
-              content={results.studyResults}
+            <Section
               icon={FileText}
-              isLast={!results.publications}
+              title="Study Results"
+              content={results.studyResults}
             />
           )}
           {results.publications && (
-            <ResultSection
-              label="Publications"
-              content={results.publications}
+            <Section
               icon={BookOpen}
-              isLast
+              title="Publications"
+              content={results.publications}
             />
           )}
         </div>
@@ -94,68 +52,90 @@ const Results = ({ results }) => {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
+        .results-container {
+          margin: 16px 0;
+        }
+
+        .results-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 16px;
+        }
+
+        .no-results {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          color: #6b7280;
+          padding: 16px;
+        }
+
+        .results-content {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .section {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .section-icon {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
+          background: #f3f4f6;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .section-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #111827;
+        }
+
+        .section-content {
+          font-size: 12px;
+          color: #6b7280;
+          line-height: 1.5;
+        }
+
         @media (max-width: 640px) {
-          .rounded-2xl {
-            border-radius: 12px;
+          .results-container {
+            margin: 12px 0;
           }
 
-          .px-4 {
-            padding-left: 12px;
-            padding-right: 12px;
-          }
-
-          .py-3 {
-            padding-top: 10px;
-            padding-bottom: 10px;
-          }
-
-          .text-lg {
+          .results-title {
             font-size: 16px;
           }
 
-          .p-4 {
-            padding: 12px;
-          }
-
-          .mb-3 {
-            margin-bottom: 8px;
-          }
-
-          .text-sm {
+          .section-title {
             font-size: 12px;
           }
 
-          .w-8 {
-            width: 28px;
+          .section-content {
+            font-size: 11px;
           }
 
-          .h-8 {
-            height: 28px;
-          }
-
-          .py-6 {
-            padding-top: 20px;
-            padding-bottom: 20px;
-          }
-
-          .max-w-7xl {
-            margin-left: 12px;
-            margin-right: 12px;
-          }
-        }
-
-        @media (min-width: 641px) and (max-width: 1023px) {
-          .rounded-2xl {
-            border-radius: 14px;
-          }
-
-          .my-3 {
-            margin-top: 12px;
-            margin-bottom: 12px;
+          .section-icon {
+            width: 24px;
+            height: 24px;
           }
         }
       `}</style>
-    </Card>
+    </div>
   );
 };
 
