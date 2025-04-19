@@ -396,7 +396,7 @@ const InfoCard = ({ icon: Icon, label, value, bgColor }) => (
 const DateInfo = ({ icon: Icon, label, date }) => (
   <DateInfoWrapper>
     <DateIconWrapper>
-      <Icon size=16 color="#FFFFFF" />
+      <Icon size={16} color="#FFFFFF" />
     </DateIconWrapper>
     <DateLabel>{label}</DateLabel>
     <DateValue>{date || 'Not specified'}</DateValue>
