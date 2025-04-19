@@ -1,29 +1,157 @@
 import React from 'react';
+import styled from 'styled-components';
 import { AlertOctagon, FileText, BookOpen, AlertCircle } from 'lucide-react';
 
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const HeaderText = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 24px;
+  }
+`;
+
+const NoDataText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const ResultsList = styled.div`
+  padding: 12px;
+  @media (max-width: 640px) {
+    padding: 8px;
+  }
+`;
+
+const SectionWrapper = styled.div`
+  border-radius: 12px;
+  overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
+  &:last-child {
+    border-bottom: none;
+  }
+  @media (max-width: 640px) {
+    border-radius: 10px;
+  }
+`;
+
+const SectionContent = styled.div`
+  padding: 12px;
+  @media (max-width: 640px) {
+    padding: 10px;
+  }
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    gap: 8px;
+  }
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  color: #000000;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  @media (max-width: 640px) {
+    font-size: 14px;
+  }
+`;
+
+const SectionText = styled.p`
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+  padding: 0 12px 12px 56px;
+  @media (max-width: 640px) {
+    font-size: 12px;
+    padding: 0 10px 10px 46px;
+  }
+`;
+
 const Section = ({ icon: Icon, title, content }) => (
-  <div className="section">
-    <div className="section-header">
-      <div className="section-icon">
-        <Icon size={16} className="text-gray-600" />
-      </div>
-      <h3 className="section-title">{title}</h3>
-    </div>
-    <p className="section-content">{content}</p>
-  </div>
+  <SectionWrapper>
+    <SectionContent>
+      <SectionHeader>
+        <IconWrapper>
+          <Icon size={18} />
+        </IconWrapper>
+        <SectionTitle>{title}</SectionTitle>
+      </SectionHeader>
+      <SectionText>{content}</SectionText>
+    </SectionContent>
+  </SectionWrapper>
 );
 
 const Results = ({ results }) => {
   return (
-    <div className="results-container">
-      <h2 className="results-title">Study Results</h2>
+    <Container>
+      <Header>
+        <AlertOctagon size={20} color="#ffffff" />
+        <HeaderText>Study Results</HeaderText>
+      </Header>
       {!results || Object.keys(results).length === 0 ? (
-        <div className="no-results">
-          <AlertCircle size={20} className="text-gray-400" />
-          <p className="text-sm text-gray-400 mt-2">No results available at this time.</p>
-        </div>
+        <NoDataContainer>
+          <AlertCircle size={20} color="#6b7280" />
+          <NoDataText>No results available at this time.</NoDataText>
+        </NoDataContainer>
       ) : (
-        <div className="results-content">
+        <ResultsList>
           {results.adverseEvents && (
             <Section
               icon={AlertOctagon}
@@ -45,97 +173,9 @@ const Results = ({ results }) => {
               content={results.publications}
             />
           )}
-        </div>
+        </ResultsList>
       )}
-      <style jsx>{`
-        * {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .results-container {
-          margin: 16px 0;
-        }
-
-        .results-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: #111827;
-          margin-bottom: 16px;
-        }
-
-        .no-results {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          color: #6b7280;
-          padding: 16px;
-        }
-
-        .results-content {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .section {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .section-icon {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          background: #f3f4f6;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .section-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #111827;
-        }
-
-        .section-content {
-          font-size: 12px;
-          color: #6b7280;
-          line-height: 1.5;
-        }
-
-        @media (max-width: 640px) {
-          .results-container {
-            margin: 12px 0;
-          }
-
-          .results-title {
-            font-size: 16px;
-          }
-
-          .section-title {
-            font-size: 12px;
-          }
-
-          .section-content {
-            font-size: 11px;
-          }
-
-          .section-icon {
-            width: 24px;
-            height: 24px;
-          }
-        }
-      `}</style>
-    </div>
+    </Container>
   );
 };
 
