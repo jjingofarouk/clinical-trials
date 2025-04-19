@@ -1,28 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Shuffle, 
-  Eye, 
-  Layout, 
-  Target, 
-  Columns, 
-  AlertCircle 
-} from 'lucide-react';
+import { Shuffle, Eye, Layout, Target, Columns, AlertCircle } from 'lucide-react';
 
-const DesignItem = ({ Icon, label, value }) => {
-  return (
-    <div className="flex items-center justify-between py-4 border-b border-gray-200">
-      <div className="flex items-center flex-1">
-        <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center mr-3">
-          <Icon size={16} className="text-blue-600" />
-        </div>
-        <span className="text-base font-semibold text-blue-900">{label}</span>
+const DesignItem = ({ Icon, label, value }) => (
+  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+    <div className="flex items-center gap-2 flex-1">
+      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <Icon size={16} className="text-gray-600" />
       </div>
-      <span className="text-[15px] text-gray-700 flex-1 text-right">
-        {value || 'Not specified'}
-      </span>
+      <span className="text-sm font-semibold text-gray-900">{label}</span>
     </div>
-  );
-};
+    <span className="text-sm text-gray-600 flex-1 text-right truncate">
+      {value || 'Not specified'}
+    </span>
+  </div>
+);
 
 const StudyDesign = ({ design }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -38,55 +29,98 @@ const StudyDesign = ({ design }) => {
     { Icon: Target, label: 'Endpoint', value: design?.endpoint },
   ];
 
-  const containerClasses = `
-    bg-white 
-    rounded-2xl 
-    my-4 
-    overflow-hidden 
-    shadow-lg 
-    transition-all 
-    duration-600
-    ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-  `;
-
-  if (!design) {
-    return (
-      <div className={containerClasses}>
-        <div className="flex items-center p-5 border-b border-white/10 bg-gradient-to-r from-blue-600 to-blue-800">
-          <Columns className="w-7 h-7 text-white mr-3" />
-          <h2 className="text-2xl font-extrabold text-white tracking-wide">
-            Study Design
-          </h2>
-        </div>
-        <div className="bg-white flex flex-col items-center py-8">
-          <AlertCircle className="w-6 h-6 text-gray-400" />
-          <p className="text-base text-gray-400 mt-2">
-            No study design data available
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className={containerClasses}>
-      <div className="flex items-center p-5 border-b border-white/10 bg-gradient-to-r from-blue-600 to-blue-800">
-        <Columns className="w-7 h-7 text-white mr-3" />
-        <h2 className="text-2xl font-extrabold text-white tracking-wide">
-          Study Design
-        </h2>
+    <div
+      className={`
+        bg-white rounded-2xl my-3 overflow-hidden transition-all duration-300 max-w-7xl mx-auto
+        ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
+      `}
+    >
+      <div className="flex items-center p-3 bg-[#000000]">
+        <Columns className="w-5 h-5 text-white mr-2" />
+        <h2 className="text-lg font-semibold text-white">Study Design</h2>
       </div>
+      {!design ? (
+        <div className="flex flex-col items-center py-6 bg-white">
+          <AlertCircle className="w-5 h-5 text-gray-400" />
+          <p className="text-sm text-gray-400 mt-2">No study design data available</p>
+        </div>
+      ) : (
+        <div className="p-4 bg-white">
+          {designItems.map((item, index) => (
+            <DesignItem key={index} Icon={item.Icon} label={item.label} value={item.value} />
+          ))}
+        </div>
+      )}
+      <style jsx>{`
+        * {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-      <div className="p-5 bg-white">
-        {designItems.map((item, index) => (
-          <DesignItem
-            key={index}
-            Icon={item.Icon}
-            label={item.label}
-            value={item.value}
-          />
-        ))}
-      </div>
+        @media (max-width: 640px) {
+          .rounded-2xl {
+            border-radius: 12px;
+          }
+
+          .my-3 {
+            margin-top: 12px;
+            margin-bottom: 12px;
+          }
+
+          .p-3 {
+            padding: 10px;
+          }
+
+          .p-4 {
+            padding: 12px;
+          }
+
+          .py-3 {
+            padding-top: 8px;
+            padding-bottom: 8px;
+          }
+
+          .text-lg {
+            font-size: 16px;
+          }
+
+          .text-sm {
+            font-size: 12px;
+          }
+
+          .w-8 {
+            width: 28px;
+          }
+
+          .h-8 {
+            height: 28px;
+          }
+
+          .w-5 {
+            width: 18px;
+          }
+
+          .h-5 {
+            height: 18px;
+          }
+
+          .py-6 {
+            padding-top: 20px;
+            padding-bottom: 20px;
+          }
+
+          .max-w-7xl {
+            margin-left: 12px;
+            margin-right: 12px;
+          }
+        }
+
+        @media (min-width: 641px) and (max-width: 1023px) {
+          .rounded-2xl {
+            border-radius: 14px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
