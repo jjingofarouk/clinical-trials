@@ -1,5 +1,169 @@
 import React, { useEffect, useState } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { Users, Calendar, User } from 'lucide-react';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+`;
+
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: ${fadeIn} 0.3s ease-out;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const HeaderText = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 24px;
+  }
+`;
+
+const NoDataText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const Content = styled.div`
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+`;
+
+const CardWrapper = styled.div`
+  background-color: #000000;
+  border-radius: 12px;
+  transition: all 0.3s ease-out;
+  opacity: ${props => (props.isVisible ? 1 : 0)};
+  transform: translateY(${props => (props.isVisible ? 0 : '4px')});
+  @media (max-width: 640px) {
+    border-radius: 10px;
+  }
+`;
+
+const CardContent = styled.div`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 120px;
+  @media (max-width: 640px) {
+    padding: 12px;
+    height: 110px;
+  }
+`;
+
+const IconWrapper = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
+const CardValue = styled.span`
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 22px;
+  }
+`;
+
+const CardLabel = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
+
+const EligibilitySection = styled.div`
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  @media (max-width: 640px) {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+`;
+
+const EligibilityTitle = styled.h3`
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+  @media (max-width: 640px) {
+    font-size: 14px;
+  }
+`;
+
+const EligibilityText = styled.p`
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  white-space: pre-line;
+  @media (max-width: 640px) {
+    font-size: 12px;
+  }
+`;
 
 const AnimatedCounter = ({ endValue, duration = 2000 }) => {
   const [count, setCount] = useState(0);
@@ -29,7 +193,7 @@ const AnimatedCounter = ({ endValue, duration = 2000 }) => {
     };
   }, [endValue, duration]);
 
-  return <span className="text-2xl font-semibold text-white">{count}</span>;
+  return <CardValue>{count}</CardValue>;
 };
 
 const ParticipantCard = ({ Icon, value, label, delay = 0 }) => {
@@ -44,49 +208,37 @@ const ParticipantCard = ({ Icon, value, label, delay = 0 }) => {
   const isNumeric = !isNaN(numericValue);
 
   return (
-    <div
-      className={`transform transition-all duration-300 ease-out ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-      } bg-[#000000] rounded-xl p-4 flex flex-col items-center justify-between h-32 w-full`}
-    >
-      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-        <Icon className="text-white" size={18} />
-      </div>
-      {isNumeric ? (
-        <AnimatedCounter endValue={numericValue} />
-      ) : (
-        <span className="text-2xl font-semibold text-white">{value || 'N/A'}</span>
-      )}
-      <span className="text-xs font-medium text-white/90">{label}</span>
-    </div>
+    <CardWrapper isVisible={isVisible}>
+      <CardContent>
+        <IconWrapper>
+          <Icon size={18} color="#ffffff" />
+        </IconWrapper>
+        {isNumeric ? (
+          <AnimatedCounter endValue={numericValue} />
+        ) : (
+          <CardValue>{value || 'N/A'}</CardValue>
+        )}
+        <CardLabel>{label}</CardLabel>
+      </CardContent>
+    </CardWrapper>
   );
 };
 
 const Participants = ({ participants }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   return (
-    <div
-      className={`bg-white rounded-2xl overflow-hidden transform transition-all duration-300 ease-out ${
-        isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-      } max-w-7xl mx-auto`}
-    >
-      <div className="bg-[#000000] px-4 py-3 flex items-center gap-2">
-        <Users size={20} className="text-white" />
-        <h2 className="text-lg font-semibold text-white">Participant Information</h2>
-      </div>
-
+    <Container>
+      <Header>
+        <Users size={20} color="#ffffff" />
+        <HeaderText>Participant Information</HeaderText>
+      </Header>
       {!participants ? (
-        <div className="p-6 text-center">
-          <p className="text-gray-500 text-sm">No participant data available</p>
-        </div>
+        <NoDataContainer>
+          <Users size={20} color="#6b7280" />
+          <NoDataText>No participant data available</NoDataText>
+        </NoDataContainer>
       ) : (
-        <div className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <Content>
+          <Grid>
             <ParticipantCard
               Icon={Calendar}
               value={participants.ageRange}
@@ -105,97 +257,16 @@ const Participants = ({ participants }) => {
               label="Enrollment"
               delay={200}
             />
-          </div>
-
+          </Grid>
           {participants.eligibility && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <h3 className="text-base font-semibold text-gray-900 mb-2">Eligibility Criteria</h3>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                {participants.eligibility}
-              </p>
-            </div>
+            <EligibilitySection>
+              <EligibilityTitle>Eligibility Criteria</EligibilityTitle>
+              <EligibilityText>{participants.eligibility}</EligibilityText>
+            </EligibilitySection>
           )}
-        </div>
+        </Content>
       )}
-      <style jsx>{`
-        * {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        @media (max-width: 640px) {
-          .rounded-2xl {
-            border-radius: 12px;
-          }
-
-          .bg-[#000000] {
-            padding: 12px;
-          }
-
-          .text-lg {
-            font-size: 16px;
-          }
-
-          .p-4 {
-            padding: 12px;
-          }
-
-          .gap-3 {
-            gap: 8px;
-          }
-
-          .h-32 {
-            height: 120px;
-          }
-
-          .text-2xl {
-            font-size: 1.5rem;
-          }
-
-          .text-xs {
-            font-size: 11px;
-          }
-
-          .w-8 {
-            width: 32px;
-          }
-
-          .h-8 {
-            height: 32px;
-          }
-
-          .mt-4 {
-            margin-top: 12px;
-          }
-
-          .pt-4 {
-            padding-top: 12px;
-          }
-
-          .text-base {
-            font-size: 14px;
-          }
-
-          .text-sm {
-            font-size: 12px;
-          }
-
-          .max-w-7xl {
-            margin-left: 12px;
-            margin-right: 12px;
-          }
-        }
-
-        @media (min-width: 641px) and (max-width: 1023px) {
-          .rounded-2xl {
-            border-radius: 14px;
-          }
-
-          .h-32 {
-            height: 130px;
-          }
-        }
-      `}</style>
-    </div>
+    </Container>
   );
 };
 
