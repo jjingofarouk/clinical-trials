@@ -1,53 +1,120 @@
 .footer {
-  background-color: #000;
-  color: #fff;
-  padding: 1rem;
-  text-align: center;
-  font-family: 'Inter', sans-serif;
-  position: relative;
-  bottom: 0;
-  width: 100%;
+  background-color: #000000;
+  padding: 24px 0;
 }
 
-.footer-content {
-  max-width: 1200px;
+.footer-container {
+  max-width: 1440px;
   margin: 0 auto;
+  padding: 0 16px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: 24px;
+}
+
+.footer-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
 }
 
 .footer-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
-  gap: 1.5rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
-.footer-links a {
-  color: #fff;
+.footer-nav {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-nav-link {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  font-size: 0.9rem;
   transition: color 0.2s ease;
 }
 
-.footer-links a:hover,
-.footer-links a:focus {
-  color: #ccc;
+.footer-nav-link:hover,
+.footer-nav-link:focus {
+  color: #ffffff;
   outline: none;
 }
 
-.footer p {
-  margin: 0;
-  font-size: 0.9rem;
+.footer-social {
+  display: flex;
+  gap: 16px;
 }
 
-@media (max-width: 768px) {
-  .footer-content {
-    flex-direction: column;
-    text-align: center;
+.footer-social-icon {
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease;
+}
+
+.footer-social-icon:hover,
+.footer-social-icon:focus {
+  color: #ffffff;
+}
+
+@media (min-width: 640px) {
+  .footer-container {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .footer-links {
+    flex-direction: row;
+    gap: 24px;
+  }
+
+  .footer-text {
+    text-align: left;
+  }
+}
+
+@media (max-width: 639px) {
+  .footer {
+    padding: 16px 0;
+  }
+
+  .footer-container {
+    padding: 0 12px;
+    gap: 16px;
+  }
+
+  .footer-text {
+    font-size: 12px;
+  }
+
+  .footer-nav {
+    gap: 16px;
+  }
+
+  .footer-nav-link {
+    font-size: 12px;
+  }
+
+  .footer-social {
+    gap: 12px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .footer {
+    padding: 20px 0;
+  }
+
+  .footer-container {
+    gap: 20px;
+  }
+
+  .footer-nav {
+    gap: 20px;
   }
 }
