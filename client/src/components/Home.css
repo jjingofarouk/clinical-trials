@@ -1,10 +1,11 @@
+
 .home {
   min-height: calc(100vh - 100px); /* Adjust for footer height */
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fff;
-  color: #000;
+  background-color: #F5F1E9; /* Secondary: Soft Beige */
+  color: #374151; /* Text on Secondary: Dark Gray */
   font-family: 'Inter', sans-serif;
 }
 
@@ -17,29 +18,31 @@
 .home h1 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
+  color: #1A4A4F; /* Primary: Dark Teal */
 }
 
 .home p {
   font-size: 1.2rem;
   margin-bottom: 2rem;
-  color: #333;
+  color: #374151; /* Text on Secondary: Dark Gray */
 }
 
 .cta-button {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background-color: #000;
-  color: #fff;
+  background-color: #1A4A4F; /* Primary: Dark Teal */
+  color: #FFFFFF; /* Text on Primary: White */
   text-decoration: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 500;
   transition: background-color 0.2s ease;
+  border: 1px solid #E5E7EB; /* Borders: Light Gray */
 }
 
 .cta-button:hover,
 .cta-button:focus {
-  background-color: #333;
+  background-color: #2D6A6F; /* Accent/Hover: Light Teal */
   outline: none;
 }
 
