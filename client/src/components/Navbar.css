@@ -1,3 +1,5 @@
+
+/* Updated Navbar CSS with the color theme */
 .navbar {
   position: fixed;
   top: 20px;
@@ -6,8 +8,8 @@
 }
 
 .navbar-menu {
-  background-color: #000;
-  color: #fff;
+  background-color: #1A4A4F; /* Primary: Dark Teal */
+  color: #FFFFFF; /* Text on Primary: White */
   border-radius: 50%;
   width: 60px;
   height: 60px;
@@ -16,7 +18,7 @@
   justify-content: center;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(26, 74, 79, 0.3);
 }
 
 .navbar-menu.expanded {
@@ -50,7 +52,7 @@
 }
 
 .navbar-links a {
-  color: #fff;
+  color: #FFFFFF; /* Text on Primary: White */
   text-decoration: none;
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
@@ -58,11 +60,13 @@
   display: block;
   border-radius: 8px;
   transition: background-color 0.2s ease;
+  border: 1px solid transparent;
 }
 
 .navbar-links a:hover,
 .navbar-links a:focus {
-  background-color: #333;
+  background-color: #2D6A6F; /* Accent/Hover: Light Teal */
+  border: 1px solid #E5E7EB; /* Borders: Light Gray */
   outline: none;
 }
 
