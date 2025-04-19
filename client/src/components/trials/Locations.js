@@ -1,58 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FaMapMarkerAlt, FaMap, FaMapPin } from 'react-icons/fa';
 
-// Keyframes for animations
 const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
 `;
 
-const scaleIn = keyframes`
-  from { transform: scale(0.98); }
-  to { transform: scale(1); }
-`;
-
-// Styled components
 const Container = styled.div`
   background-color: #ffffff;
   border-radius: 16px;
   margin-bottom: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  @media (max-width: 640px) {
+    margin-bottom: 12px;
+    border-radius: 12px;
+  }
 `;
 
 const Header = styled.div`
-  overflow: hidden;
-`;
-
-const HeaderGradient = styled.div`
+  background-color: #000000;
+  padding: 16px;
   display: flex;
   align-items: center;
-  padding: 16px;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
 `;
 
 const HeaderText = styled.h2`
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  margin-left: 12px;
   color: #ffffff;
   flex: 1;
+  margin-left: 12px;
+  @media (max-width: 640px) {
+    font-size: 16px;
+    margin-left: 8px;
+  }
 `;
 
 const Badge = styled.div`
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
   padding: 4px 8px;
-  border-radius: 12px;
+  border-radius: 10px;
+  @media (max-width: 640px) {
+    padding: 3px 6px;
+  }
 `;
 
 const BadgeText = styled.span`
   color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
 `;
 
 const EmptyContainer = styled.div`
@@ -63,73 +66,99 @@ const EmptyContainer = styled.div`
   padding: 32px;
   background-color: #ffffff;
   border-radius: 16px;
+  @media (max-width: 640px) {
+    padding: 24px;
+    border-radius: 12px;
+  }
 `;
 
 const NoDataText = styled.p`
-  color: #9ca3af;
-  font-size: 16px;
-  margin-top: 12px;
+  color: #6b7280;
+  font-size: 14px;
+  margin-top: 8px;
   text-align: center;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
 `;
 
 const LocationsGrid = styled.div`
   padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
 `;
 
 const LocationCardWrapper = styled.div`
   border-radius: 12px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
   transition: transform 0.2s ease-in-out;
-
   &:active {
     transform: scale(0.98);
   }
+  @media (max-width: 640px) {
+    margin-bottom: 8px;
+    border-radius: 10px;
+  }
 `;
 
-const CardGradient = styled.div`
-  border-radius: 12px;
-  padding: 16px;
-  background: linear-gradient(135deg, #ffffff, #f8f9ff);
+const CardContent = styled.div`
+  padding: 12px;
+  @media (max-width: 640px) {
+    padding: 10px;
+  }
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 `;
 
 const FacilityName = styled.h3`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: #1f2937;
+  color: #111827;
   margin-left: 8px;
+  @media (max-width: 640px) {
+    font-size: 14px;
+    margin-left: 6px;
+  }
 `;
 
 const AddressContainer = styled.div`
   padding-left: 24px;
+  @media (max-width: 640px) {
+    padding-left: 20px;
+  }
 `;
 
 const AddressText = styled.p`
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
-  line-height: 20px;
+  line-height: 18px;
+  @media (max-width: 640px) {
+    font-size: 12px;
+    line-height: 16px;
+  }
 `;
 
 const Separator = styled.div`
   height: 1px;
   background-color: #e5e7eb;
-  margin-top: 16px;
-  margin-bottom: 12px;
+  margin: 12px 0;
+  @media (max-width: 640px) {
+    margin: 8px 0;
+  }
 `;
 
-// LocationCard Component
 const LocationCard = ({ location, index, totalLocations }) => {
   return (
     <LocationCardWrapper>
-      <CardGradient>
+      <CardContent>
         <CardHeader>
-          <FaMapPin size={16} color="#4f46e5" />
+          <FaMapPin size={14} color="#000000" />
           <FacilityName>
             {location.name || 'Facility Name Not Specified'}
           </FacilityName>
@@ -142,12 +171,11 @@ const LocationCard = ({ location, index, totalLocations }) => {
           </AddressText>
         </AddressContainer>
         {index < totalLocations - 1 && <Separator />}
-      </CardGradient>
+      </CardContent>
     </LocationCardWrapper>
   );
 };
 
-// Locations Component
 const Locations = ({ locations }) => {
   const [fadeAnim, setFadeAnim] = useState(0);
 
@@ -158,7 +186,7 @@ const Locations = ({ locations }) => {
   if (!locations || locations.length === 0) {
     return (
       <EmptyContainer>
-        <FaMapMarkerAlt size={32} color="#9ca3af" />
+        <FaMapMarkerAlt size={24} color="#6b7280" />
         <NoDataText>No location data available</NoDataText>
       </EmptyContainer>
     );
@@ -167,13 +195,11 @@ const Locations = ({ locations }) => {
   return (
     <Container style={{ opacity: fadeAnim, transition: 'opacity 0.5s ease-in-out' }}>
       <Header>
-        <HeaderGradient>
-          <FaMap size={24} color="#ffffff" />
-          <HeaderText>Study Locations</HeaderText>
-          <Badge>
-            <BadgeText>{locations.length}</BadgeText>
-          </Badge>
-        </HeaderGradient>
+        <FaMap size={20} color="#ffffff" />
+        <HeaderText>Study Locations</HeaderText>
+        <Badge>
+          <BadgeText>{locations.length}</BadgeText>
+        </Badge>
       </Header>
       <LocationsGrid>
         {locations.map((location, index) => (
