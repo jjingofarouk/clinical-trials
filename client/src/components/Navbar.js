@@ -15,7 +15,7 @@ const Navbars = () => {
 
   const styles = {
     navbar: {
-      backgroundColor: '#1A4A4F', // Primary: Dark Teal
+      backgroundColor: '#2C3E50', // Deep blue/slate color for professional medical look
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       transition: 'top 0.3s ease-in-out',
       position: 'sticky',
@@ -25,25 +25,40 @@ const Navbars = () => {
       zIndex: 1000,
     },
     navLink: { 
-      color: '#FFFFFF', // Text on Primary: White
+      color: '#FFFFFF',
       fontSize: '1rem',
     },
-    donateButton: {
-      backgroundColor: '#2D6A6F', // Accent/Hover: Light Teal
-      borderColor: '#2D6A6F',
+    ctaButton: {
+      backgroundColor: '#FF8C00', // Claude's orange submit button color
+      borderColor: '#FF8C00',
       color: '#FFFFFF',
       fontWeight: 600,
       padding: '0.5rem 1rem',
       transition: 'all 0.2s ease',
     },
     brandText: {
-      color: '#FFFFFF', // Text on Primary: White
+      color: '#FFFFFF',
       fontSize: '1.2rem',
       fontWeight: 700,
       letterSpacing: '1px',
       marginLeft: '0.5rem',
       textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)',
     },
+    logoContainer: {
+      width: '40px',
+      height: '40px',
+      borderRadius: '50%',
+      overflow: 'hidden',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+    },
+    logo: {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'cover',
+    }
   };
 
   // Scroll effect for hide/show
@@ -97,20 +112,16 @@ const Navbars = () => {
       ref={navbarRef}
     >
       <Container className="d-flex align-items-center">
-        <Navbar.Brand as={NavLink} to="/" style={styles.navLink}>
-          <img
-            src={logo}
-            alt="CS Logo"
-            height="25"
-            width="50"
-            className="d-inline-block align-top"
-          />
+        <Navbar.Brand as={NavLink} to="/" style={styles.navLink} className="d-flex align-items-center">
+          <div style={styles.logoContainer}>
+            <img
+              src={logo}
+              alt="TrialConnect Logo"
+              style={styles.logo}
+            />
+          </div>
+          <span style={styles.brandText} className="ms-2">TrialConnect</span>
         </Navbar.Brand>
-
-        {/* Brand Name - Visible on mobile only */}
-        <div className="brand-name d-flex d-lg-none flex-grow-1 justify-content-center">
-          <span style={styles.brandText}>CS</span>
-        </div>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" className="ms-auto" />
         <Navbar.Collapse id="basic-navbar-nav">
@@ -119,10 +130,13 @@ const Navbars = () => {
               Home
             </Nav.Link>
             <Nav.Link as={NavLink} to="/trials" style={styles.navLink} className="nav-link-custom">
-              Trials
+              Find Trials
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/researchers" style={styles.navLink} className="nav-link-custom">
+              For Researchers
             </Nav.Link>
             <Nav.Link as={NavLink} to="/about" style={styles.navLink} className="nav-link-custom">
-              About
+              About Us
             </Nav.Link>
             <Nav.Link as={NavLink} to="/contact" style={styles.navLink} className="nav-link-custom">
               Contact
@@ -131,11 +145,11 @@ const Navbars = () => {
           <Nav className="ms-auto align-items-center">
             <Button
               as={NavLink}
-              to="/donate"
-              style={styles.donateButton}
-              className="donate-button-custom ms-2"
+              to="/register"
+              style={styles.ctaButton}
+              className="cta-button-custom ms-2"
             >
-              Donate Now
+              Participate Now
             </Button>
           </Nav>
         </Navbar.Collapse>
@@ -143,31 +157,28 @@ const Navbars = () => {
 
       <style jsx>{`
         .nav-link-custom:hover {
-          color: #F5F1E9 !important; // Secondary: Soft Beige
+          color: #3498DB !important; // Light blue hover effect
           transition: color 0.2s ease;
         }
         .nav-link-custom.active {
-          color: #FFFFFF !important; // Text on Primary: White
-          fontWeight: 600;
+          color: #FFFFFF !important;
+          font-weight: 600;
+          border-bottom: 2px solid #3498DB;
         }
-        .donate-button-custom {
-          background-color: #2D6A6F !important; // Accent/Hover: Light Teal
-          border-color: #2D6A6F !important;
+        .cta-button-custom {
+          background-color: #FF8C00 !important; // Claude's orange submit button color
+          border-color: #FF8C00 !important;
         }
-        .donate-button-custom:hover {
-          background-color: #1A4A4F !important; // Primary: Dark Teal
-          border-color: #1A4A4F !important;
+        .cta-button-custom:hover {
+          background-color: #FF7000 !important; // Slightly darker on hover
+          border-color: #FF7000 !important;
           transform: scale(1.05);
         }
-        .brand-name span:hover {
-          color: #F5F1E9 !important; // Secondary: Soft Beige
-          transition: color 0.2s ease;
-        }
         .navbar-dark .navbar-toggler {
-          border-color: #E5E7EB !important; // Borders: Light Gray
+          border-color: #E5E7EB !important;
         }
         .navbar-collapse {
-          background-color: #1A4A4F; // Primary: Dark Teal (for mobile collapse)
+          background-color: #2C3E50; // Match navbar background for mobile collapse
         }
       `}</style>
     </Navbar>
