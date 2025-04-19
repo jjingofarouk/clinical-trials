@@ -1,27 +1,139 @@
 import React, { useState, useEffect } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { Shuffle, Eye, Layout, Target, Columns, AlertCircle } from 'lucide-react';
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: ${fadeIn} 0.3s ease-out;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const HeaderText = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 24px;
+  }
+`;
+
+const NoDataText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const Content = styled.div`
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const ItemWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  &:last-child {
+    border-bottom: none;
+  }
+  @media (max-width: 640px) {
+    padding: 10px 0;
+  }
+`;
+
+const ItemLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+`;
+
+const LabelText = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const ValueText = styled.span`
+  font-size: 14px;
+  color: #6b7280;
+  text-align: right;
+  flex: 1;
+  @media (max-width: 640px) {
+    font-size: 12px;
+  }
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
 const DesignItem = ({ Icon, label, value }) => (
-  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-    <div className="flex items-center gap-2 flex-1">
-      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-        <Icon size={16} className="text-gray-600" />
-      </div>
-      <span className="text-sm font-semibold text-gray-900">{label}</span>
-    </div>
-    <span className="text-sm text-gray-600 flex-1 text-right truncate">
-      {value || 'Not specified'}
-    </span>
-  </div>
+  <ItemWrapper>
+    <ItemLabel>
+      <IconWrapper>
+        <Icon size={16} color="#6b7280" />
+      </IconWrapper>
+      <LabelText>{label}</LabelText>
+    </ItemLabel>
+    <ValueText>{value || 'Not specified'}</ValueText>
+  </ItemWrapper>
 );
 
 const StudyDesign = ({ design }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   const designItems = [
     { Icon: Shuffle, label: 'Allocation', value: design?.allocation },
     { Icon: Eye, label: 'Masking', value: design?.masking },
@@ -30,98 +142,24 @@ const StudyDesign = ({ design }) => {
   ];
 
   return (
-    <div
-      className={`
-        bg-white rounded-2xl my-3 overflow-hidden transition-all duration-300 max-w-7xl mx-auto
-        ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-      `}
-    >
-      <div className="flex items-center p-3 bg-[#000000]">
-        <Columns className="w-5 h-5 text-white mr-2" />
-        <h2 className="text-lg font-semibold text-white">Study Design</h2>
-      </div>
+    <Container>
+      <Header>
+        <Columns size={20} color="#ffffff" />
+        <HeaderText>Study Design</HeaderText>
+      </Header>
       {!design ? (
-        <div className="flex flex-col items-center py-6 bg-white">
-          <AlertCircle className="w-5 h-5 text-gray-400" />
-          <p className="text-sm text-gray-400 mt-2">No study design data available</p>
-        </div>
+        <NoDataContainer>
+          <AlertCircle size={20} color="#6b7280" />
+          <NoDataText>No study design data available</NoDataText>
+        </NoDataContainer>
       ) : (
-        <div className="p-4 bg-white">
+        <Content>
           {designItems.map((item, index) => (
             <DesignItem key={index} Icon={item.Icon} label={item.label} value={item.value} />
           ))}
-        </div>
+        </Content>
       )}
-      <style jsx>{`
-        * {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        @media (max-width: 640px) {
-          .rounded-2xl {
-            border-radius: 12px;
-          }
-
-          .my-3 {
-            margin-top: 12px;
-            margin-bottom: 12px;
-          }
-
-          .p-3 {
-            padding: 10px;
-          }
-
-          .p-4 {
-            padding: 12px;
-          }
-
-          .py-3 {
-            padding-top: 8px;
-            padding-bottom: 8px;
-          }
-
-          .text-lg {
-            font-size: 16px;
-          }
-
-          .text-sm {
-            font-size: 12px;
-          }
-
-          .w-8 {
-            width: 28px;
-          }
-
-          .h-8 {
-            height: 28px;
-          }
-
-          .w-5 {
-            width: 18px;
-          }
-
-          .h-5 {
-            height: 18px;
-          }
-
-          .py-6 {
-            padding-top: 20px;
-            padding-bottom: 20px;
-          }
-
-          .max-w-7xl {
-            margin-left: 12px;
-            margin-right: 12px;
-          }
-        }
-
-        @media (min-width: 641px) and (max-width: 1023px) {
-          .rounded-2xl {
-            border-radius: 14px;
-          }
-        }
-      `}</style>
-    </div>
+    </Container>
   );
 };
 
