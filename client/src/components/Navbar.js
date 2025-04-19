@@ -29,6 +29,16 @@ const Navbar = () => {
                 Trials
               </Link>
             </li>
+            <li>
+              <Link to="/about" aria-label="About page">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link to="/contact" aria-label="Contact page">
+                Contact
+              </Link>
+            </li>
           </ul>
         )}
       </div>
@@ -37,3 +47,5 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+
