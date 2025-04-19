@@ -1,19 +1,20 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 .privacy-container {
   max-width: 896px; /* Matches max-w-4xl */
   margin: 32px auto;
   padding: 24px;
-  background: #ffffff;
+  background: #F5F1E9; /* Secondary: Soft Beige */
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(26, 74, 79, 0.1); /* Shadow with Dark Teal */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .privacy-title {
   font-size: 28px;
   font-weight: 700;
-  color: #000000;
+  color: #1A4A4F; /* Primary: Dark Teal */
   margin-bottom: 24px;
   line-height: 1.3;
 }
@@ -27,7 +28,7 @@
 .privacy-text {
   font-size: 16px;
   font-weight: 400;
-  color: #333333;
+  color: #374151; /* Text on Secondary: Dark Gray */
   line-height: 1.6;
 }
 
@@ -40,26 +41,26 @@
 .privacy-section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #000000;
+  color: #1A4A4F; /* Primary: Dark Teal */
   line-height: 1.4;
 }
 
 .privacy-section-text {
   font-size: 14px;
   font-weight: 400;
-  color: #333333;
+  color: #374151; /* Text on Secondary: Dark Gray */
   line-height: 1.6;
 }
 
 .privacy-link {
-  color: #000000;
+  color: #2D6A6F; /* Accent/Hover: Light Teal */
   text-decoration: underline;
   transition: color 0.2s ease;
 }
 
 .privacy-link:hover,
 .privacy-link:focus {
-  color: #555555;
+  color: #1A4A4F; /* Primary: Dark Teal */
   outline: none;
 }
 
@@ -103,10 +104,12 @@
   }
 
   .privacy-title {
-    font-size.Margin: 26px;
+    font-size: 26px;
   }
 
   .privacy-content {
     gap: 20px;
   }
 }
+
+
