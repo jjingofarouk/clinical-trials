@@ -8,10 +8,13 @@ const fadeIn = keyframes`
 `;
 
 const Container = styled.div`
-  background-color: #ffffff;
+  background-color: #F5F1E9; /* Soft Beige */
   border-radius: 16px;
   margin-bottom: 16px;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  animation: ${fadeIn} 0.5s ease-in-out;
   @media (max-width: 640px) {
     margin-bottom: 12px;
     border-radius: 12px;
@@ -19,7 +22,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
-  background-color: #000000;
+  background-color: #1A4A4F; /* Dark Teal */
   padding: 16px;
   display: flex;
   align-items: center;
@@ -31,7 +34,7 @@ const Header = styled.div`
 const HeaderText = styled.h2`
   font-size: 18px;
   font-weight: 600;
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   flex: 1;
   margin-left: 12px;
   @media (max-width: 640px) {
@@ -41,7 +44,7 @@ const HeaderText = styled.h2`
 `;
 
 const Badge = styled.div`
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: #2D6A6F; /* Light Teal */
   padding: 4px 8px;
   border-radius: 10px;
   @media (max-width: 640px) {
@@ -50,7 +53,7 @@ const Badge = styled.div`
 `;
 
 const BadgeText = styled.span`
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   font-size: 12px;
   font-weight: 500;
   @media (max-width: 640px) {
@@ -64,8 +67,9 @@ const EmptyContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 32px;
-  background-color: #ffffff;
+  background-color: #F5F1E9; /* Soft Beige */
   border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   @media (max-width: 640px) {
     padding: 24px;
     border-radius: 12px;
@@ -73,7 +77,7 @@ const EmptyContainer = styled.div`
 `;
 
 const NoDataText = styled.p`
-  color: #6b7280;
+  color: #374151; /* Dark Gray */
   font-size: 14px;
   margin-top: 8px;
   text-align: center;
@@ -92,8 +96,12 @@ const LocationsGrid = styled.div`
 const LocationCardWrapper = styled.div`
   border-radius: 12px;
   margin-bottom: 12px;
-  background-color: #ffffff;
-  transition: transform 0.2s ease-in-out;
+  background-color: #FFFFFF; /* White for contrast */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  border: 1px solid #E5E7EB; /* Light Gray */
+  &:hover {
+    background-color: rgba(45, 106, 111, 0.05); /* Light Teal with opacity */
+  }
   &:active {
     transform: scale(0.98);
   }
@@ -119,7 +127,7 @@ const CardHeader = styled.div`
 const FacilityName = styled.h3`
   font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: #374151; /* Dark Gray */
   margin-left: 8px;
   @media (max-width: 640px) {
     font-size: 14px;
@@ -136,7 +144,7 @@ const AddressContainer = styled.div`
 
 const AddressText = styled.p`
   font-size: 13px;
-  color: #6b7280;
+  color: #6B7280; /* Gray for secondary text */
   line-height: 18px;
   @media (max-width: 640px) {
     font-size: 12px;
@@ -146,7 +154,7 @@ const AddressText = styled.p`
 
 const Separator = styled.div`
   height: 1px;
-  background-color: #e5e7eb;
+  background-color: #E5E7EB; /* Light Gray */
   margin: 12px 0;
   @media (max-width: 640px) {
     margin: 8px 0;
@@ -158,7 +166,7 @@ const LocationCard = ({ location, index, totalLocations }) => {
     <LocationCardWrapper>
       <CardContent>
         <CardHeader>
-          <FaMapPin size={14} color="#000000" />
+          <FaMapPin size={14} color="#2D6A6F" /* Light Teal */ />
           <FacilityName>
             {location.name || 'Facility Name Not Specified'}
           </FacilityName>
@@ -186,7 +194,7 @@ const Locations = ({ locations }) => {
   if (!locations || locations.length === 0) {
     return (
       <EmptyContainer>
-        <FaMapMarkerAlt size={24} color="#6b7280" />
+        <FaMapMarkerAlt size={24} color="#374151" /* Dark Gray */ />
         <NoDataText>No location data available</NoDataText>
       </EmptyContainer>
     );
@@ -195,7 +203,7 @@ const Locations = ({ locations }) => {
   return (
     <Container style={{ opacity: fadeAnim, transition: 'opacity 0.5s ease-in-out' }}>
       <Header>
-        <FaMap size={20} color="#ffffff" />
+        <FaMap size={20} color="#FFFFFF" /* White */ />
         <HeaderText>Study Locations</HeaderText>
         <Badge>
           <BadgeText>{locations.length}</BadgeText>
