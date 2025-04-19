@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X } from 'lucide-react';
@@ -11,7 +11,7 @@ const ClinicalTrials = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
-    status: 'RECRUITING',
+    status: '',
     phase: '',
     ageGroup: '',
     gender: '',
@@ -30,6 +30,7 @@ const ClinicalTrials = () => {
 
   const filterOptions = {
     status: [
+      { label: 'All Statuses', value: '' },
       { label: 'Recruiting', value: 'RECRUITING' },
       { label: 'Not Yet Recruiting', value: 'NOT_YET_RECRUITING' },
       { label: 'Active, not recruiting', value: 'ACTIVE_NOT_RECRUITING' },
@@ -86,15 +87,16 @@ const ClinicalTrials = () => {
     ],
   };
 
-  const searchTrials = useCallback(async () => {
+  const searchTrials = useCallback(async (isRandom = false) => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
-        'query.term': searchQuery,
-        'filter.overallStatus': filters.status,
         'pageSize': '50',
+        'sort': isRandom ? 'random' : '',
       });
 
+      if (!isRandom && searchQuery) queryParams.append('query.term', searchQuery);
+      if (filters.status) queryParams.append('filter.overallStatus', filters.status);
       if (filters.phase) queryParams.append('filter.phase', filters.phase);
       if (filters.studyType) queryParams.append('filter.studyType', filters.studyType);
       if (filters.gender) queryParams.append('filter.sex', filters.gender);
@@ -134,9 +136,13 @@ const ClinicalTrials = () => {
     }
   }, [searchQuery, filters]);
 
+  useEffect(() => {
+    searchTrials(true); // Fetch random trials on mount
+  }, []);
+
   const resetFilters = () => {
     setFilters({
-      status: 'RECRUITING',
+      status: '',
       phase: '',
       ageGroup: '',
       gender: '',
@@ -163,7 +169,7 @@ const ClinicalTrials = () => {
 
     return (
       <motion.div
-        whileHover={{ backgroundColor: '#f7f7f7' }}
+        whileHover={{ backgroundColor: '#2D6A6F' }}
         className="trial-list-item"
         onClick={() => navigate(`/trials/${nctId}`)}
         role="button"
@@ -172,10 +178,10 @@ const ClinicalTrials = () => {
         aria-label={`View trial ${title}`}
       >
         <div className="trial-list-content">
-          <h3 className="text-sm font-semibold text-gray-900 truncate">{title}</h3>
-          <p className="text-xs text-gray-600">NCT ID: {nctId}</p>
-          <p className="text-xs text-gray-600">Status: {status}</p>
-          <p className="text-xs text-gray-600">Phase: {phase}</p>
+          <h3 className="trial-title">{title}</h3>
+          <p className="trial-meta">NCT ID: {nctId}</p>
+          <p className="trial-meta">Status: {status}</p>
+          <p className="trial-meta">Phase: {phase}</p>
         </div>
       </motion.div>
     );
@@ -200,113 +206,27 @@ const ClinicalTrials = () => {
         </button>
       </div>
       <div className="filter-grid">
+        {Object.entries(filterOptions).map(([key, options]) => (
+          <div className="filter-group" key={key}>
+            <label htmlFor={`${key}-filter`} className="filter-label">
+              {key.charAt(0).toUpperCase() + key.slice(1)}
+            </label>
+            <select
+              id={`${key}-filter`}
+              value={filters[key]}
+              onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
+              className="filter-input"
+            >
+              {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
         <div className="filter-group">
-          <label htmlFor="status-filter" className="text-xs">Status</label>
-          <select
-            id="status-filter"
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.status.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="phase-filter" className="text-xs">Phase</label>
-          <select
-            id="phase-filter"
-            value={filters.phase}
-            onChange={(e) => setFilters({ ...filters, phase: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.phase.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="study-type-filter" className="text-xs">Study Type</label>
-          <select
-            id="study-type-filter"
-            value={filters.studyType}
-            onChange={(e) => setFilters({ ...filters, studyType: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.studyType.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="age-group-filter" className="text-xs">Age Group</label>
-          <select
-            id="age-group-filter"
-            value={filters.ageGroup}
-            onChange={(e) => setFilters({ ...filters, ageGroup: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.ageGroup.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="gender-filter" className="text-xs">Gender</label>
-          <select
-            id="gender-filter"
-            value={filters.gender}
-            onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.gender.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="funding-type-filter" className="text-xs">Funding Type</label>
-          <select
-            id="funding-type-filter"
-            value={filters.fundingType}
-            onChange={(e) => setFilters({ ...filters, fundingType: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.fundingType.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="intervention-type-filter" className="text-xs">Intervention Type</label>
-          <select
-            id="intervention-type-filter"
-            value={filters.interventionType}
-            onChange={(e) => setFilters({ ...filters, interventionType: e.target.value })}
-            className="filter-input"
-          >
-            {filterOptions.interventionType.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="healthy-volunteers-filter" className="text-xs flex items-center gap-2">
+          <label htmlFor="healthy-volunteers-filter" className="filter-label flex items-center gap-2">
             Healthy Volunteers
             <input
               id="healthy-volunteers-filter"
@@ -317,7 +237,7 @@ const ClinicalTrials = () => {
           </label>
         </div>
         <div className="filter-group">
-          <label htmlFor="has-results-filter" className="text-xs flex items-center gap-2">
+          <label htmlFor="has-results-filter" className="filter-label flex items-center gap-2">
             Has Results
             <input
               id="has-results-filter"
@@ -328,7 +248,7 @@ const ClinicalTrials = () => {
           </label>
         </div>
         <div className="filter-group">
-          <label htmlFor="start-date-filter" className="text-xs">Start Date</label>
+          <label htmlFor="start-date-filter" className="filter-label">Start Date</label>
           <input
             id="start-date-filter"
             type="date"
@@ -338,7 +258,7 @@ const ClinicalTrials = () => {
           />
         </div>
         <div className="filter-group">
-          <label htmlFor="completion-date-filter" className="text-xs">Completion Date</label>
+          <label htmlFor="completion-date-filter" className="filter-label">Completion Date</label>
           <input
             id="completion-date-filter"
             type="date"
@@ -348,7 +268,7 @@ const ClinicalTrials = () => {
           />
         </div>
         <div className="filter-group">
-          <label htmlFor="conditions-filter" className="text-xs">Conditions (comma-separated)</label>
+          <label htmlFor="conditions-filter" className="filter-label">Conditions</label>
           <input
             id="conditions-filter"
             type="text"
@@ -360,7 +280,7 @@ const ClinicalTrials = () => {
           />
         </div>
         <div className="filter-group">
-          <label htmlFor="locations-filter" className="text-xs">Locations (comma-separated)</label>
+          <label htmlFor="locations-filter" className="filter-label">Locations</label>
           <input
             id="locations-filter"
             type="text"
@@ -372,7 +292,7 @@ const ClinicalTrials = () => {
           />
         </div>
         <div className="filter-group">
-          <label className="text-xs">Participant Age Range</label>
+          <label className="filter-label">Participant Age Range</label>
           <div className="range-inputs">
             <input
               type="number"
@@ -403,7 +323,7 @@ const ClinicalTrials = () => {
           </div>
         </div>
         <div className="filter-group">
-          <label className="text-xs">Enrollment Count Range</label>
+          <label className="filter-label">Enrollment Count Range</label>
           <div className="range-inputs">
             <input
               type="number"
