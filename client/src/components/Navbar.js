@@ -116,11 +116,11 @@ const Navbars = () => {
           <div style={styles.logoContainer}>
             <img
               src={logo}
-              alt="TrialConnect Logo"
+              alt="Dwaliro Logo"
               style={styles.logo}
             />
           </div>
-          <span style={styles.brandText} className="ms-2">TrialConnect</span>
+          <span style={styles.brandText} className="ms-2">Dwaliro</span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" className="ms-auto" />
