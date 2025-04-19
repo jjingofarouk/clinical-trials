@@ -1,45 +1,106 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const About = () => (
-  <div className="max-w-4xl mx-auto p-4 my-3 bg-white rounded-2xl">
-    <h1 className="text-lg font-semibold text-gray-900 mb-4">About ClinSearch</h1>
-    <p className="text-sm text-gray-600 leading-relaxed">
-      ClinSearch is dedicated to advancing medical research by connecting patients, researchers, and healthcare providers with clinical trial opportunities. Our mission is to provide accessible, transparent, and up-to-date information about clinical studies worldwide, empowering individuals to make informed decisions about their health.
-    </p>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="max-w-4xl mx-auto p-6 my-4 bg-white rounded-2xl shadow-sm"
+  >
+    <h1 className="text-2xl font-semibold text-gray-900 mb-6">About ClinSearch</h1>
+    <div className="space-y-6">
+      <p className="text-sm text-gray-600 leading-relaxed">
+        ClinSearch is a pioneering platform dedicated to transforming medical research by seamlessly connecting patients, researchers, and healthcare providers with clinical trial opportunities worldwide. Our vision is to democratize access to cutting-edge medical advancements, empowering individuals to take control of their health through informed decisions.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-gray-50 rounded-xl">
+          <h2 className="text-base font-semibold text-gray-900 mb-2">Our Mission</h2>
+          <p className="text-xs text-gray-600">
+            To provide transparent, accessible, and up-to-date information about clinical studies, fostering trust and collaboration in the global medical community.
+          </p>
+        </div>
+        <div className="p-4 bg-gray-50 rounded-xl">
+          <h2 className="text-base font-semibold text-gray-900 mb-2">Our Impact</h2>
+          <p className="text-xs text-gray-600">
+            Since our inception, ClinSearch has facilitated thousands of connections, helping advance medical research and improve patient outcomes across diverse populations.
+          </p>
+        </div>
+      </div>
+      <div className="mt-6">
+        <h2 className="text-base font-semibold text-gray-900 mb-3">Our Team</h2>
+        <p className="text-xs text-gray-600">
+          Led by a passionate group of innovators, including our founder{' '}
+          <a
+            href="https://ug.linkedin.com/in/farouk-jjingo-0341b01a5"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-900 underline hover:text-gray-700"
+          >
+            Farouk Jjingo
+          </a>
+          , ClinSearch combines expertise in technology and healthcare to drive meaningful change.
+        </p>
+      </div>
+    </div>
     <style jsx>{`
       * {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       @media (max-width: 640px) {
-        .rounded-2xl {
-          border-radius: 12px;
+        .max-w-4xl {
+          margin-left: 12px;
+          margin-right: 12px;
         }
 
-        .p-4 {
-          padding: 12px;
+        .p-6 {
+          padding: 16px;
         }
 
-        .my-3 {
+        .my-4 {
           margin-top: 12px;
           margin-bottom: 12px;
         }
 
-        .text-lg {
-          font-size: 16px;
+        .rounded-2xl {
+          border-radius: 12px;
+        }
+
+        .text-2xl {
+          font-size: 1.5rem;
+        }
+
+        .text-base {
+          font-size: 14px;
         }
 
         .text-sm {
           font-size: 12px;
         }
 
-        .mb-4 {
+        .text-xs {
+          font-size: 11px;
+        }
+
+        .mb-6 {
+          margin-bottom: 16px;
+        }
+
+        .mb-3 {
           margin-bottom: 12px;
         }
 
-        .max-w-4xl {
-          margin-left: 12px;
-          margin-right: 12px;
+        .gap-4 {
+          gap: 8px;
+        }
+
+        .p-4 {
+          padding: 12px;
+        }
+
+        .space-y-6 {
+          gap: 16px;
         }
       }
 
@@ -47,9 +108,13 @@ const About = () => (
         .rounded-2xl {
           border-radius: 14px;
         }
+
+        .p-6 {
+          padding: 20px;
+        }
       }
     `}</style>
-  </div>
+  </motion.div>
 );
 
 export default About;
