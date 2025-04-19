@@ -1,125 +1,282 @@
 import React from 'react';
+import styled, { keyframes } from 'styled-components';
 import { ChevronDown, Pill, Box, Users, Activity, ArrowRight, AlertCircle } from 'lucide-react';
 
-const getStatusStyle = (status) => {
-  const styleMap = {
-    'ACTIVE': { bg: '#000000', text: '#FFFFFF', iconBg: '#333333' },
-    'PENDING': { bg: '#000000', text: '#FFFFFF', iconBg: '#333333' },
-    'COMPLETED': { bg: '#000000', text: '#FFFFFF', iconBg: '#333333' },
-    'SUSPENDED': { bg: '#000000', text: '#FFFFFF', iconBg: '#333333' },
-  };
-  return styleMap[status?.toUpperCase()] || { bg: '#000000', text: '#FFFFFF', iconBg: '#333333' };
-};
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
 
-const getInterventionIcon = (type) => {
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: ${fadeIn} 0.5s ease-in-out;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const HeaderText = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 24px;
+  }
+`;
+
+const NoDataText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const Content = styled.div`
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const CardWrapper = styled.div`
+  border-radius: 12px;
+  margin-bottom: ${props => (props.isLast ? '0' : '12px')};
+  background-color: #000000;
+  transition: transform 0.2s ease-in-out;
+  &:active {
+    transform: scale(0.98);
+  }
+  @media (max-width: 640px) {
+    margin-bottom: ${props => (props.isLast ? '0' : '8px')};
+    border-radius: 10px;
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  @media (max-width: 640px) {
+    padding: 10px;
+  }
+`;
+
+const CardHeaderContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    gap: 8px;
+  }
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
+const CardTitle = styled.h3`
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 14px;
+  }
+`;
+
+const CardSubtitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+`;
+
+const TypeText = styled.span`
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
+
+const StatusBadge = styled.span`
+  padding: 2px 8px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+`;
+
+const ExpandedContent = styled.div`
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+  @media (max-width: 640px) {
+    padding: 10px;
+  }
+`;
+
+const DetailRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #ffffff;
+  &:last-child {
+    margin-bottom: 0;
+  }
+  @media (max-width: 640px) {
+    margin-bottom: 6px;
+  }
+`;
+
+const DetailLabel = styled.span`
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 12px;
+  }
+`;
+
+const DetailValue = styled.span`
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  @media (max-width: 640px) {
+    font-size: 12px;
+  }
+`;
+
+const getInterventionIcon = type => {
   const iconMap = {
-    'DRUG': Pill,
-    'DEVICE': Box,
-    'PROCEDURE': Activity,
-    'BEHAVIORAL': Users,
-    'OTHER': Box,
+    DRUG: Pill,
+    DEVICE: Box,
+    PROCEDURE: Activity,
+    BEHAVIORAL: Users,
+    OTHER: Box,
   };
-  const IconComponent = iconMap[type?.toUpperCase()] || Box;
-  return <IconComponent className="w-4 h-4" />;
+  return iconMap[type?.toUpperCase()] || Box;
 };
 
 const InterventionCard = ({ intervention, isLast }) => {
   const [expanded, setExpanded] = React.useState(false);
-  const statusStyle = getStatusStyle(intervention.status);
+  const Icon = getInterventionIcon(intervention.type);
 
   return (
-    <div className={`bg-white rounded-2xl ${!isLast ? 'mb-3' : ''} transition-all duration-300`}>
-      <div
-        onClick={() => setExpanded(!expanded)}
-        className="cursor-pointer p-4 rounded-2xl flex items-center justify-between"
-        style={{ backgroundColor: statusStyle.bg }}
-      >
-        <div className="flex items-center space-x-3">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: statusStyle.iconBg }}
-          >
-            {getInterventionIcon(intervention.type)}
-          </div>
+    <CardWrapper isLast={isLast}>
+      <CardHeader onClick={() => setExpanded(!expanded)}>
+        <CardHeaderContent>
+          <IconWrapper>
+            <Icon size={16} color="#ffffff" />
+          </IconWrapper>
           <div>
-            <h3 className="font-semibold text-base" style={{ color: statusStyle.text }}>
-              {intervention.name || 'Unnamed Intervention'}
-            </h3>
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="text-xs" style={{ color: statusStyle.text + '90' }}>
-                {intervention.type || 'Type not specified'}
-              </span>
+            <CardTitle>{intervention.name || 'Unnamed Intervention'}</CardTitle>
+            <CardSubtitle>
+              <TypeText>{intervention.type || 'Type not specified'}</TypeText>
               {intervention.status && (
-                <span
-                  className="px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={{ backgroundColor: statusStyle.text + '20', color: statusStyle.text }}
-                >
-                  {intervention.status}
-                </span>
+                <StatusBadge>{intervention.status}</StatusBadge>
               )}
-            </div>
+            </CardSubtitle>
           </div>
-        </div>
+        </CardHeaderContent>
         <ChevronDown
-          className={`w-4 h-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-          style={{ color: statusStyle.text }}
+          size={16}
+          color="#ffffff"
+          style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}
         />
-      </div>
+      </CardHeader>
       {expanded && (
-        <div className="p-4 border-t border-gray-100">
+        <ExpandedContent>
           {intervention.dosage && (
-            <div className="flex items-center mb-2 text-gray-800">
-              <Pill className="w-4 h-4 mr-2 text-gray-500" />
-              <span className="font-medium text-sm mr-1">Dosage:</span>
-              <span className="text-sm">{intervention.dosage}</span>
-            </div>
+            <DetailRow>
+              <Pill size={14} color="#ffffff" />
+              <DetailLabel>Dosage:</DetailLabel>
+              <DetailValue>{intervention.dosage}</DetailValue>
+            </DetailRow>
           )}
           {intervention.route && (
-            <div className="flex items-center text-gray-800">
-              <ArrowRight className="w-4 h-4 mr-2 text-gray-500" />
-              <span className="font-medium text-sm mr-1">Route:</span>
-              <span className="text-sm">{intervention.route}</span>
-            </div>
+            <DetailRow>
+              <ArrowRight size={14} color="#ffffff" />
+              <DetailLabel>Route:</DetailLabel>
+              <DetailValue>{intervention.route}</DetailValue>
+            </DetailRow>
           )}
-        </div>
+        </ExpandedContent>
       )}
-    </div>
+    </CardWrapper>
   );
 };
 
 const Interventions = ({ interventions = [] }) => {
-  if (interventions.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl overflow-hidden">
-        <div className="bg-black p-4 flex items-center">
-          <AlertCircle className="w-5 h-5 text-white mr-2" />
-          <h2 className="text-lg font-semibold text-white">Trial Interventions</h2>
-        </div>
-        <div className="p-6 flex flex-col items-center justify-center text-gray-500">
-          <AlertCircle className="w-6 h-6 mb-2 text-gray-400" />
-          <span className="text-sm">No intervention data available</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-2xl overflow-hidden">
-      <div className="bg-black p-4 flex items-center">
-        <AlertCircle className="w-5 h-5 text-white mr-2" />
-        <h2 className="text-lg font-semibold text-white">Trial Interventions</h2>
-      </div>
-      <div className="p-4">
-        {interventions.map((intervention, index) => (
-          <InterventionCard
-            key={intervention.id || index}
-            intervention={intervention}
-            isLast={index === interventions.length - 1}
-          />
-        ))}
-      </div>
-    </div>
+    <Container>
+      <Header>
+        <AlertCircle size={20} color="#ffffff" />
+        <HeaderText>Trial Interventions</HeaderText>
+      </Header>
+      {interventions.length === 0 ? (
+        <NoDataContainer>
+          <AlertCircle size={20} color="#6b7280" />
+          <NoDataText>No intervention data available</NoDataText>
+        </NoDataContainer>
+      ) : (
+        <Content>
+          {interventions.map((intervention, index) => (
+            <InterventionCard
+              key={intervention.id || index}
+              intervention={intervention}
+              isLast={index === interventions.length - 1}
+            />
+          ))}
+        </Content>
+      )}
+    </Container>
   );
 };
 
 export default Interventions;
+
