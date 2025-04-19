@@ -9,10 +9,10 @@ const About = () => (
     transition={{ duration: 0.5 }}
     className="max-w-4xl mx-auto p-6 my-4 bg-white rounded-2xl shadow-sm"
   >
-    <h1 className="text-2xl font-semibold text-[#1A4A4F] mb-6">About ClinSearch</h1>
+    <h1 className="text-2xl font-semibold text-[#1A4A4F] mb-6">About Dwaliro</h1>
     <div className="space-y-6">
       <p className="text-sm text-[#374151] leading-relaxed">
-        ClinSearch is a pioneering platform dedicated to transforming medical research by seamlessly connecting patients, researchers, and healthcare providers with clinical trial opportunities worldwide. Our vision is to democratize access to cutting-edge medical advancements, empowering individuals to take control of their health through informed decisions.
+        Dwaliro is a pioneering platform dedicated to transforming medical research by seamlessly connecting patients, researchers, and healthcare providers with clinical trial opportunities worldwide. Our vision is to democratize access to cutting-edge medical advancements, empowering individuals to take control of their health through informed decisions.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-[#1A4A4F] rounded-xl">
@@ -24,7 +24,7 @@ const About = () => (
         <div className="p-4 bg-[#1A4A4F] rounded-xl">
           <h2 className="text-base font-semibold text-[#FFFFFF] mb-2">Our Impact</h2>
           <p className="text-xs text-[#FFFFFF]">
-            Since our inception, ClinSearch has facilitated thousands of connections, helping advance medical research and improve patient outcomes across diverse populations.
+            Since our inception, Dwaliro has facilitated thousands of connections, helping advance medical research and improve patient outcomes across diverse populations.
           </p>
         </div>
       </div>
@@ -40,7 +40,7 @@ const About = () => (
           >
             Farouk Jjingo
           </a>
-          , ClinSearch combines expertise in technology and healthcare to drive meaningful change.
+          , Dwaliro combines expertise in technology and healthcare to drive meaningful change.
         </p>
       </div>
     </div>

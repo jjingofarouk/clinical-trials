@@ -37,8 +37,8 @@ const Contact = () => {
           <div className="contact-links">
             <div className="contact-link-item">
               <Mail size={16} className="contact-icon" />
-              <a href="mailto:support@clinsearch.com" className="contact-link" title="Email us">
-                support@clinsearch.com
+              <a href="mailto:support@dwaliro.com" className="contact-link" title="Email us">
+                support@dwaliro.com
               </a>
             </div>
             <div className="contact-link-item">

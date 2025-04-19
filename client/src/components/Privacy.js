@@ -11,7 +11,7 @@ const Privacy = () => (
     <h1 className="privacy-title">Privacy Policy</h1>
     <div className="privacy-content">
       <p className="privacy-text">
-        At ClinSearch, your privacy is our top priority. This Privacy Policy explains how we collect, use, protect, and disclose your personal information to provide a seamless and secure experience while exploring clinical trial opportunities.
+        At Dwaliro, your privacy is our top priority. This Privacy Policy explains how we collect, use, protect, and disclose your personal information to provide a seamless and secure experience while exploring clinical trial opportunities.
       </p>
       <div className="privacy-section">
         <h2 className="privacy-section-title">Data Collection</h2>
@@ -35,8 +35,8 @@ const Privacy = () => (
         <h2 className="privacy-section-title">Your Rights</h2>
         <p className="privacy-section-text">
           You have the right to access, update, or delete your personal information at any time. Contact us at{' '}
-          <a href="mailto:support@clinsearch.com" className="privacy-link">
-            support@clinsearch.com
+          <a href="mailto:support@dwaliro.com" className="privacy-link">
+            support@dwaliro.com
           </a>{' '}
           to exercise these rights or for any privacy-related concerns.
         </p>

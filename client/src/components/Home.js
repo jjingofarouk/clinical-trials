@@ -6,7 +6,7 @@ const Home = () => {
   return (
     <div className="home">
       <div className="home-content">
-        <h1>ClinSearch</h1>
+        <h1>Dwaliro</h1>
         <p>Discover clinical trials with ease and precision.</p>
         <Link to="/trials" className="cta-button" aria-label="Explore Clinical Trials">
           Explore Trials

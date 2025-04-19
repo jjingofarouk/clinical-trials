@@ -5,7 +5,7 @@ import './Footer.css';
 const Footer = () => (
   <footer className="footer">
     <div className="footer-container">
-      <p className="footer-text">© 2025 ClinSearch. All rights reserved.</p>
+      <p className="footer-text">© 2025 Dwaliro. All rights reserved.</p>
       <div className="footer-links">
         <ul className="footer-nav">
           <motion.li
@@ -14,7 +14,7 @@ const Footer = () => (
           >
             <a
               href="/about"
-              aria-label="About ClinSearch"
+              aria-label="About Dwaliro"
               className="footer-nav-link"
             >
               About
