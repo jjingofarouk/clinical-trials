@@ -193,7 +193,7 @@ const StatCard = ({ Icon, value, label, delay = 0, bgColor }) => {
   }, [delay]);
 
   return (
- urges   <StatCardWrapper isVisible={isVisible} bgColor={bgColor}>
+    <StatCardWrapper isVisible={isVisible} bgColor={bgColor}>
       <StatContent>
         <IconWrapper>
           <Icon size={20} color="#FFFFFF" />
