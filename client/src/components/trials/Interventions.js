@@ -8,12 +8,13 @@ const fadeIn = keyframes`
 `;
 
 const Container = styled.div`
-  background-color: #ffffff;
+  background-color: #F5F1E9; /* Soft Beige */
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   animation: ${fadeIn} 0.5s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   @media (max-width: 640px) {
     border-radius: 12px;
     margin-bottom: 12px;
@@ -21,7 +22,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
-  background-color: #000000;
+  background-color: #1A4A4F; /* Dark Teal */
   padding: 16px;
   display: flex;
   align-items: center;
@@ -34,7 +35,7 @@ const Header = styled.div`
 const HeaderText = styled.h2`
   font-size: 18px;
   font-weight: 600;
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   @media (max-width: 640px) {
     font-size: 16px;
   }
@@ -54,7 +55,7 @@ const NoDataContainer = styled.div`
 
 const NoDataText = styled.p`
   font-size: 14px;
-  color: #6b7280;
+  color: #374151; /* Dark Gray */
   @media (max-width: 640px) {
     font-size: 13px;
   }
@@ -70,8 +71,12 @@ const Content = styled.div`
 const CardWrapper = styled.div`
   border-radius: 12px;
   margin-bottom: ${props => (props.isLast ? '0' : '12px')};
-  background-color: #000000;
-  transition: transform 0.2s ease-in-out;
+  background-color: #1A4A4F; /* Dark Teal */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  border: 1px solid #E5E7EB; /* Light Gray */
+  &:hover {
+    background-color: #2D6A6F; /* Light Teal */
+  }
   &:active {
     transform: scale(0.98);
   }
@@ -107,7 +112,7 @@ const IconWrapper = styled.div`
   justify-content: center;
   width: 32px;
   height: 32px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   @media (max-width: 640px) {
     width: 28px;
@@ -118,7 +123,7 @@ const IconWrapper = styled.div`
 const CardTitle = styled.h3`
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   @media (max-width: 640px) {
     font-size: 14px;
   }
@@ -133,7 +138,7 @@ const CardSubtitle = styled.div`
 
 const TypeText = styled.span`
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
   @media (max-width: 640px) {
     font-size: 11px;
   }
@@ -142,10 +147,10 @@ const TypeText = styled.span`
 const StatusBadge = styled.span`
   padding: 2px 8px;
   border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: #2D6A6F; /* Light Teal */
   font-size: 12px;
   font-weight: 500;
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   @media (max-width: 640px) {
     font-size: 11px;
     padding: 2px 6px;
@@ -154,7 +159,8 @@ const StatusBadge = styled.span`
 
 const ExpandedContent = styled.div`
   padding: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #E5E7EB; /* Light Gray */
+  background-color: rgba(255, 255, 255, 0.05);
   @media (max-width: 640px) {
     padding: 10px;
   }
@@ -165,7 +171,7 @@ const DetailRow = styled.div`
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   &:last-child {
     margin-bottom: 0;
   }
@@ -177,7 +183,7 @@ const DetailRow = styled.div`
 const DetailLabel = styled.span`
   font-size: 13px;
   font-weight: 500;
-  color: #ffffff;
+  color: #FFFFFF; /* White */
   @media (max-width: 640px) {
     font-size: 12px;
   }
@@ -185,7 +191,7 @@ const DetailLabel = styled.span`
 
 const DetailValue = styled.span`
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
   @media (max-width: 640px) {
     font-size: 12px;
   }
@@ -211,7 +217,7 @@ const InterventionCard = ({ intervention, isLast }) => {
       <CardHeader onClick={() => setExpanded(!expanded)}>
         <CardHeaderContent>
           <IconWrapper>
-            <Icon size={16} color="#ffffff" />
+            <Icon size={16} color="#D1D5DB" /* Light Gray for contrast */ />
           </IconWrapper>
           <div>
             <CardTitle>{intervention.name || 'Unnamed Intervention'}</CardTitle>
@@ -225,7 +231,7 @@ const InterventionCard = ({ intervention, isLast }) => {
         </CardHeaderContent>
         <ChevronDown
           size={16}
-          color="#ffffff"
+          color="#FFFFFF" /* White */
           style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}
         />
       </CardHeader>
@@ -233,14 +239,14 @@ const InterventionCard = ({ intervention, isLast }) => {
         <ExpandedContent>
           {intervention.dosage && (
             <DetailRow>
-              <Pill size={14} color="#ffffff" />
+              <Pill size={14} color="#D1D5DB" /* Light Gray */ />
               <DetailLabel>Dosage:</DetailLabel>
               <DetailValue>{intervention.dosage}</DetailValue>
             </DetailRow>
           )}
           {intervention.route && (
             <DetailRow>
-              <ArrowRight size={14} color="#ffffff" />
+              <ArrowRight size={14} color="#D1D5DB" /* Light Gray */ />
               <DetailLabel>Route:</DetailLabel>
               <DetailValue>{intervention.route}</DetailValue>
             </DetailRow>
@@ -255,12 +261,12 @@ const Interventions = ({ interventions = [] }) => {
   return (
     <Container>
       <Header>
-        <AlertCircle size={20} color="#ffffff" />
+        <AlertCircle size={20} color="#FFFFFF" /* White */ />
         <HeaderText>Trial Interventions</HeaderText>
       </Header>
       {interventions.length === 0 ? (
         <NoDataContainer>
-          <AlertCircle size={20} color="#6b7280" />
+          <AlertCircle size={20} color="#374151" /* Dark Gray */ />
           <NoDataText>No intervention data available</NoDataText>
         </NoDataContainer>
       ) : (
@@ -279,4 +285,3 @@ const Interventions = ({ interventions = [] }) => {
 };
 
 export default Interventions;
-
