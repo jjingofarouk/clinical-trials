@@ -1,21 +1,13 @@
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, X, ChevronLeft } from 'lucide-react';
-import Interventions from './Interventions';
-import Locations from './Locations';
-import Outcomes from './Outcomes';
-import Participants from './Participants';
-import RegulatoryInfo from './RegulatoryInfo';
-import Results from './Results';
-import Statistics from './Statistics';
-import StudyDesign from './StudyDesign';
-import StudyDetails from './StudyDetails';
+import { Search, Filter, X } from 'lucide-react';
 
 const ClinicalTrials = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [trials, setTrials] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTrial, setSelectedTrial] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -134,7 +126,6 @@ const ClinicalTrials = () => {
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setTrials(data.studies || []);
-      setSelectedTrial(null); // Reset selected trial on new search
     } catch (error) {
       console.error('Error fetching trials:', error);
       setTrials([]);
@@ -174,110 +165,17 @@ const ClinicalTrials = () => {
       <motion.div
         whileHover={{ backgroundColor: '#f7f7f7' }}
         className="trial-list-item"
-        onClick={() => setSelectedTrial(trial)}
+        onClick={() => navigate(`/trials/${nctId}`)}
         role="button"
         tabIndex={0}
-        onKeyPress={(e) => e.key === 'Enter' && setSelectedTrial(trial)}
-        aria-label={`Select trial ${title}`}
+        onKeyPress={(e) => e.key === 'Enter' && navigate(`/trials/${nctId}`)}
+        aria-label={`View trial ${title}`}
       >
         <div className="trial-list-content">
           <h3 className="text-sm font-semibold text-gray-900 truncate">{title}</h3>
           <p className="text-xs text-gray-600">NCT ID: {nctId}</p>
           <p className="text-xs text-gray-600">Status: {status}</p>
           <p className="text-xs text-gray-600">Phase: {phase}</p>
-        </div>
-      </motion.div>
-    );
-  };
-
-  const TrialDetail = ({ trial }) => {
-    const protocolSection = trial.protocolSection;
-    const studyData = {
-      title: protocolSection?.identificationModule?.briefTitle || 'No Title',
-      type: protocolSection?.designModule?.studyType || 'Unknown',
-      phase: protocolSection?.designModule?.phases?.join(', ') || 'N/A',
-      description: protocolSection?.descriptionModule?.briefSummary || 'No Description',
-      startDate: protocolSection?.statusModule?.startDateStruct?.date || 'N/A',
-      completionDate: protocolSection?.statusModule?.completionDateStruct?.date || 'N/A',
-      status: protocolSection?.statusModule?.overallStatus || 'Unknown',
-    };
-
-    const interventionsData = protocolSection?.armsInterventionsModule?.interventions || [];
-    const locationsData = protocolSection?.contactsLocationsModule?.locations || [];
-    const outcomesData = {
-      primary:
-        protocolSection?.outcomesModule?.primaryOutcomes?.map((o) => o.measure).join(', ') ||
-        'N/A',
-      secondary:
-        protocolSection?.outcomesModule?.secondaryOutcomes?.map((o) => o.measure).join(', ') ||
-        'N/A',
-      timeFrames:
-        protocolSection?.outcomesModule?.primaryOutcomes?.map((o) => o.timeFrame).join(', ') ||
-        'N/A',
-    };
-
-    const participantsData = {
-      eligibility: protocolSection?.eligibilityModule?.eligibilityCriteria || 'N/A',
-      ageRange: `${protocolSection?.eligibilityModule?.minimumAge || 'N/A'} - ${
-        protocolSection?.eligibilityModule?.maximumAge || 'N/A'
-      }`,
-      sex: protocolSection?.eligibilityModule?.sex || 'N/A',
-      enrollment: protocolSection?.designModule?.enrollmentInfo?.count || 'N/A',
-    };
-
-    const regulatoryData = {
-      nctId: protocolSection?.identificationModule?.nctId || 'N/A',
-      fdaRegulated: protocolSection?.oversightModule?.isFdaRegulatedDrug ? 'Yes' : 'No',
-      sponsor: protocolSection?.sponsorCollaboratorsModule?.leadSponsor?.name || 'N/A',
-    };
-
-    const resultsData = {
-      adverseEvents: protocolSection?.resultsSection?.adverseEventsModule?.description || 'N/A',
-      studyResults: protocolSection?.resultsSection?.baselineModule?.description || 'N/A',
-      publications:
-        protocolSection?.referencesModule?.references?.map((r) => r.citation).join(', ') ||
-        'N/A',
-    };
-
-    const statsData = {
-      enrollment: protocolSection?.designModule?.enrollmentInfo?.count || 0,
-      primary: protocolSection?.outcomesModule?.primaryOutcomes?.length || 0,
-      secondary: protocolSection?.outcomesModule?.secondaryOutcomes?.length || 0,
-    };
-
-    const designData = {
-      allocation: protocolSection?.designModule?.allocation || 'N/A',
-      masking: protocolSection?.designModule?.masking?.masking || 'N/A',
-      model: protocolSection?.designModule?.interventionModel || 'N/A',
-      endpoint: protocolSection?.designModule?.primaryPurpose || 'N/A',
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
-        className="trial-detail"
-      >
-        <button
-          className="back-btn"
-          onClick={() => setSelectedTrial(null)}
-          aria-label="Back to trial list"
-        >
-          <ChevronLeft size={16} className="mr-1" /> Back
-        </button>
-        <div className="trial-detail-content">
-          <StudyDetails study={studyData} />
-          <div className="trial-detail-grid">
-            <StudyDesign design={designData} />
-            <Participants participants={participantsData} />
-            <Interventions interventions={interventionsData} />
-            <Locations locations={locationsData} />
-            <Outcomes outcomes={outcomesData} />
-            <Statistics stats={statsData} />
-            <RegulatoryInfo regulatory={regulatoryData} />
-            <Results results={resultsData} />
-          </div>
         </div>
       </motion.div>
     );
@@ -599,22 +497,13 @@ const ClinicalTrials = () => {
               Loading trials...
             </div>
           ) : trials.length > 0 ? (
-            <div className="trials-layout">
-              <div className="trials-list">
-                {trials.map((trial) => (
-                  <TrialListItem
-                    key={trial.protocolSection?.identificationModule?.nctId}
-                    trial={trial}
-                  />
-                ))}
-              </div>
-              <AnimatePresence>
-                {selectedTrial && (
-                  <div className="trials-detail">
-                    <TrialDetail trial={selectedTrial} />
-                  </div>
-                )}
-              </AnimatePresence>
+            <div className="trials-list">
+              {trials.map((trial) => (
+                <TrialListItem
+                  key={trial.protocolSection?.identificationModule?.nctId}
+                  trial={trial}
+                />
+              ))}
             </div>
           ) : (
             <div className="no-results" aria-live="polite">
@@ -805,16 +694,10 @@ const ClinicalTrials = () => {
           padding: 16px;
         }
 
-        .trials-layout {
-          display: flex;
-          gap: 16px;
-          flex-direction: column;
-        }
-
         .trials-list {
-          flex: 1;
-          max-height: calc(100vh - 200px);
-          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
         .trial-list-item {
@@ -828,41 +711,6 @@ const ClinicalTrials = () => {
           display: flex;
           flex-direction: column;
           gap: 4px;
-        }
-
-        .trials-detail {
-          flex: 2;
-          background: #fff;
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .trial-detail-content {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .trial-detail-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          background: none;
-          border: none;
-          color: #6b7280;
-          font-size: 14px;
-          cursor: pointer;
-          margin-bottom: 8px;
-        }
-
-        .back-btn:hover {
-          color: #111827;
         }
 
         .loading-spinner {
@@ -922,20 +770,8 @@ const ClinicalTrials = () => {
             padding: 12px;
           }
 
-          .trials-layout {
-            flex-direction: column;
-          }
-
-          .trials-list {
-            max-height: none;
-          }
-
           .trial-list-item {
             padding: 8px;
-          }
-
-          .trial-detail-grid {
-            grid-template-columns: 1fr;
           }
 
           .text-sm {
@@ -950,16 +786,6 @@ const ClinicalTrials = () => {
         @media (min-width: 641px) and (max-width: 1023px) {
           .filter-sidebar {
             width: 240px;
-          }
-
-          .trials-detail {
-            padding: 12px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .trials-layout {
-            flex-direction: row;
           }
         }
       `}</style>
