@@ -1,69 +1,167 @@
 import React, { useState, useEffect } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { Shield, Hash, CheckSquare, Briefcase, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
-const Card = ({ children, className = '' }) => (
-  <div className={`bg-white rounded-2xl overflow-hidden ${className}`}>
-    {children}
-  </div>
-);
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
-const CardHeader = ({ icon: Icon, title }) => (
-  <div className="bg-[#000000] px-4 py-3 flex items-center gap-2">
-    <Icon size={20} className="text-white" />
-    <h2 className="text-lg font-semibold text-white">{title}</h2>
-  </div>
-);
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: ${fadeIn} 0.3s ease-out;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const HeaderText = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 24px;
+  }
+`;
+
+const NoDataText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const Content = styled.div`
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const ItemWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  &:last-child {
+    border-bottom: none;
+  }
+  @media (max-width: 640px) {
+    padding: 10px 0;
+  }
+`;
+
+const ItemLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const LabelText = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const ValueText = styled.span`
+  font-size: 14px;
+  color: #6b7280;
+  text-align: right;
+  max-width: 50%;
+  @media (max-width: 640px) {
+    font-size: 12px;
+  }
+`;
+
+const StatusBadge = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.1);
+  @media (max-width: 640px) {
+    padding: 3px 6px;
+  }
+`;
+
+const StatusText = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: #111827;
+  margin-left: 4px;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
 
 const RegulatoryItem = ({ label, value, icon: Icon, isStatus = false }) => (
-  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-    <div className="flex items-center gap-2">
-      <Icon size={16} className="text-gray-600" />
-      <span className="text-sm font-semibold text-gray-900">{label}</span>
-    </div>
+  <ItemWrapper>
+    <ItemLabel>
+      <Icon size={16} color="#6b7280" />
+      <LabelText>{label}</LabelText>
+    </ItemLabel>
     {isStatus ? (
-      <div
-        className={`flex items-center px-2 py-1 rounded-full ${
-          value === 'Yes' ? 'bg-black/10' : 'bg-black/10'
-        }`}
-      >
+      <StatusBadge>
         {value === 'Yes' ? (
-          <CheckCircle size={12} className="text-black mr-1" />
+          <CheckCircle size={12} color="#111827" />
         ) : (
-          <XCircle size={12} className="text-black mr-1" />
+          <XCircle size={12} color="#111827" />
         )}
-        <span className="text-xs font-medium text-gray-900">{value}</span>
-      </div>
+        <StatusText>{value}</StatusText>
+      </StatusBadge>
     ) : (
-      <span className="text-sm text-gray-600 text-right max-w-[50%] truncate">
-        {value || 'Not specified'}
-      </span>
+      <ValueText>{value || 'Not specified'}</ValueText>
     )}
-  </div>
+  </ItemWrapper>
 );
 
 const RegulatoryInfo = ({ regulatory }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   return (
-    <Card
-      className={`
-        transform transition-all duration-300 ease-out max-w-7xl mx-auto
-        ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95'}
-        my-3
-      `}
-    >
-      <CardHeader icon={Shield} title="Regulatory Information" />
+    <Container>
+      <Header>
+        <Shield size={20} color="#ffffff" />
+        <HeaderText>Regulatory Information</HeaderText>
+      </Header>
       {!regulatory ? (
-        <div className="flex flex-col items-center py-6">
-          <AlertCircle size={20} className="text-gray-400" />
-          <p className="text-sm text-gray-400 mt-2">No regulatory data available</p>
-        </div>
+        <NoDataContainer>
+          <AlertCircle size={20} color="#6b7280" />
+          <NoDataText>No regulatory data available</NoDataText>
+        </NoDataContainer>
       ) : (
-        <div className="p-4">
+        <Content>
           <RegulatoryItem label="NCT ID" value={regulatory.nctId} icon={Hash} />
           <RegulatoryItem
             label="FDA Regulated"
@@ -72,67 +170,9 @@ const RegulatoryInfo = ({ regulatory }) => {
             isStatus
           />
           <RegulatoryItem label="Sponsor" value={regulatory.sponsor} icon={Briefcase} />
-        </div>
+        </Content>
       )}
-      <style jsx>{`
-        * {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        @media (max-width: 640px) {
-          .rounded-2xl {
-            border-radius: 12px;
-          }
-
-          .px-4 {
-            padding-left: 12px;
-            padding-right: 12px;
-          }
-
-          .py-3 {
-            padding-top: 10px;
-            padding-bottom: 10px;
-          }
-
-          .text-lg {
-            font-size: 16px;
-          }
-
-          .p-4 {
-            padding: 12px;
-          }
-
-          .text-sm {
-            font-size: 12px;
-          }
-
-          .text-xs {
-            font-size: 11px;
-          }
-
-          .py-6 {
-            padding-top: 20px;
-            padding-bottom: 20px;
-          }
-
-          .max-w-7xl {
-            margin-left: 12px;
-            margin-right: 12px;
-          }
-        }
-
-        @media (min-width: 641px) and (max-width: 1023px) {
-          .rounded-2xl {
-            border-radius: 14px;
-          }
-
-          .my-3 {
-            margin-top: 12px;
-            margin-bottom: 12px;
-          }
-        }
-      `}</style>
-    </Card>
+    </Container>
   );
 };
 
