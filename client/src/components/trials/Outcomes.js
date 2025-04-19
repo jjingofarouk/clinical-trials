@@ -1,36 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { useSpring, animated } from 'react-spring';
-import { FaChevronDown, FaAward, FaLayers, FaClock, FaClipboard } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaChevronDown, FaBullseye, FaClipboard } from 'react-icons/fa';
+import { FaAward, FaLayerGroup, FaClock } from 'react-icons/fa';
+import { useSpring, animated } from '@react-spring/web';
 import './Outcomes.css';
-import { FaBullseye as FaTarget } from 'react-icons/fa'  // FaBullseye is a similar target icon
-import { FaLayerGroup } from "react-icons/fa";
 
 const OutcomeSection = ({ title, content, icon, isLast }) => {
   const [expanded, setExpanded] = useState(false);
   const rotate = useSpring({ transform: `rotate(${expanded ? 180 : 0}deg)` });
 
-  const toggleExpand = () => {
-    setExpanded(!expanded);
-  };
+  const toggleExpand = () => setExpanded(!expanded);
 
   return (
-    <div className={`outcomeSection ${!isLast ? 'withSeparator' : ''}`}>
-      <button onClick={toggleExpand} className="sectionContent">
-        <div className="sectionHeader">
-          <div className="iconContainer">
-            {icon === 'award' && <FaAward size={20} color="#2563EB" />}
-            {icon === 'layers' && <FaLayerGroup size={20} color="#2563EB" />}
-            {icon === 'clock' && <FaClock size={20} color="#2563EB" />}
+    <div className={`outcome-section ${isLast ? '' : 'with-separator'}`}>
+      <button onClick={toggleExpand} className="section-content">
+        <div className="section-header">
+          <div className="icon-wrapper">
+            {icon === 'award' && <FaAward size={18} />}
+            {icon === 'layers' && <FaLayerGroup size={18} />}
+            {icon === 'clock' && <FaClock size={18} />}
           </div>
-          <span className="sectionTitle">{title}</span>
+          <span className="section-title">{title}</span>
           <animated.div style={rotate}>
-            <FaChevronDown size={20} color="#2563EB" />
+            <FaChevronDown size={16} />
           </animated.div>
         </div>
-        
         {expanded && (
-          <div className="expandedContent">
-            <p className="outcomeText">{content}</p>
+          <div className="expanded-content">
+            <p className="outcome-text">{content}</p>
           </div>
         )}
       </button>
@@ -39,32 +35,30 @@ const OutcomeSection = ({ title, content, icon, isLast }) => {
 };
 
 const Outcomes = ({ outcomes }) => {
-  const fadeIn = useSpring({ opacity: 1, from: { opacity: 0 }, duration: 600 });
-  const scaleIn = useSpring({ transform: 'scale(1)', from: { transform: 'scale(0.95)' } });
+  const fadeIn = useSpring({ opacity: 1, from: { opacity: 0 }, config: { duration: 400 } });
 
-  if (!outcomes || (!outcomes.primary && !outcomes.secondary)) {
+  if (!outcomes || (!outcomes.primary && !outcomes.secondary && !outcomes.timeFrames)) {
     return (
-      <animated.div style={{ ...fadeIn, ...scaleIn }} className="container">
-        <div className="headerGradient">
-          <FaTarget size={28} color="#FFF" className="headerIcon" />
-          <span className="headerText">Study Outcomes</span>
+      <animated.div style={fadeIn} className="outcomes-container">
+        <div className="header">
+          <FaBullseye size={20} />
+          <span className="header-text">Study Outcomes</span>
         </div>
-        <div className="noDataContainer">
-          <FaClipboard size={24} color="#94A3B8" />
-          <p className="noDataText">No outcome data available</p>
+        <div className="no-data">
+          <FaClipboard size={20} />
+          <p className="no-data-text">No outcome data available</p>
         </div>
       </animated.div>
     );
   }
 
   return (
-    <animated.div style={{ ...fadeIn, ...scaleIn }} className="container">
-      <div className="headerGradient">
-        <FaTarget size={28} color="#FFF" className="headerIcon" />
-        <span className="headerText">Study Outcomes</span>
+    <animated.div style={fadeIn} className="outcomes-container">
+      <div className="header">
+        <FaBullseye size={20} />
+        <span className="header-text">Study Outcomes</span>
       </div>
-
-      <div className="scrollContainer">
+      <div className="outcomes-list">
         {outcomes.primary && (
           <OutcomeSection
             title="Primary Outcomes"
@@ -73,7 +67,6 @@ const Outcomes = ({ outcomes }) => {
             isLast={!outcomes.secondary && !outcomes.timeFrames}
           />
         )}
-        
         {outcomes.secondary && (
           <OutcomeSection
             title="Secondary Outcomes"
@@ -82,13 +75,12 @@ const Outcomes = ({ outcomes }) => {
             isLast={!outcomes.timeFrames}
           />
         )}
-        
         {outcomes.timeFrames && (
           <OutcomeSection
             title="Time Frames"
             content={outcomes.timeFrames}
             icon="clock"
-            isLast={true}
+            isLast
           />
         )}
       </div>
