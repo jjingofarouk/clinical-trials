@@ -1,16 +1,308 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, AlertCircle, Info, FileText, Calendar, Activity, Layers, UserPlus, Clock, CheckCircle, CheckSquare, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
+import styled, { keyframes } from 'styled-components';
+import {
+  ChevronUp,
+  ChevronDown,
+  AlertCircle,
+  Info,
+  FileText,
+  Calendar,
+  Activity,
+  Layers,
+  UserPlus,
+  Clock,
+  CheckCircle,
+  CheckSquare,
+  XCircle,
+  MinusCircle,
+  HelpCircle,
+} from 'lucide-react';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const Container = styled.div`
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: ${fadeIn} 0.3s ease-out;
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+`;
+
+const Header = styled.div`
+  background-color: #000000;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.2;
+  @media (max-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const Content = styled.div`
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 8px;
+  @media (max-width: 640px) {
+    padding: 24px;
+  }
+`;
+
+const NoDataText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const StatusBadgeWrapper = styled.div`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.15);
+  @media (max-width: 640px) {
+    padding: 3px 6px;
+  }
+`;
+
+const StatusText = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  margin-left: 4px;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
+
+const InfoCardWrapper = styled.div`
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  @media (max-width: 640px) {
+    border-radius: 10px;
+    padding: 10px;
+  }
+`;
+
+const InfoIconWrapper = styled.div`
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
+const InfoLabel = styled.div`
+  font-size: 12px;
+  color: #111827;
+  margin-bottom: 4px;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
+
+const InfoValue = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const DateInfoWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  @media (max-width: 640px) {
+    padding: 6px;
+    border-radius: 10px;
+  }
+`;
+
+const DateIconWrapper = styled.div`
+  width: 28px;
+  height: 28px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  @media (max-width: 640px) {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+const DateLabel = styled.span`
+  font-size: 12px;
+  color: #111827;
+  flex: 1;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
+
+const DateValue = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: #111827;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
+
+const AccordionWrapper = styled.div`
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  border: 1px solid #e5e7eb;
+  @media (max-width: 640px) {
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+`;
+
+const AccordionButton = styled.button`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  @media (max-width: 640px) {
+    padding: 10px;
+  }
+`;
+
+const AccordionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const AccordionIconWrapper = styled.div`
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @media (max-width: 640px) {
+    width: 28px;
+    height: 28px;
+  }
+`;
+
+const AccordionTitle = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  @media (max-width: 640px) {
+    font-size: 13px;
+  }
+`;
+
+const AccordionContent = styled.div`
+  padding: 0 12px 12px;
+  @media (max-width: 640px) {
+    padding: 0 10px 10px;
+  }
+`;
+
+const DescriptionContainer = styled.div`
+  background-color: #f3f4f6;
+  border-radius: 12px;
+  padding: 12px;
+  @media (max-width: 640px) {
+    border-radius: 10px;
+    padding: 10px;
+  }
+`;
+
+const DescriptionText = styled.p`
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  @media (max-width: 640px) {
+    font-size: 12px;
+  }
+`;
+
+const DescriptionNoData = styled.div`
+  text-align: center;
+  padding: 16px;
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+`;
+
+const DescriptionNoDataText = styled.span`
+  font-size: 12px;
+  color: #6b7280;
+  @media (max-width: 640px) {
+    font-size: 11px;
+  }
+`;
 
 const StatusBadge = ({ status }) => {
-  const getStatusConfig = (status) => {
+  const getStatusConfig = status => {
     const configs = {
-      'Recruiting': { icon: UserPlus },
+      Recruiting: { icon: UserPlus },
       'Not Yet Recruiting': { icon: Clock },
       'Active, not recruiting': { icon: CheckCircle },
-      'Completed': { icon: CheckSquare },
-      'Terminated': { icon: XCircle },
-      'Withdrawn': { icon: MinusCircle },
-      'Unknown': { icon: HelpCircle },
+      Completed: { icon: CheckSquare },
+      Terminated: { icon: XCircle },
+      Withdrawn: { icon: MinusCircle },
+      Unknown: { icon: HelpCircle },
     };
     return configs[status] || configs['Unknown'];
   };
@@ -19,95 +311,90 @@ const StatusBadge = ({ status }) => {
   const Icon = config.icon;
 
   return (
-    <div className="inline-flex items-center px-2 py-1 rounded-full bg-white/10">
-      <Icon size={14} className="text-white mr-1" />
-      <span className="text-xs font-medium text-white">{status}</span>
-    </div>
+    <StatusBadgeWrapper>
+      <Icon size={12} color="#ffffff" />
+      <StatusText>{status}</StatusText>
+    </StatusBadgeWrapper>
   );
 };
 
 const InfoCard = ({ icon: Icon, label, value }) => (
-  <div className="flex-1 bg-white rounded-xl p-3 text-center border border-gray-100">
-    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-      <Icon size={16} className="text-gray-600" />
-    </div>
-    <div className="text-xs text-gray-900 mb-1">{label}</div>
-    <div className="text-sm font-semibold text-gray-900">{value || 'Not specified'}</div>
-  </div>
+  <InfoCardWrapper>
+    <InfoIconWrapper>
+      <Icon size={16} color="#6b7280" />
+    </InfoIconWrapper>
+    <InfoLabel>{label}</InfoLabel>
+    <InfoValue>{value || 'Not specified'}</InfoValue>
+  </InfoCardWrapper>
 );
 
 const DateInfo = ({ icon: Icon, label, date }) => (
-  <div className="flex items-center bg-gray-50 p-2 rounded-xl border border-gray-100">
-    <div className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center mr-2">
-      <Icon size={14} className="text-gray-600" />
-    </div>
-    <span className="text-xs text-gray-900 flex-1">{label}</span>
-    <span className="text-xs font-medium text-gray-900">{date || 'Not specified'}</span>
-  </div>
+  <DateInfoWrapper>
+    <DateIconWrapper>
+      <Icon size={14} color="#6b7280" />
+    </DateIconWrapper>
+    <DateLabel>{label}</DateLabel>
+    <DateValue>{date || 'Not specified'}</DateValue>
+  </DateInfoWrapper>
 );
 
 const AccordionSection = ({ title, icon: Icon, children, initiallyExpanded = false }) => {
   const [isExpanded, setIsExpanded] = useState(initiallyExpanded);
 
   return (
-    <div className="bg-white rounded-xl mb-2 overflow-hidden border border-gray-100">
-      <button
-        className="w-full flex items-center justify-between p-3"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center">
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-            <Icon size={16} className="text-gray-600" />
-          </div>
-          <span className="ml-2 text-sm font-semibold text-gray-900">{title}</span>
-        </div>
+    <AccordionWrapper>
+      <AccordionButton onClick={() => setIsExpanded(!isExpanded)}>
+        <AccordionHeader>
+          <AccordionIconWrapper>
+            <Icon size={16} color="#6b7280" />
+          </AccordionIconWrapper>
+          <AccordionTitle>{title}</AccordionTitle>
+        </AccordionHeader>
         {isExpanded ? (
-          <ChevronUp size={16} className="text-gray-500" />
+          <ChevronUp size={16} color="#6b7280" />
         ) : (
-          <ChevronDown size={16} className="text-gray-500" />
+          <ChevronDown size={16} color="#6b7280" />
         )}
-      </button>
-      {isExpanded && <div className="p-3 pt-0">{children}</div>}
-    </div>
+      </AccordionButton>
+      {isExpanded && <AccordionContent>{children}</AccordionContent>}
+    </AccordionWrapper>
   );
 };
 
 const StudyDetails = ({ study }) => {
   return (
-    <div
-      className="bg-white rounded-2xl my-3 overflow-hidden max-w-4xl mx-auto"
-    >
+    <Container>
       {!study ? (
-        <div className="p-6 text-center">
-          <AlertCircle size={24} className="text-gray-400 mx-auto mb-2" />
-          <div className="text-sm text-gray-400">No study details available</div>
-        </div>
+        <NoDataContainer>
+          <AlertCircle size={20} color="#6b7280" />
+          <NoDataText>No study details available</NoDataText>
+        </NoDataContainer>
       ) : (
         <>
-          <div className="bg-[#000000] p-4 space-y-3">
-            <h1 className="text-lg font-semibold text-white leading-tight">{study.title}</h1>
+          <Header>
+            <Title>{study.title}</Title>
             <StatusBadge status={study.status} />
-          </div>
-          <div className="p-4">
+          </Header>
+          <Content>
             <AccordionSection title="Overview" icon={Info} initiallyExpanded>
-              <div className="flex gap-3">
+              <div style={{ display: 'flex', gap: '12px', flexDirection: 'row' }}>
                 <InfoCard icon={Activity} label="Study Type" value={study.type} />
                 <InfoCard icon={Layers} label="Phase" value={study.phase} />
               </div>
             </AccordionSection>
             <AccordionSection title="Description" icon={FileText}>
               {study.description ? (
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-600 leading-relaxed">{study.description}</p>
-                </div>
+                <DescriptionContainer>
+                  <DescriptionText>{study.description}</DescriptionText>
+                </DescriptionContainer>
               ) : (
-                <div className="text-center py-4">
-                  <span className="text-xs text-gray-400">No description available</span>
-                </div>
+                <DescriptionNoData>
+                  <DescriptionNoDataText>No description available</DescriptionNoDataText>
+                </DescriptionNoData>
               )}
             </AccordionSection>
             <AccordionSection title="Timeline" icon={Calendar}>
-              <div className="space-y-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <DateInfo icon={Calendar} label="Start Date" date={study.startDate} />
                 <DateInfo icon={Calendar} label="Primary Completion" date={study.primaryCompletionDate} />
                 <DateInfo icon={Calendar} label="Study Completion" date={study.completionDate} />
@@ -115,109 +402,10 @@ const StudyDetails = ({ study }) => {
                 <DateInfo icon={Calendar} label="Last Updated" date={study.lastUpdateDate} />
               </div>
             </AccordionSection>
-          </div>
+          </Content>
         </>
       )}
-      <style jsx>{`
-        * {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        @media (max-width: 640px) {
-          .rounded-2xl {
-            border-radius: 12px;
-          }
-
-          .my-3 {
-            margin-top: 12px;
-            margin-bottom: 12px;
-          }
-
-          .p-4 {
-            padding: 12px;
-          }
-
-          .p-6 {
-            padding: 16px;
-          }
-
-          .space-y-3 {
-            gap: 8px;
-          }
-
-          .flex {
-            flex-direction: column;
-          }
-
-          .gap-3 {
-            gap: 8px;
-          }
-
-          .p-3 {
-            padding: 8px;
-          }
-
-          .text-lg {
-            font-size: 16px;
-          }
-
-          .text-sm {
-            font-size: 12px;
-          }
-
-          .text-xs {
-            font-size: 11px;
-          }
-
-          .w-8 {
-            width: 28px;
-          }
-
-          .h-8 {
-            height: 28px;
-          }
-
-          .w-7 {
-            width: 24px;
-          }
-
-          .h-7 {
-            height: 24px;
-          }
-
-          .space-y-2 {
-            gap: 6px;
-          }
-
-          .rounded-xl {
-            border-radius: 10px;
-          }
-
-          .mb-2 {
-            margin-bottom: 6px;
-          }
-
-          .max-w-4xl {
-            margin-left: 12px;
-            margin-right: 12px;
-          }
-        }
-
-        @media (min-width: 641px) and (max-width: 1023px) {
-          .rounded-2xl {
-            border-radius: 14px;
-          }
-
-          .flex {
-            flex-direction: row;
-          }
-
-          .p-3 {
-            padding: 10px;
-          }
-        }
-      `}</style>
-    </div>
+    </Container>
   );
 };
 
