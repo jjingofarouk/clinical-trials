@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X } from 'lucide-react';
+import './ClinicalTrials.css';
 
 const ClinicalTrials = () => {
   const navigate = useNavigate();
@@ -73,8 +74,8 @@ const ClinicalTrials = () => {
       { label: 'All', value: '' },
       { label: 'NIH', value: 'NIH' },
       { label: 'Industry', value: 'INDUSTRY' },
-      { label: 'Other U.S. Federal Agency', value: 'OTHER_US_FED' },
-      { label: 'Academic/University', value: 'ACADEMIC' },
+      { label: 'Other U.S. Federal Agency', value: 'FED' },
+      { label: 'Other', value: 'OTHER' },
     ],
     interventionType: [
       { label: 'All', value: '' },
@@ -87,58 +88,92 @@ const ClinicalTrials = () => {
     ],
   };
 
-  const searchTrials = useCallback(async (isRandom = false) => {
+  const shuffleArray = (array) => {
+    return [...array].sort(() => Math.random() - 0.5);
+  };
+
+  const searchTrials = useCallback(async (isRandom = false, retries = 3) => {
     setLoading(true);
-    try {
-      const queryParams = new URLSearchParams({
-        'pageSize': '50',
-        'sort': isRandom ? 'random' : '',
-      });
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const queryParams = new URLSearchParams({
+          pageSize: '50',
+        });
 
-      if (!isRandom && searchQuery) queryParams.append('query.term', searchQuery);
-      if (filters.status) queryParams.append('filter.overallStatus', filters.status);
-      if (filters.phase) queryParams.append('filter.phase', filters.phase);
-      if (filters.studyType) queryParams.append('filter.studyType', filters.studyType);
-      if (filters.gender) queryParams.append('filter.sex', filters.gender);
-      if (filters.ageGroup) queryParams.append('filter.ageGroup', filters.ageGroup);
-      if (filters.healthyVolunteers) queryParams.append('filter.healthyVolunteers', 'true');
-      if (filters.hasResults) queryParams.append('filter.hasResults', 'true');
-      if (filters.fundingType) queryParams.append('filter.fundingType', filters.fundingType);
-      if (filters.interventionType)
-        queryParams.append('filter.interventionType', filters.interventionType);
-      if (filters.startDate) queryParams.append('filter.startDate', filters.startDate);
-      if (filters.completionDate)
-        queryParams.append('filter.completionDate', filters.completionDate);
-      if (filters.conditions.length)
-        queryParams.append('filter.conditions', filters.conditions.join(','));
-      if (filters.locations.length)
-        queryParams.append('filter.locations', filters.locations.join(','));
-      if (filters.participantAge.min)
-        queryParams.append('filter.minimumAge', filters.participantAge.min);
-      if (filters.participantAge.max)
-        queryParams.append('filter.maximumAge', filters.participantAge.max);
-      if (filters.enrollmentCount.min)
-        queryParams.append('filter.enrollment.min', filters.enrollmentCount.min);
-      if (filters.enrollmentCount.max)
-        queryParams.append('filter.enrollment.max', filters.enrollmentCount.max);
+        if (!isRandom && searchQuery) queryParams.append('query.term', searchQuery);
+        if (filters.status) queryParams.append('filter.overallStatus', filters.status);
+        if (filters.phase) queryParams.append('filter.phase', filters.phase);
+        if (filters.studyType) queryParams.append('filter.studyType', filters.studyType);
+        if (filters.gender) queryParams.append('filter.sex', filters.gender);
+        if (filters.healthyVolunteers) queryParams.append('filter.healthyVolunteers', 'true');
+        if (filters.hasResults) queryParams.append('filter.hasResults', 'true');
+        if (filters.fundingType) queryParams.append('filter.sponsorType', filters.fundingType);
+        if (filters.interventionType)
+          queryParams.append('filter.interventionType', filters.interventionType);
+        if (filters.startDate) queryParams.append('filter.startDate', filters.startDate);
+        if (filters.completionDate)
+          queryParams.append('filter.completionDate', filters.completionDate);
+        if (filters.conditions.length)
+          queryParams.append('filter.advanced', filters.conditions.map(c => `AREA[Condition]${c}`).join('|'));
+        if (filters.locations.length)
+          queryParams.append('filter.advanced', filters.locations.map(l => `AREA[LocationCountry]${l}`).join('|'));
+        if (filters.ageGroup) {
+          if (filters.ageGroup === 'CHILD') {
+            queryParams.append('filter.minimumAge', '0');
+            queryParams.append('filter.maximumAge', '17');
+          } else if (filters.ageGroup === 'ADULT') {
+            queryParams.append('filter.minimumAge', '18');
+            queryParams.append('filter.maximumAge', '64');
+          } else if (filters.ageGroup === 'OLDER_ADULT') {
+            queryParams.append('filter.minimumAge', '65');
+          }
+        }
+        if (filters.participantAge.min)
+          queryParams.append('filter.minimumAge', filters.participantAge.min);
+        if (filters.participantAge.max)
+          queryParams.append('filter.maximumAge', filters.participantAge.max);
+        if (filters.enrollmentCount.min)
+          queryParams.append('filter.enrollmentMin', filters.enrollmentCount.min);
+        if (filters.enrollmentCount.max)
+          queryParams.append('filter.enrollmentMax', filters.enrollmentCount.max);
 
-      const response = await fetch(
-        `https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`
-      );
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-      setTrials(data.studies || []);
-    } catch (error) {
-      console.error('Error fetching trials:', error);
-      setTrials([]);
-    } finally {
-      setLoading(false);
+        console.log(`API URL: https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`);
+        const response = await fetch(
+          `https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`
+        );
+        if (!response.ok) {
+          if (response.status === 429 && attempt < retries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('API Response:', data);
+        const fetchedTrials = data.studies || [];
+        setTrials(isRandom ? shuffleArray(fetchedTrials) : fetchedTrials);
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed:`, error);
+        if (attempt === retries) {
+          setTrials([]);
+          setLoading(false);
+        }
+      }
     }
   }, [searchQuery, filters]);
 
   useEffect(() => {
-    searchTrials(true); // Fetch random trials on mount
-  }, []);
+    const fetchInitialTrials = async () => {
+      await searchTrials(true);
+      if (trials.length === 0) {
+        console.log('No trials found, retrying with default query');
+        await searchTrials(false);
+      }
+    };
+    fetchInitialTrials();
+  }, [searchTrials, trials.length]);
 
   const resetFilters = () => {
     setFilters({
@@ -169,7 +204,10 @@ const ClinicalTrials = () => {
 
     return (
       <motion.div
-        whileHover={{ backgroundColor: '#2D6A6F' }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ scale: 1.02, backgroundColor: '#E5E7EB' }}
         className="trial-list-item"
         onClick={() => navigate(`/trials/${nctId}`)}
         role="button"
@@ -202,7 +240,7 @@ const ClinicalTrials = () => {
           onClick={() => setShowFilters(false)}
           aria-label="Close filters"
         >
-          <X size={16} />
+          <X size={16} color="#374151" />
         </button>
       </div>
       <div className="filter-grid">
@@ -429,7 +467,7 @@ const ClinicalTrials = () => {
             </div>
           ) : (
             <div className="no-results" aria-live="polite">
-              No trials found. Try adjusting your search criteria.
+              No trials found. Try broadening your search criteria or resetting filters.
             </div>
           )}
         </main>
