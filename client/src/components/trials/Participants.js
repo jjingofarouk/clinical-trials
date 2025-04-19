@@ -29,7 +29,7 @@ const AnimatedCounter = ({ endValue, duration = 2000 }) => {
     };
   }, [endValue, duration]);
 
-  return <span className="text-2 AscendantsCounter">{count}</span>;
+  return <span className="text-2xl font-semibold text-white">{count}</span>;
 };
 
 const ParticipantCard = ({ Icon, value, label, delay = 0 }) => {
@@ -117,82 +117,86 @@ const Participants = ({ participants }) => {
           )}
         </div>
       )}
+      <style jsx>{`
+        * {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        @media (max-width: 640px) {
+          .rounded-2xl {
+            border-radius: 12px;
+          }
+
+          .bg-[#000000] {
+            padding: 12px;
+          }
+
+          .text-lg {
+            font-size: 16px;
+          }
+
+          .p-4 {
+            padding: 12px;
+          }
+
+          .gap-3 {
+            gap: 8px;
+          }
+
+          .h-32 {
+            height: 120px;
+          }
+
+          .text-2xl {
+            font-size: 1.5rem;
+          }
+
+          .text-xs {
+            font-size: 11px;
+          }
+
+          .w-8 {
+            width: 32px;
+          }
+
+          .h-8 {
+            height: 32px;
+          }
+
+          .mt-4 {
+            margin-top: 12px;
+          }
+
+          .pt-4 {
+            padding-top: 12px;
+          }
+
+          .text-base {
+            font-size: 14px;
+          }
+
+          .text-sm {
+            font-size: 12px;
+          }
+
+          .max-w-7xl {
+            margin-left: 12px;
+            margin-right: 12px;
+          }
+        }
+
+        @media (min-width: 641px) and (max-width: 1023px) {
+          .rounded-2xl {
+            border-radius: 14px;
+          }
+
+          .h-32 {
+            height: 130px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
 export default Participants;
-
-<style>
-.participants-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-@media (max-width: 640px) {
-  .participants-container {
-    border-radius: 12px;
-  }
-
-  .bg-[#000000] {
-    padding: 12px;
-  }
-
-  .text-lg {
-    font-size: 16px;
-  }
-
-  .p-4 {
-    padding: 12px;
-  }
-
-  .gap-3 {
-    gap: 8px;
-  }
-
-  .h-32 {
-    height: 120px;
-  }
-
-  .text-2xl {
-    font-size: 1.5rem;
-  }
-
-  .text-xs {
-    font-size: 11px;
-  }
-
-  .w-8 {
-    width: 32px;
-  }
-
-  .h-8 {
-    height: 32px;
-  }
-
-  .mt-4 {
-    margin-top: 12px;
-  }
-
-  .pt-4 {
-    padding-top: 12px;
-  }
-
-  .text-base {
-    font-size: 14px;
-  }
-
-  .text-sm {
-    font-size: 12px;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1023px) {
-  .participants-container {
-    border-radius: 14px;
-  }
-
-  .h-32 {
-    height: 130px;
-  }
-}
-</style>
