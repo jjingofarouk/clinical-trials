@@ -1,20 +1,25 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import ClinicalTrials from './components/trials/ClinicalTrials'; // Import ClinicalTrials component
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Home from './components/Home';
+import ClinicalTrials from './components/trials/ClinicalTrials';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>ClinSearch</h1> {/* Display app name */}
-        <p>
-          Search and explore clinical trials with ease.
-        </p>
-      </header>
-      <main>
-        <ClinicalTrials /> {/* Use ClinicalTrials component */}
-      </main>
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/trials" element={<ClinicalTrials />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
