@@ -26,7 +26,8 @@ const TrialDetailPage = () => {
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           const response = await fetch(
-            `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies/${encodeURIComponent(nctId)}`
+            `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies/${encodeURIComponent(nctId)}?format=json`,
+            { headers: { 'Accept': 'application/json' } }
           );
           if (!response.ok) {
             if (response.status === 429 && attempt < retries) {
@@ -168,7 +169,7 @@ const TrialDetailPage = () => {
         <Outcomes outcomes={outcomesData} />
         <Statistics stats={statsData} />
         <RegulatoryInfo regulatory={regulatoryData} />
-        <Results results={resultsData} />
+        <Results results={data.resultsData} />
       </div>
       <style jsx>{`
         * {
