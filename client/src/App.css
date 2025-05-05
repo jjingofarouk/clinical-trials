@@ -1,20 +1,26 @@
-/* app.css */
+/* App.css */
 .App {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', sans-serif;
-  background-color: #F5F1E9; /* Secondary: Soft Beige */
-  color: #374151; /* Text on Secondary: Dark Gray */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 main {
   flex: 1;
-  padding-top: 50px; /* Space for floating navbar */
+  margin: 0;
+  padding: 0;
 }
 
-@media (max-width: 768px) {
-  main {
-    padding-top: 60px;
-  }
+/* Ensure no default margins/padding on main content */
+main > * {
+  margin-top: 0;
+}
+
+/* Optional: Reset global margins for consistency */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
