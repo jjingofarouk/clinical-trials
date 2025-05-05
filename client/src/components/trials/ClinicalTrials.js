@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
+import { NavLink } from 'react-router-dom';
+import { auth, db, collection, doc, setDoc, getDocs, query, where } from '../firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
-import AuthModal from './AuthModal';
 import TrialsSection from './TrialsSection';
 import './ClinicalTrials.css';
 
@@ -15,7 +15,6 @@ const ClinicalTrials = () => {
   const [recommendedTrials, setRecommendedTrials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [error, setError] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -49,7 +48,7 @@ const ClinicalTrials = () => {
         }
       },
       (err) => {
-        setError(`Auth error: ${err.message}`);
+        setError(`Authentication error: ${err.message}`);
       }
     );
     return () => unsubscribe();
@@ -73,8 +72,11 @@ const ClinicalTrials = () => {
       const conditions = querySnapshot.docs.map(doc => doc.data().trial.protocolSection?.conditionsModule?.conditions || []).flat();
       if (conditions.length > 0) {
         const response = await fetch(
-          `https://clinicaltrials.gov/api/v2/studies?query.cond=${conditions.join('|')}&pageSize=5`
+          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?query.cond=${conditions.join('|')}&pageSize=5`
         );
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
         const data = await response.json();
         setRecommendedTrials(data.studies || []);
       }
@@ -129,14 +131,14 @@ const ClinicalTrials = () => {
           queryParams.append('filter.enrollmentMax', filters.enrollmentCount.max);
 
         const response = await fetch(
-          `https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`
+          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`
         );
         if (!response.ok) {
           if (response.status === 429 && attempt < retries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             continue;
           }
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error: ${response.status}`);
         }
         const data = await response.json();
         const fetchedTrials = data.studies || [];
@@ -173,7 +175,7 @@ const ClinicalTrials = () => {
 
   const saveTrial = async (trial) => {
     if (!user) {
-      setShowAuthModal(true);
+      setError('Please sign in to save trials.');
       return;
     }
     try {
@@ -189,12 +191,19 @@ const ClinicalTrials = () => {
     }
   };
 
-  if (error) {
+  if (error && process.env.REACT_APP_DEBUG_MODE === 'true') {
     return (
       <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
         <h1>Error</h1>
         <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Reload Page</button>
+        {error.includes('sign in') && (
+          <NavLink to="/auth" style={{ color: '#3498DB', textDecoration: 'underline' }}>
+            Go to Sign In
+          </NavLink>
+        )}
+        <button onClick={() => window.location.reload()} style={{ marginTop: '10px' }}>
+          Reload Page
+        </button>
       </div>
     );
   }
@@ -202,12 +211,10 @@ const ClinicalTrials = () => {
   return (
     <div className="clinical-trials-container">
       <SearchBar
-        user={user}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         searchTrials={searchTrials}
         setShowFilters={setShowFilters}
-        setShowAuthModal={setShowAuthModal}
       />
       <div className="main-content">
         <AnimatePresence>
@@ -219,7 +226,6 @@ const ClinicalTrials = () => {
               searchTrials={searchTrials}
             />
           )}
-          {showAuthModal && <AuthModal setShowAuthModal={setShowAuthModal} />}
         </AnimatePresence>
         <main className="trials-content">
           {user && savedTrials.length > 0 && (
