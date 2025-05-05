@@ -41,7 +41,7 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/trials" element={<ClinicalTrials />} />
+            <Route path="/trials/*" element={<ClinicalTrials />} />
             <Route path="/trials/:nctId" element={<TrialDetailPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/researchers" element={<div>For Researchers (Placeholder)</div>} />
