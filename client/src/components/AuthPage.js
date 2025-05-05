@@ -34,7 +34,9 @@ const AuthPage = () => {
     try {
       let userCredential;
       if (isSignUp) {
-        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth,
+
+ email, password);
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           name,
           email,
@@ -51,137 +53,112 @@ const AuthPage = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      style={{ maxWidth: '400px', margin: '40px auto', padding: '20px' }}
-    >
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
-        {isSignUp ? 'Sign Up' : 'Sign In'}
-      </h2>
-      {error && process.env.REACT_APP_DEBUG_MODE === 'true' && (
-        <div style={{ color: 'red', textAlign: 'center', marginBottom: '20px' }}>
-          <AlertCircle size={20} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
-          {error}
-        </div>
-      )}
-      <button
-        onClick={handleGoogleSignIn}
-        style={{
-          width: '100%',
-          padding: '10px',
-          backgroundColor: '#4285F4',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: '20px',
-        }}
+    <div className="auth-page">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="auth-container"
       >
-        Sign {isSignUp ? 'Up' : 'In'} with Google
-      </button>
-      <form onSubmit={handleEmailAuth}>
-        {isSignUp && (
-          <>
-            <div style={{ marginBottom: '15px' }}>
-              <label htmlFor="name" style={{ display: 'block', marginBottom: '5px' }}>
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label htmlFor="cadre" style={{ display: 'block', marginBottom: '5px' }}>
-                Cadre
-              </label>
-              <select
-                id="cadre"
-                value={cadre}
-                onChange={(e) => setCadre(e.target.value)}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              >
-                <option value="">Select Cadre</option>
-                <option value="Student">Student</option>
-                <option value="Researcher">Researcher</option>
-                <option value="Clinician">Clinician</option>
-                <option value="General">General</option>
-              </select>
-            </div>
-          </>
+        <h2 className="auth-title">{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
+        {error && process.env.REACT_APP_DEBUG_MODE === 'true' && (
+          <div className="error-message">
+            <AlertCircle size={20} style={{ marginRight: '5px' }} />
+            {error}
+          </div>
         )}
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-          />
-        </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-          />
-        </div>
         <button
-          type="submit"
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#FF8C00',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          onClick={handleGoogleSignIn}
+          className="google-button"
         >
-          {isSignUp ? 'Sign Up' : 'Sign In'}
+          Sign {isSignUp ? 'Up' : 'In'} with Google
         </button>
-      </form>
-      <p style={{ textAlign: 'center', marginTop: '20px' }}>
-        {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+        <form onSubmit={handleEmailAuth} className="auth-form">
+          {isSignUp && (
+            <>
+              <div className="form-group">
+                <label htmlFor="name" className="form-label">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="cadre" className="form-label">
+                  Cadre
+                </label>
+                <select
+                  id="cadre"
+                  value={cadre}
+                  onChange={(e) => setCadre(e.target.value)}
+                  required
+                  className="form-select"
+                >
+                  <option value="">Select Cadre</option>
+                  <option value="Student">Student</option>
+                  <option value="Researcher">Researcher</option>
+                  <option value="Clinician">Clinician</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+            </>
+          )}
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="form-input"
+            />
+          </div>
+          <button
+            type="submit"
+            className="submit-button"
+          >
+            {isSignUp ? 'Sign Up' : 'Sign In'}
+          </button>
+        </form>
+        <p className="toggle-auth">
+          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="toggle-button"
+          >
+            {isSignUp ? 'Sign In' : 'Sign Up'}
+          </button>
+        </p>
         <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          style={{ background: 'none', border: 'none', color: '#3498DB', cursor: 'pointer' }}
+          onClick={() => navigate('/trials')}
+          className="back-button"
         >
-          {isSignUp ? 'Sign In' : 'Sign Up'}
+          Back to Trials
         </button>
-      </p>
-      <button
-        onClick={() => navigate('/trials')}
-        style={{
-          width: '100%',
-          padding: '10px',
-          background: 'none',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          marginTop: '10px',
-          cursor: 'pointer',
-        }}
-      >
-        Back to Trials
-      </button>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 
