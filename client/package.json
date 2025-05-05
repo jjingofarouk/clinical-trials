@@ -5,6 +5,7 @@
   "dependencies": {
     "bootstrap": "^5.3.5",
     "cra-template": "1.2.0",
+    "firebase": "^11.0.1",
     "framer-motion": "^12.7.4",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
