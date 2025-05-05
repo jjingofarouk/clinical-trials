@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import AuthModal from './AuthModal';
