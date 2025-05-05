@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
+import { auth, db, collection, doc, setDoc, getDocs, query, where } from '../firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import TrialsSection from './TrialsSection';
@@ -20,19 +20,7 @@ const ClinicalTrials = () => {
   const [filters, setFilters] = useState({
     status: '',
     phase: '',
-    ageGroup: '',
-    gender: '',
-    healthyVolunteers: false,
     studyType: '',
-    fundingType: '',
-    interventionType: '',
-    conditions: [],
-    locations: [],
-    startDate: '',
-    completionDate: '',
-    hasResults: false,
-    participantAge: { min: '', max: '' },
-    enrollmentCount: { min: '', max: '' },
   });
 
   useEffect(() => {
@@ -69,10 +57,13 @@ const ClinicalTrials = () => {
     try {
       const q = query(collection(db, 'savedTrials'), where('userId', '==', uid));
       const querySnapshot = await getDocs(q);
-      const conditions = querySnapshot.docs.map(doc => doc.data().trial.protocolSection?.conditionsModule?.conditions || []).flat();
+      const conditions = querySnapshot.docs
+        .map(doc => doc.data().trial.protocolSection?.conditionsModule?.conditions || [])
+        .flat()
+        .filter(Boolean);
       if (conditions.length > 0) {
         const response = await fetch(
-          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?query.cond=${conditions.join('|')}&pageSize=5`
+          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?query.cond=${encodeURIComponent(conditions.join('|'))}&pageSize=5`
         );
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);
@@ -87,61 +78,42 @@ const ClinicalTrials = () => {
 
   const searchTrials = useCallback(async (isRandom = false, retries = 3) => {
     setLoading(true);
+    setError(null);
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         const queryParams = new URLSearchParams({
           pageSize: '50',
+          format: 'json',
         });
 
-        if (!isRandom && searchQuery) queryParams.append('query.term', searchQuery);
-        if (filters.status) queryParams.append('filter.overallStatus', filters.status);
-        if (filters.phase) queryParams.append('filter.phase', filters.phase);
-        if (filters.studyType) queryParams.append('filter.studyType', filters.studyType);
-        if (filters.gender) queryParams.append('filter.sex', filters.gender);
-        if (filters.healthyVolunteers) queryParams.append('filter.healthyVolunteers', 'true');
-        if (filters.hasResults) queryParams.append('filter.hasResults', 'true');
-        if (filters.fundingType) queryParams.append('filter.sponsorType', filters.fundingType);
-        if (filters.interventionType)
-          queryParams.append('filter.interventionType', filters.interventionType);
-        if (filters.startDate) queryParams.append('filter.startDate', filters.startDate);
-        if (filters.completionDate)
-          queryParams.append('filter.completionDate', filters.completionDate);
-        if (filters.conditions.length)
-          queryParams.append('filter.advanced', filters.conditions.map(c => `AREA[Condition]${c}`).join('|'));
-        if (filters.locations.length)
-          queryParams.append('filter.advanced', filters.locations.map(l => `AREA[LocationCountry]${l}`).join('|'));
-        if (filters.ageGroup) {
-          if (filters.ageGroup === 'CHILD') {
-            queryParams.append('filter.minimumAge', '0');
-            queryParams.append('filter.maximumAge', '17');
-          } else if (filters.ageGroup === 'ADULT') {
-            queryParams.append('filter.minimumAge', '18');
-            queryParams.append('filter.maximumAge', '64');
-          } else if (filters.ageGroup === 'OLDER_ADULT') {
-            queryParams.append('filter.minimumAge', '65');
-          }
+        if (!isRandom && searchQuery) {
+          queryParams.append('query.term', encodeURIComponent(searchQuery));
         }
-        if (filters.participantAge.min)
-          queryParams.append('filter.minimumAge', filters.participantAge.min);
-        if (filters.participantAge.max)
-          queryParams.append('filter.maximumAge', filters.participantAge.max);
-        if (filters.enrollmentCount.min)
-          queryParams.append('filter.enrollmentMin', filters.enrollmentCount.min);
-        if (filters.enrollmentCount.max)
-          queryParams.append('filter.enrollmentMax', filters.enrollmentCount.max);
+        if (filters.status) {
+          queryParams.append('filter.overallStatus', filters.status);
+        }
+        if (filters.phase) {
+          queryParams.append('filter.phase', filters.phase);
+        }
+        if (filters.studyType) {
+          queryParams.append('filter.studyType', filters.studyType);
+        }
 
         const response = await fetch(
           `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`
         );
         if (!response.ok) {
           if (response.status === 429 && attempt < retries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
             continue;
           }
-          throw new Error(`HTTP error: ${response.status}`);
+          throw new Error(`HTTP error: ${response.status} - ${response.statusText}`);
         }
         const data = await response.json();
         const fetchedTrials = data.studies || [];
+        if (fetchedTrials.length === 0 && !isRandom && searchQuery) {
+          setError('No trials found for your search. Try a broader query.');
+        }
         setTrials(isRandom ? shuffleArray(fetchedTrials) : fetchedTrials);
         setLoading(false);
         return;
@@ -149,7 +121,7 @@ const ClinicalTrials = () => {
         if (attempt === retries) {
           setTrials([]);
           setLoading(false);
-          setError(`Error searching trials: ${err.message}`);
+          setError(`Failed to load trials: ${err.message}. Please try again later.`);
         }
       }
     }
@@ -171,7 +143,7 @@ const ClinicalTrials = () => {
       }
     };
     fetchInitialTrials();
-  }, [searchTrials, trials.length]);
+  }, [searchTrials]);
 
   const saveTrial = async (trial) => {
     if (!user) {
@@ -201,8 +173,8 @@ const ClinicalTrials = () => {
             Go to Sign In
           </NavLink>
         )}
-        <button onClick={() => window.location.reload()} style={{ marginTop: '10px' }}>
-          Reload Page
+        <button onClick={() => searchTrials()} style={{ marginTop: '10px' }}>
+          Retry Search
         </button>
       </div>
     );
@@ -210,6 +182,11 @@ const ClinicalTrials = () => {
 
   return (
     <div className="clinical-trials-container">
+      {user && (
+        <div style={{ padding: '10px', textAlign: 'center', background: '#e6f3ff' }}>
+          <p>Welcome, {user.email.split('@')[0]}! Explore your saved trials below.</p>
+        </div>
+      )}
       <SearchBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
