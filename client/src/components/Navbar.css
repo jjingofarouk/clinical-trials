@@ -5,6 +5,8 @@
   top: 20px;
   left: 20px;
   z-index: 1000;
+  padding-bottom: 0;
+  margin: 5px; /* Adjust as needed */
 }
 
 .navbar-menu {
