@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { auth, signOut } from './trials/firebase';
+import { auth, db, signOut, collection, query, where, getDocs } from '../firebase';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
@@ -17,15 +17,22 @@ const Navbars = () => {
   const [visible, setVisible] = useState(true);
   const [prevScrollY, setPrevScrollY] = useState(0);
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [randomId, setRandomId] = useState(generateRandomId());
   const navbarRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         setRandomId(generateRandomId());
+        const userDoc = await getDocs(query(collection(db, 'users'), where('email', '==', currentUser.email)));
+        if (!userDoc.empty) {
+          setUserData(userDoc.docs[0].data());
+        }
+      } else {
+        setUserData(null);
       }
     });
     return () => unsubscribe();
@@ -176,10 +183,10 @@ const Navbars = () => {
             </Nav.Link>
           </Nav>
           <Nav className="ms-auto align-items-center">
-            {user ? (
+            {user && userData ? (
               <>
                 <span style={styles.userInfo}>
-                  {user.email.split('@')[0]} ({randomId})
+                  {userData.name} ({randomId})
                 </span>
                 <Button
                   onClick={handleLogout}
