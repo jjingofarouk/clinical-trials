@@ -10,7 +10,7 @@
 
 main {
   flex: 1;
-  padding-top: 10px; /* Space for floating navbar */
+  padding-top: 50px; /* Space for floating navbar */
 }
 
 @media (max-width: 768px) {
