@@ -16,7 +16,7 @@ import './Home.css';
 const Home = () => {
   return (
     <div className="home">
-      {/* Hero Section with Video */}
+      {/* Hero Section with Video and Fallback Image */}
       <section className="hero">
         <video
           className="hero-video"
@@ -64,25 +64,25 @@ const Home = () => {
               title: 'AI-Powered Discovery',
               description: 'Instantly find relevant trials with intelligent search tools.',
               icon: <Search size={48} />,
-              bg: '/images/trial-discovery.jpeg',
+              bg: '/images/trial-discovery.jpg',
             },
             {
               title: 'Secure Profiles',
               description: 'Manage research and patient data with enterprise-grade security.',
               icon: <User size={48} />,
-              bg: '/images/secure-profiles.jpeg',
+              bg: '/images/secure-profiles.jpg',
             },
             {
               title: 'Global Collaboration',
               description: 'Connect with international research networks seamlessly.',
               icon: <Users size={48} />,
-              bg: '/images/collaboration.jpeg',
+              bg: '/images/collaboration.jpg',
             },
             {
               title: 'Verified Data',
               description: 'Access trusted, real-time trial data for informed decisions.',
               icon: <Database size={48} />,
-              bg: '/images/data-integrity.jpeg',
+              bg: '/images/data-integrity.jpg',
             },
           ].map((solution, idx) => (
             <motion.div
@@ -152,17 +152,17 @@ const Home = () => {
             {
               quote: 'Dwaliro has redefined how we approach clinical trial discovery.',
               author: 'Dr. Sophia Lee, Head Researcher',
-              bg: '/images/testimonial-1.jpeg',
+              bg: '/images/testimonial-1.jpg',
             },
             {
               quote: 'The platform’s tools have transformed our trial operations.',
               author: 'Mark Thompson, Pharma Director',
-              bg: '/images/testimonial-2.jpeg',
+              bg: '/images/testimonial-2.jpg',
             },
             {
               quote: 'Dwaliro empowers patients with unparalleled trial access.',
               author: 'Clara Evans, Patient Advocate',
-              bg: '/images/testimonial-3.jpeg',
+              bg: '/images/testimonial-3.jpg',
             },
           ].map((testimonial, idx) => (
             <motion.div
