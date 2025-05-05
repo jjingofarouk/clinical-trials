@@ -20,24 +20,34 @@ const TrialDetailPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchTrial = async () => {
+    const fetchTrial = async (retries = 3) => {
       setLoading(true);
-      try {
-        const response = await fetch(
-          `https://clinicaltrials.gov/api/v2/studies/${nctId}`
-        );
-        if (!response.ok) {
-          throw new Error(`Failed to fetch trial: HTTP ${response.status}`);
+      setError(null);
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const response = await fetch(
+            `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies/${encodeURIComponent(nctId)}`
+          );
+          if (!response.ok) {
+            if (response.status === 429 && attempt < retries) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+              continue;
+            }
+            throw new Error(`Failed to fetch trial: HTTP ${response.status} - ${response.statusText}`);
+          }
+          const data = await response.json();
+          if (!data || !data.protocolSection) {
+            throw new Error('Invalid trial data received');
+          }
+          setTrial(data);
+          setLoading(false);
+          return;
+        } catch (err) {
+          if (attempt === retries) {
+            setError(`Error fetching trial: ${err.message}`);
+            setLoading(false);
+          }
         }
-        const data = await response.json();
-        if (!data || !data.protocolSection) {
-          throw new Error('Invalid trial data received');
-        }
-        setTrial(data);
-      } catch (err) {
-        setError(`Error fetching trial: ${err.message}`);
-      } finally {
-        setLoading(false);
       }
     };
     fetchTrial();
@@ -52,7 +62,7 @@ const TrialDetailPage = () => {
     );
   }
 
-  if (error || !trial) {
+  if ((error || !trial) && process.env.REACT_APP_DEBUG_MODE === 'true') {
     return (
       <div className="error-message" aria-live="polite">
         <AlertCircle size={20} className="text-gray-400" />
@@ -68,6 +78,10 @@ const TrialDetailPage = () => {
         </button>
       </div>
     );
+  }
+
+  if (!trial) {
+    return null;
   }
 
   const protocolSection = trial.protocolSection;
@@ -160,13 +174,11 @@ const TrialDetailPage = () => {
         * {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
         .trial-detail-page {
           max-width: 800px;
           margin: 16px auto;
           padding: 16px;
         }
-
         .back-btn {
           display: flex;
           align-items: center;
@@ -177,17 +189,14 @@ const TrialDetailPage = () => {
           cursor: pointer;
           margin-bottom: 16px;
         }
-
         .back-btn:hover {
           color: #111827;
         }
-
         .trial-detail-content {
           display: flex;
           flex-direction: column;
           gap: 16px;
         }
-
         .loading-spinner {
           display: flex;
           flex-direction: column;
@@ -197,7 +206,6 @@ const TrialDetailPage = () => {
           font-size: 14px;
           margin-top: 32px;
         }
-
         .spinner {
           width: 24px;
           height: 24px;
@@ -206,7 +214,6 @@ const TrialDetailPage = () => {
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
-
         .error-message {
           display: flex;
           flex-direction: column;
@@ -216,26 +223,21 @@ const TrialDetailPage = () => {
           font-size: 14px;
           margin-top: 32px;
         }
-
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-
         @media (max-width: 640px) {
           .trial-detail-page {
             padding: 12px;
             margin: 12px;
           }
-
           .text-sm {
             font-size: 12px;
           }
-
           .text-xs {
             font-size: 11px;
           }
-
           .back-btn {
             font-size: 12px;
           }
