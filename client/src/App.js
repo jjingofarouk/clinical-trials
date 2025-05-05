@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Navbars from './components/Navbar';
@@ -11,6 +11,29 @@ import Contact from './components/Contact';
 import Privacy from './components/Privacy';
 
 function App() {
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    try {
+      // Basic initialization check
+      if (!window) {
+        throw new Error('Window object not available');
+      }
+    } catch (err) {
+      setError(`App failed to initialize: ${err.message}`);
+    }
+  }, []);
+
+  if (error) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
+        <h1>App Error</h1>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Reload Page</button>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <div className="App">
@@ -23,6 +46,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<div style={{ padding: '20px', textAlign: 'center' }}>404: Page Not Found</div>} />
           </Routes>
         </main>
         <Footer />
