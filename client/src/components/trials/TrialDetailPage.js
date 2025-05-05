@@ -169,7 +169,7 @@ const TrialDetailPage = () => {
         <Outcomes outcomes={outcomesData} />
         <Statistics stats={statsData} />
         <RegulatoryInfo regulatory={regulatoryData} />
-        <Results results={data.resultsData} />
+        <Results results={resultsData} />
       </div>
       <style jsx>{`
         * {
