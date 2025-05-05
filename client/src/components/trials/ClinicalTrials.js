@@ -137,7 +137,6 @@ const ClinicalTrials = () => {
         if (filters.enrollmentCount.max)
           queryParams.append('filter.enrollmentMax', filters.enrollmentCount.max);
 
-        console.log(`API URL: https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`);
         const response = await fetch(
           `https://clinicaltrials.gov/api/v2/studies?${queryParams.toString()}`
         );
@@ -149,7 +148,6 @@ const ClinicalTrials = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('API Response:', data);
         const fetchedTrials = data.studies || [];
         setTrials(isRandom ? shuffleArray(fetchedTrials) : fetchedTrials);
         setLoading(false);
@@ -197,7 +195,7 @@ const ClinicalTrials = () => {
 
   const TrialListItem = ({ trial }) => {
     const protocolSection = trial.protocolSection;
-    const nctId = protocolSection?.identificationModule?.nctId;
+    const nctId = protocolSection?.identificationModule?.nctId || 'N/A';
     const title = protocolSection?.identificationModule?.briefTitle || 'No Title';
     const status = protocolSection?.statusModule?.overallStatus || 'Unknown';
     const phase = protocolSection?.designModule?.phases?.join(', ') || 'N/A';
@@ -207,7 +205,7 @@ const ClinicalTrials = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        whileHover={{ scale: 1.02, backgroundColor: '#E5E7EB' }}
+        whileHover={{ scale: 1.02 }}
         className="trial-list-item"
         onClick={() => navigate(`/trials/${nctId}`)}
         role="button"
@@ -217,9 +215,9 @@ const ClinicalTrials = () => {
       >
         <div className="trial-list-content">
           <h3 className="trial-title">{title}</h3>
-          <p className="trial-meta">NCT ID: {nctId}</p>
-          <p className="trial-meta">Status: {status}</p>
-          <p className="trial-meta">Phase: {phase}</p>
+          <p className="trial-meta nct-id">NCT ID: {nctId}</p>
+          <p className="trial-meta status">Status: {status}</p>
+          <p className="trial-meta phase">Phase: {phase}</p>
         </div>
       </motion.div>
     );
@@ -227,189 +225,193 @@ const ClinicalTrials = () => {
 
   const FilterSidebar = () => (
     <motion.div
-      initial={{ x: -300 }}
-      animate={{ x: showFilters ? 0 : -300 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: showFilters ? 1 : 0 }}
       transition={{ duration: 0.3 }}
       className={`filter-sidebar ${showFilters ? 'active' : ''}`}
       aria-hidden={!showFilters}
     >
-      <div className="sidebar-header">
-        <h3>Filters</h3>
-        <button
-          className="close-btn"
-          onClick={() => setShowFilters(false)}
-          aria-label="Close filters"
-        >
-          <X size={16} color="#374151" />
-        </button>
-      </div>
-      <div className="filter-grid">
-        {Object.entries(filterOptions).map(([key, options]) => (
-          <div className="filter-group" key={key}>
-            <label htmlFor={`${key}-filter`} className="filter-label">
-              {key.charAt(0).toUpperCase() + key.slice(1)}
+      <div className="filter-modal">
+        <div className="sidebar-header">
+          <h3>Filters</h3>
+          <button
+            className="close-btn"
+            onClick={() => setShowFilters(false)}
+            aria-label="Close filters"
+          >
+            <X size={16} color="#1E293B" />
+          </button>
+        </div>
+        <div className="filter-grid">
+          {Object.entries(filterOptions).map(([key, options]) => (
+            <div className="filter-group" key={key}>
+              <label htmlFor={`${key}-filter`} className="filter-label">
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </label>
+              <select
+                id={`${key}-filter`}
+                value={filters[key]}
+                onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
+                className="filter-input"
+              >
+                {options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <div className="filter-group">
+            <label htmlFor="healthy-volunteers-filter" className="filter-label flex items-center gap-2">
+              Healthy Volunteers
+              <input
+                id="healthy-volunteers-filter"
+                type="checkbox"
+                checked={filters.healthyVolunteers}
+                onChange={(e) => setFilters({ ...filters, healthyVolunteers: e.target.checked })}
+                className="filter-input"
+              />
             </label>
-            <select
-              id={`${key}-filter`}
-              value={filters[key]}
-              onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
-              className="filter-input"
-            >
-              {options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
-        ))}
-        <div className="filter-group">
-          <label htmlFor="healthy-volunteers-filter" className="filter-label flex items-center gap-2">
-            Healthy Volunteers
+          <div className="filter-group">
+            <label htmlFor="has-results-filter" className="filter-label flex items-center gap-2">
+              Has Results
+              <input
+                id="has-results-filter"
+                type="checkbox"
+                checked={filters.hasResults}
+                onChange={(e) => setFilters({ ...filters, hasResults: e.target.checked })}
+                className="filter-input"
+              />
+            </label>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="start-date-filter" className="filter-label">Start Date</label>
             <input
-              id="healthy-volunteers-filter"
-              type="checkbox"
-              checked={filters.healthyVolunteers}
-              onChange={(e) => setFilters({ ...filters, healthyVolunteers: e.target.checked })}
-            />
-          </label>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="has-results-filter" className="filter-label flex items-center gap-2">
-            Has Results
-            <input
-              id="has-results-filter"
-              type="checkbox"
-              checked={filters.hasResults}
-              onChange={(e) => setFilters({ ...filters, hasResults: e.target.checked })}
-            />
-          </label>
-        </div>
-        <div className="filter-group">
-          <label htmlFor="start-date-filter" className="filter-label">Start Date</label>
-          <input
-            id="start-date-filter"
-            type="date"
-            value={filters.startDate}
-            onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-            className="filter-input"
-          />
-        </div>
-        <div className="filter-group">
-          <label htmlFor="completion-date-filter" className="filter-label">Completion Date</label>
-          <input
-            id="completion-date-filter"
-            type="date"
-            value={filters.completionDate}
-            onChange={(e) => setFilters({ ...filters, completionDate: e.target.value })}
-            className="filter-input"
-          />
-        </div>
-        <div className="filter-group">
-          <label htmlFor="conditions-filter" className="filter-label">Conditions</label>
-          <input
-            id="conditions-filter"
-            type="text"
-            value={filters.conditions.join(',')}
-            onChange={(e) =>
-              setFilters({ ...filters, conditions: e.target.value.split(',').map((c) => c.trim()) })
-            }
-            className="filter-input"
-          />
-        </div>
-        <div className="filter-group">
-          <label htmlFor="locations-filter" className="filter-label">Locations</label>
-          <input
-            id="locations-filter"
-            type="text"
-            value={filters.locations.join(',')}
-            onChange={(e) =>
-              setFilters({ ...filters, locations: e.target.value.split(',').map((l) => l.trim()) })
-            }
-            className="filter-input"
-          />
-        </div>
-        <div className="filter-group">
-          <label className="filter-label">Participant Age Range</label>
-          <div className="range-inputs">
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.participantAge.min}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  participantAge: { ...filters.participantAge, min: e.target.value },
-                })
-              }
+              id="start-date-filter"
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
               className="filter-input"
-              aria-label="Minimum age"
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.participantAge.max}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  participantAge: { ...filters.participantAge, max: e.target.value },
-                })
-              }
-              className="filter-input"
-              aria-label="Maximum age"
             />
           </div>
-        </div>
-        <div className="filter-group">
-          <label className="filter-label">Enrollment Count Range</label>
-          <div className="range-inputs">
+          <div className="filter-group">
+            <label htmlFor="completion-date-filter" className="filter-label">Completion Date</label>
             <input
-              type="number"
-              placeholder="Min"
-              value={filters.enrollmentCount.min}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  enrollmentCount: { ...filters.enrollmentCount, min: e.target.value },
-                })
-              }
+              id="completion-date-filter"
+              type="date"
+              value={filters.completionDate}
+              onChange={(e) => setFilters({ ...filters, completionDate: e.target.value })}
               className="filter-input"
-              aria-label="Minimum enrollment"
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.enrollmentCount.max}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  enrollmentCount: { ...filters.enrollmentCount, max: e.target.value },
-                })
-              }
-              className="filter-input"
-              aria-label="Maximum enrollment"
             />
           </div>
+          <div className="filter-group">
+            <label htmlFor="conditions-filter" className="filter-label">Conditions</label>
+            <input
+              id="conditions-filter"
+              type="text"
+              value={filters.conditions.join(',')}
+              onChange={(e) =>
+                setFilters({ ...filters, conditions: e.target.value.split(',').map((c) => c.trim()) })
+              }
+              className="filter-input"
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="locations-filter" className="filter-label">Locations</label>
+            <input
+              id="locations-filter"
+              type="text"
+              value={filters.locations.join(',')}
+              onChange={(e) =>
+                setFilters({ ...filters, locations: e.target.value.split(',').map((l) => l.trim()) })
+              }
+              className="filter-input"
+            />
+          </div>
+          <div className="filter-group">
+            <label className="filter-label">Participant Age Range</label>
+            <div className="range-inputs">
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters.participantAge.min}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    participantAge: { ...filters.participantAge, min: e.target.value },
+                  })
+                }
+                className="filter-input"
+                aria-label="Minimum age"
+              />
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters.participantAge.max}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    participantAge: { ...filters.participantAge, max: e.target.value },
+                  })
+                }
+                className="filter-input"
+                aria-label="Maximum age"
+              />
+            </div>
+          </div>
+          <div className="filter-group">
+            <label className="filter-label">Enrollment Count Range</label>
+            <div className="range-inputs">
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters.enrollmentCount.min}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    enrollmentCount: { ...filters.enrollmentCount, min: e.target.value },
+                  })
+                }
+                className="filter-input"
+                aria-label="Minimum enrollment"
+              />
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters.enrollmentCount.max}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    enrollmentCount: { ...filters.enrollmentCount, max: e.target.value },
+                  })
+                }
+                className="filter-input"
+                aria-label="Maximum enrollment"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="sidebar-footer">
-        <button
-          className="btn btn-secondary"
-          onClick={resetFilters}
-          aria-label="Reset filters"
-        >
-          Reset
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            searchTrials();
-            setShowFilters(false);
-          }}
-          aria-label="Apply filters"
-        >
-          Apply
-        </button>
+        <div className="sidebar-footer">
+          <button
+            className="btn btn-secondary"
+            onClick={resetFilters}
+            aria-label="Reset filters"
+          >
+            Reset
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              searchTrials();
+              setShowFilters(false);
+            }}
+            aria-label="Apply filters"
+          >
+            Apply
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -424,7 +426,7 @@ const ClinicalTrials = () => {
               type="text"
               placeholder="Search clinical trials..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e opiskelijä.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && searchTrials()}
               aria-label="Search clinical trials"
               className="search-input"
