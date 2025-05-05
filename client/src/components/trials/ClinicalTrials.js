@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
+import { auth, db, collection, doc, setDoc, getDocs, query, where } from '../firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import TrialsSection from './TrialsSection';
@@ -90,6 +90,8 @@ const ClinicalTrials = () => {
 
         if (!isRandom && searchQuery) {
           queryParams.append('query.term', encodeURIComponent(searchQuery));
+        } else if (isRandom) {
+          queryParams.append('query.term', ''); // Empty query for random trials
         }
         if (filters.status) {
           queryParams.append('filter.overallStatus', filters.status.toUpperCase());
@@ -101,7 +103,7 @@ const ClinicalTrials = () => {
           queryParams.append('filter.studyType', filters.studyType.toUpperCase());
         }
 
-        const response = await fetch(
+        let response = await fetch(
           `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`,
           { headers: { 'Accept': 'application/json' } }
         );
@@ -110,7 +112,23 @@ const ClinicalTrials = () => {
             await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
             continue;
           }
-          throw new Error(`HTTP error: ${response.status} - ${response.statusText}`);
+          // Fallback to a broad query if the initial query fails
+          if (attempt === retries) {
+            const fallbackParams = new URLSearchParams({
+              pageSize: '50',
+              format: 'json',
+              query: '',
+            });
+            response = await fetch(
+              `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${fallbackParams.toString()}`,
+              { headers: { 'Accept': 'application/json' } }
+            );
+            if (!response.ok) {
+              throw new Error(`Fallback query failed: HTTP ${response.status} - ${response.statusText}`);
+            }
+          } else {
+            throw new Error(`HTTP error: ${response.status} - ${response.statusText}`);
+          }
         }
         const data = await response.json();
         const fetchedTrials = data.studies || [];
