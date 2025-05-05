@@ -29,9 +29,16 @@ const ClinicalTrials = () => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const userDoc = await getDocs(query(collection(db, 'users'), where('email', '==', currentUser.email)));
-        if (!userDoc.empty) {
-          setUserData(userDoc.docs[0].data());
+        try {
+          const userDoc = await getDocs(query(collection(db, 'users'), where('email', '==', currentUser.email)));
+          if (!userDoc.empty) {
+            setUserData(userDoc.docs[0].data());
+          } else {
+            setUserData(null);
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+          setUserData(null);
         }
         fetchSavedTrials(currentUser.uid);
         fetchRecommendedTrials(currentUser.uid);
@@ -52,6 +59,7 @@ const ClinicalTrials = () => {
       setSavedTrials(saved);
     } catch (err) {
       setError(`Error fetching saved trials: ${err.message}`);
+      console.error('Saved trials error:', err);
     }
   };
 
@@ -69,13 +77,14 @@ const ClinicalTrials = () => {
           { headers: { 'Accept': 'application/json' } }
         );
         if (!response.ok) {
-          throw new Error(`HTTP error: ${response.status}`);
+          throw new Error(`HTTP error: ${response.status} - ${response.statusText}`);
         }
         const data = await response.json();
-        setRecommendedTrials(data.studies || []);
+        setRecommendedTrials(Array.isArray(data.studies) ? data.studies : []);
       }
     } catch (err) {
       setError(`Error fetching recommended trials: ${err.message}`);
+      console.error('Recommended trials error:', err);
     }
   };
 
@@ -102,20 +111,21 @@ const ClinicalTrials = () => {
           queryParams.append('filter.studyType', filters.studyType.toUpperCase());
         }
 
+        console.log('Fetching trials with URL:', `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`);
         let response = await fetch(
           `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`,
           { headers: { 'Accept': 'application/json' } }
         );
         if (!response.ok) {
           if (response.status === 429 && attempt < retries) {
+            console.warn(`Rate limit hit, retrying after ${1000 * Math.pow(2, attempt)}ms`);
             await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
             continue;
           }
-          // Fallback to a broad query
+          console.log('Primary query failed, attempting fallback');
           const fallbackParams = new URLSearchParams({
             pageSize: '50',
             format: 'json',
-            query: '',
           });
           response = await fetch(
             `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${fallbackParams.toString()}`,
@@ -126,14 +136,17 @@ const ClinicalTrials = () => {
           }
         }
         const data = await response.json();
-        const fetchedTrials = data.studies || [];
+        console.log('API response:', data);
+        const fetchedTrials = Array.isArray(data.studies) ? data.studies : [];
         if (fetchedTrials.length === 0 && !isRandom && searchQuery) {
           setError('No trials found. Try a broader query, e.g., "cancer" or "diabetes".');
+          console.warn('No trials returned for query:', searchQuery);
         }
         setTrials(isRandom ? shuffleArray(fetchedTrials) : fetchedTrials);
         setLoading(false);
         return;
       } catch (err) {
+        console.error('Trial fetch error (attempt', attempt, '):', err);
         if (attempt === retries) {
           setTrials([]);
           setLoading(false);
@@ -166,6 +179,7 @@ const ClinicalTrials = () => {
       fetchSavedTrials(user.uid);
     } catch (err) {
       setError(`Error saving trial: ${err.message}`);
+      console.error('Save trial error:', err);
     }
   };
 
