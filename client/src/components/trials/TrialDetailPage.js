@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { auth, db, doc, setDoc, getDoc } from './firebase';
 import { motion } from 'framer-motion';
 import { ChevronLeft, AlertCircle } from 'lucide-react';
 import Interventions from './Interventions';
@@ -11,6 +12,8 @@ import Results from './Results';
 import Statistics from './Statistics';
 import StudyDesign from './StudyDesign';
 import StudyDetails from './StudyDetails';
+import Button from 'react-bootstrap/Button';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const TrialDetailPage = () => {
   const { nctId } = useParams();
@@ -18,6 +21,8 @@ const TrialDetailPage = () => {
   const [trial, setTrial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const fetchTrial = async (retries = 3) => {
@@ -51,8 +56,43 @@ const TrialDetailPage = () => {
         }
       }
     };
+
+    const checkIfSaved = async () => {
+      if (auth.currentUser) {
+        try {
+          const savedTrialDoc = await getDoc(doc(db, 'users', auth.currentUser.uid, 'savedTrials', nctId));
+          setIsSaved(savedTrialDoc.exists());
+        } catch (err) {
+          console.error('Error checking saved trial:', err);
+        }
+      }
+    };
+
     fetchTrial();
+    checkIfSaved();
   }, [nctId]);
+
+  const handleSaveTrial = async () => {
+    if (!auth.currentUser) {
+      navigate('/auth');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'users', auth.currentUser.uid, 'savedTrials', nctId), {
+        id: nctId,
+        title: trial.protocolSection?.identificationModule?.briefTitle || 'Untitled Trial',
+        savedAt: new Date().toISOString(),
+      });
+      setIsSaved(true);
+      alert('Trial saved successfully!');
+    } catch (err) {
+      setError(`Failed to save trial: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -162,6 +202,20 @@ const TrialDetailPage = () => {
       </button>
       <div className="trial-detail-content">
         <StudyDetails study={studyData} />
+        <Button
+          onClick={handleSaveTrial}
+          disabled={saving || isSaved}
+          style={{
+            backgroundColor: isSaved ? '#6b7280' : '#6c63ff',
+            borderColor: isSaved ? '#6b7280' : '#6c63ff',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            padding: '0.5rem 1rem',
+            marginBottom: '16px',
+          }}
+        >
+          {saving ? 'Saving...' : isSaved ? 'Trial Saved' : 'Save Trial'}
+        </Button>
         <StudyDesign design={designData} />
         <Participants participants={participantsData} />
         <Interventions interventions={interventionsData} />
