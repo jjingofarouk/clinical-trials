@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { googleProvider, signInWithPopup } from '../firebase';
+import { googleProvider, signInWithPopup } from './firebase';
 
 const AuthModal = ({ setShowAuthModal }) => {
   const handleGoogleSignIn = async () => {
