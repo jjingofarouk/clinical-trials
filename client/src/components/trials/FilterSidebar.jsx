@@ -13,7 +13,14 @@ const FilterSidebar = ({ filters, setFilters, setShowFilters, searchTrials }) =>
   };
 
   const resetFilters = () => {
-    setFilters({ status: '', phase: '', studyType: '' });
+    setFilters({
+      status: '',
+      phase: '',
+      studyType: '',
+      condition: '',
+      location: '',
+      sponsor: '',
+    });
     setShowFilters(false);
     searchTrials();
   };
@@ -81,6 +88,39 @@ const FilterSidebar = ({ filters, setFilters, setShowFilters, searchTrials }) =>
                 <option value="Observational">Observational</option>
               </select>
             </div>
+            <div className="filter-group">
+              <label className="filter-label">Condition</label>
+              <input
+                type="text"
+                name="condition"
+                value={filters.condition}
+                onChange={handleFilterChange}
+                className="filter-input"
+                placeholder="e.g., Cancer, Diabetes"
+              />
+            </div>
+            <div className="filter-group">
+              <label className="filter-label">Location</label>
+              <input
+                type="text"
+                name="location"
+                value={filters.location}
+                onChange={handleFilterChange}
+                className="filter-input"
+                placeholder="e.g., New York, CA"
+              />
+            </div>
+            <div className="filter-group">
+              <label className="filter-label">Sponsor</label>
+              <input
+                type="text"
+                name="sponsor"
+                value={filters.sponsor}
+                onChange={handleFilterChange}
+                className="filter-input"
+                placeholder="e.g., Pfizer, NIH"
+              />
+            </div>
           </div>
           <div className="sidebar-footer">
             <button className="btn btn-secondary" onClick={resetFilters}>
@@ -116,7 +156,16 @@ const FilterSidebar = ({ filters, setFilters, setShowFilters, searchTrials }) =>
           }
           .sidebar-header {
             display: flex;
-close-btn {
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          }
+          .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+          }
+          .close-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -130,13 +179,13 @@ close-btn {
           }
           .filter-grid {
             display: grid;
-            gap: 24px;
-            margin: 24px 0;
+            gap: 16px;
+            margin: 16px 0;
           }
           .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
           }
           .filter-label {
             font-size: 14px;
@@ -144,10 +193,10 @@ close-btn {
             color: #1e293b;
           }
           .filter-input {
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 14px;
             color: #1e293b;
             background: #f8fafc;
             transition: border-color 0.3s ease;
@@ -159,13 +208,13 @@ close-btn {
           .sidebar-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 16px;
+            gap: 12px;
           }
           .btn {
-            padding: 12px 24px;
-            font-size: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
           }
@@ -176,7 +225,7 @@ close-btn {
           }
           .btn-primary:hover {
             background: linear-gradient(90deg, #fb923c, #f97316);
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
           }
           .btn-secondary {
             background: #ffffff;
@@ -189,12 +238,12 @@ close-btn {
           }
           @media (max-width: 768px) {
             .filter-modal {
-              margin: 16px;
+              margin: 12px;
               padding: 16px;
             }
             .btn {
-              padding: 10px 16px;
-              font-size: 14px;
+              padding: 8px 12px;
+              font-size: 12px;
             }
           }
         `}</style>
