@@ -123,13 +123,13 @@
 
 .filter-modal {
   background: #FFFFFF;
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: 16px;
+  padding: 24px;
   width: 90%;
-  max-width: 600px;
+  max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   position: relative;
 }
 
@@ -137,11 +137,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .sidebar-header h3 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #1E293B;
 }
@@ -151,7 +151,7 @@
   border: none;
   cursor: pointer;
   padding: 8px;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
@@ -161,25 +161,25 @@
 
 .filter-grid {
   display: grid;
-  gap: 24px;
+  gap: 16px;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .filter-label {
   font-size: 14px;
   color: #1E293B;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .filter-input {
-  padding: 12px;
+  padding: 10px 12px;
   border: 1px solid #E2E8F0;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 14px;
   color: #1E293B;
   background: #F8FAFC;
@@ -189,25 +189,67 @@
 .filter-input:focus {
   outline: none;
   border-color: #F97316;
-  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1);
+  box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.1);
 }
 
-.filter-input[type="checkbox"] {
-  width: 20px;
+.filter-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
   height: 20px;
-  accent-color: #F97316;
+}
+
+.filter-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
   cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #CBD5E1;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.filter-switch input:checked + .slider {
+  background-color: #F97316;
+}
+
+.filter-switch input:checked + .slider:before {
+  transform: translateX(20px);
 }
 
 .range-inputs {
   display: flex;
-  gap: 16px;
+  gap: 12px;
+}
+
+.range-inputs .filter-input {
+  flex: 1;
 }
 
 .sidebar-footer {
   display: flex;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 12px;
+  margin-top: 20px;
   justify-content: flex-end;
 }
 
@@ -382,5 +424,10 @@
   .trial-list-item {
     padding: 16px;
     border-radius: 16px;
+  }
+
+  .filter-modal {
+    width: 95%;
+    padding: 20px;
   }
 }
