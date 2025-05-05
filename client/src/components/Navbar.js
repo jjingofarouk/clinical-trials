@@ -1,21 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { auth, signOut } from '../firebase';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
-import logo from './logo.jpg'; // Adjust path to your logo
+import logo from './logo.jpg';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+const generateRandomId = () => {
+  return 'ID-' + Math.random().toString(36).substr(2, 8);
+};
 
 const Navbars = () => {
   const [expanded, setExpanded] = useState(false);
   const [visible, setVisible] = useState(true);
   const [prevScrollY, setPrevScrollY] = useState(0);
+  const [user, setUser] = useState(null);
+  const [randomId, setRandomId] = useState(generateRandomId());
   const navbarRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        setRandomId(generateRandomId());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch (err) {
+      alert(`Logout failed: ${err.message}`);
+    }
+  };
 
   const styles = {
     navbar: {
-      backgroundColor: '#2C3E50',
+      backgroundColor: user ? '#1A3C34' : '#2C3E50',
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       transition: 'top 0.3s ease-in-out',
       position: 'sticky',
@@ -35,6 +62,14 @@ const Navbars = () => {
       fontWeight: 600,
       padding: '0.5rem 1rem',
       transition: 'all 0.2s ease',
+    },
+    userInfo: {
+      color: '#FFFFFF',
+      fontSize: '0.9rem',
+      backgroundColor: '#26A69A',
+      padding: '5px 10px',
+      borderRadius: '4px',
+      marginRight: '10px',
     },
     brandText: {
       color: '#FFFFFF',
@@ -141,14 +176,29 @@ const Navbars = () => {
             </Nav.Link>
           </Nav>
           <Nav className="ms-auto align-items-center">
-            <Button
-              as={NavLink}
-              to="/auth"
-              style={styles.ctaButton}
-              className="cta-button-custom ms-2"
-            >
-              Participate Now
-            </Button>
+            {user ? (
+              <>
+                <span style={styles.userInfo}>
+                  {user.email.split('@')[0]} ({randomId})
+                </span>
+                <Button
+                  onClick={handleLogout}
+                  style={styles.ctaButton}
+                  className="cta-button-custom ms-2"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button
+                as={NavLink}
+                to="/auth"
+                style={styles.ctaButton}
+                className="cta-button-custom ms-2"
+              >
+                Login
+              </Button>
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>
@@ -160,7 +210,7 @@ const Navbars = () => {
         }
         .nav-link-custom.active {
           color: #FFFFFF !important;
-          fontWeight: 600;
+          font-weight: 600;
           border-bottom: 2px solid #3498DB;
         }
         .cta-button-custom {
@@ -176,7 +226,7 @@ const Navbars = () => {
           border-color: #E5E7EB !important;
         }
         .navbar-collapse {
-          background-color: #2C3E50;
+          background-color: ${user ? '#1A3C34' : '#2C3E50'};
         }
       `}</style>
     </Navbar>
