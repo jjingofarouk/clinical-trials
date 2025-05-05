@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { auth, db } from './firebase';
+import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import AuthModal from './AuthModal';
@@ -16,6 +16,7 @@ const ClinicalTrials = () => {
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [error, setError] = useState(null);
 
   const [filters, setFilters] = useState({
     status: '',
@@ -36,38 +37,49 @@ const ClinicalTrials = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        fetchSavedTrials(currentUser.uid);
-        fetchRecommendedTrials(currentUser.uid);
-      } else {
-        setSavedTrials([]);
-        setRecommendedTrials([]);
+    const unsubscribe = auth.onAuthStateChanged(
+      (currentUser) => {
+        setUser(currentUser);
+        if (currentUser) {
+          fetchSavedTrials(currentUser.uid);
+          fetchRecommendedTrials(currentUser.uid);
+        } else {
+          setSavedTrials([]);
+          setRecommendedTrials([]);
+        }
+      },
+      (err) => {
+        setError(`Auth error: ${err.message}`);
       }
-    });
+    );
     return () => unsubscribe();
   }, []);
 
   const fetchSavedTrials = async (uid) => {
-    const { getDocs, query, collection, where } = await import('./firebase');
-    const q = query(collection(db, 'savedTrials'), where('userId', '==', uid));
-    const querySnapshot = await getDocs(q);
-    const saved = querySnapshot.docs.map(doc => doc.data().trial);
-    setSavedTrials(saved);
+    try {
+      const q = query(collection(db, 'savedTrials'), where('userId', '==', uid));
+      const querySnapshot = await getDocs(q);
+      const saved = querySnapshot.docs.map(doc => doc.data().trial);
+      setSavedTrials(saved);
+    } catch (err) {
+      setError(`Error fetching saved trials: ${err.message}`);
+    }
   };
 
   const fetchRecommendedTrials = async (uid) => {
-    const { getDocs, query, collection, where } = await import('./firebase');
-    const q = query(collection(db, 'savedTrials'), where('userId', '==', uid));
-    const querySnapshot = await getDocs(q);
-    const conditions = querySnapshot.docs.map(doc => doc.data().trial.protocolSection?.conditionsModule?.conditions || []).flat();
-    if (conditions.length > 0) {
-      const response = await fetch(
-        `https://clinicaltrials.gov/api/v2/studies?query.cond=${conditions.join('|')}&pageSize=5`
-      );
-      const data = await response.json();
-      setRecommendedTrials(data.studies || []);
+    try {
+      const q = query(collection(db, 'savedTrials'), where('userId', '==', uid));
+      const querySnapshot = await getDocs(q);
+      const conditions = querySnapshot.docs.map(doc => doc.data().trial.protocolSection?.conditionsModule?.conditions || []).flat();
+      if (conditions.length > 0) {
+        const response = await fetch(
+          `https://clinicaltrials.gov/api/v2/studies?query.cond=${conditions.join('|')}&pageSize=5`
+        );
+        const data = await response.json();
+        setRecommendedTrials(data.studies || []);
+      }
+    } catch (err) {
+      setError(`Error fetching recommended trials: ${err.message}`);
     }
   };
 
@@ -131,11 +143,11 @@ const ClinicalTrials = () => {
         setTrials(isRandom ? shuffleArray(fetchedTrials) : fetchedTrials);
         setLoading(false);
         return;
-      } catch (error) {
-        console.error(`Attempt ${attempt} failed:`, error);
+      } catch (err) {
         if (attempt === retries) {
           setTrials([]);
           setLoading(false);
+          setError(`Error searching trials: ${err.message}`);
         }
       }
     }
@@ -147,9 +159,13 @@ const ClinicalTrials = () => {
 
   useEffect(() => {
     const fetchInitialTrials = async () => {
-      await searchTrials(true);
-      if (trials.length === 0) {
-        await searchTrials(false);
+      try {
+        await searchTrials(true);
+        if (trials.length === 0) {
+          await searchTrials(false);
+        }
+      } catch (err) {
+        setError(`Error fetching initial trials: ${err.message}`);
       }
     };
     fetchInitialTrials();
@@ -161,7 +177,6 @@ const ClinicalTrials = () => {
       return;
     }
     try {
-      const { doc, setDoc } = await import('./firebase');
       const trialRef = doc(db, 'savedTrials', `${user.uid}_${trial.protocolSection.identificationModule.nctId}`);
       await setDoc(trialRef, {
         userId: user.uid,
@@ -169,10 +184,20 @@ const ClinicalTrials = () => {
         savedAt: new Date().toISOString(),
       });
       fetchSavedTrials(user.uid);
-    } catch (error) {
-      console.error('Error saving trial:', error);
+    } catch (err) {
+      setError(`Error saving trial: ${err.message}`);
     }
   };
+
+  if (error) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
+        <h1>Error</h1>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Reload Page</button>
+      </div>
+    );
+  }
 
   return (
     <div className="clinical-trials-container">
