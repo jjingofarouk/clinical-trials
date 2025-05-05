@@ -71,7 +71,7 @@ const About = () => (
             transition={{ duration: 0.3 }}
           >
             <img
-              src="/farouk.jpg" // Replace with actual image path
+              src="/farouk.png" // Replace with actual image path
               alt="Farouk Jjingo, Founder of Dwaliro"
               className="w-full h-full object-cover"
             />
