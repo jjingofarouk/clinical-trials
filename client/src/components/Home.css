@@ -1,9 +1,10 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 .home {
   font-family: 'Inter', sans-serif;
-  color: #0A2E36;
-  background-color: #F5F6F5;
+  color: #101828;
+  background-color: #F9FAFB;
 }
 
 /* Hero Section */
@@ -24,6 +25,7 @@
   height: 100%;
   object-fit: cover;
   z-index: -2;
+  filter: none;
 }
 
 .hero-overlay {
@@ -32,96 +34,94 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(10, 46, 54, 0.8), rgba(45, 106, 111, 0.7));
+  background: rgba(16, 24, 40, 0.6);
   z-index: -1;
 }
 
 .hero-content {
   text-align: center;
-  max-width: 900px;
+  max-width: 1000px;
   padding: 2rem;
   color: #FFFFFF;
 }
 
 .hero-content h1 {
-  font-size: 5rem;
+  font-size: 4.5rem;
   font-weight: 900;
   line-height: 1.1;
-  margin-bottom: 2rem;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  margin-bottom: 1.5rem;
 }
 
 .hero-content p {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 400;
-  margin-bottom: 3rem;
-  max-width: 700px;
+  margin-bottom: 2.5rem;
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .cta-buttons {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .cta-button {
-  padding: 1.2rem 3rem;
-  border-radius: 12px;
-  font-size: 1.3rem;
-  font-weight: 700;
+  padding: 1rem 2.5rem;
+  border-radius: 8px;
+  font-size: 1.125rem;
+  font-weight: 600;
   text-decoration: none;
-  transition: all 0.4s ease;
+  transition: all 0.3s ease;
 }
 
 .cta-button.primary {
-  background-color: #0A2E36;
+  background-color: #F97316;
   color: #FFFFFF;
-  border: 2px solid #0A2E36;
+  border: none;
 }
 
 .cta-button.primary:hover,
 .cta-button.primary:focus {
-  background-color: #2D6A6F;
-  border-color: #2D6A6F;
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background-color: #EA580C;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cta-button.secondary {
   background-color: transparent;
   color: #FFFFFF;
-  border: 2px solid #FFFFFF;
+  border: 1px solid #FFFFFF;
 }
 
 .cta-button.secondary:hover,
 .cta-button.secondary:focus {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Solutions Section */
 .solutions {
-  padding: 8rem 2rem;
+  padding: 6rem 2rem;
   background-color: #FFFFFF;
   text-align: center;
 }
 
 .solutions h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
-  margin-bottom: 4rem;
-  color: #0A2E36;
+  margin-bottom: 3rem;
+  color: #101828;
 }
 
 .solutions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 3rem;
-  max-width: 1400px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
@@ -129,18 +129,18 @@
   position: relative;
   background-size: cover;
   background-position: center;
-  border-radius: 20px;
+  border-radius: 12px;
   overflow: hidden;
-  min-height: 400px;
+  min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transition: transform 0.4s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
 .solution-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
 }
 
 .solution-overlay {
@@ -149,7 +149,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 46, 54, 0.7);
+  background: rgba(16, 24, 40, 0.7);
   z-index: 0;
 }
 
@@ -157,98 +157,97 @@
   position: relative;
   z-index: 1;
   color: #FFFFFF;
-  padding: 3rem;
+  padding: 2rem;
   text-align: center;
 }
 
 .solution-icon {
   display: block;
-  margin-bottom: 2rem;
-  color: #FFFFFF;
-}
-
-.solution-content h3 {
-  font-size: 2rem;
-  font-weight: 700;
   margin-bottom: 1.5rem;
 }
 
+.solution-content h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
 .solution-content p {
-  font-size: 1.2rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 /* Impact Section */
 .impact {
-  padding: 8rem 2rem;
-  background: linear-gradient(135deg, #F5F6F5 0%, #E5E7E6 100%);
+  padding: 6rem 2rem;
+  background-color: #F9FAFB;
   text-align: center;
 }
 
 .impact h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
-  margin-bottom: 4rem;
-  color: #0A2E36;
+  margin-bottom: 3rem;
+  color: #101828;
 }
 
 .impact-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 3rem;
-  max-width: 1400px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 .impact-card {
   background-color: #FFFFFF;
-  padding: 3rem;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transition: transform 0.4s ease;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
 .impact-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
 }
 
 .impact-icon {
   display: block;
-  margin-bottom: 1.5rem;
-  color: #2D6A6F;
+  margin-bottom: 1rem;
+  color: #F97316;
 }
 
 .impact-card h3 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
-  color: #2D6A6F;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  color: #101828;
 }
 
 .impact-card p {
-  font-size: 1.2rem;
-  color: #374151;
+  font-size: 1rem;
+  color: #475467;
 }
 
 /* Testimonials Section */
 .testimonials {
-  padding: 8rem 2rem;
+  padding: 6rem 2rem;
   background-color: #FFFFFF;
   text-align: center;
 }
 
 .testimonials h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
-  margin-bottom: 4rem;
-  color: #0A2E36;
+  margin-bottom: 3rem;
+  color: #101828;
 }
 
 .testimonial-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 3rem;
-  max-width: 1400px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
@@ -256,18 +255,18 @@
   position: relative;
   background-size: cover;
   background-position: center;
-  border-radius: 20px;
-  padding: 3rem;
-  min-height: 300px;
+  border-radius: 12px;
+  padding: 2rem;
+  min-height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transition: transform 0.4s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
 .testimonial-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
 }
 
 .testimonial-overlay {
@@ -276,63 +275,63 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 46, 54, 0.75);
+  background: rgba(16, 24, 40, 0.7);
   z-index: 0;
 }
 
 .testimonial-card .quote {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-style: italic;
   color: #FFFFFF;
-  margin-bottom: 2rem;
-  line-height: 1.6;
+  margin-bottom: 1rem;
+  line-height: 1.5;
   z-index: 1;
 }
 
 .testimonial-card .author {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: #FFFFFF;
   z-index: 1;
 }
 
 /* CTA Section */
 .cta-section {
-  padding: 8rem 2rem;
-  background: linear-gradient(135deg, #0A2E36 0%, #2D6A6F 100%);
+  padding: 6rem 2rem;
+  background-color: #101828;
   text-align: center;
   color: #FFFFFF;
 }
 
 .cta-content h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .cta-content p {
-  font-size: 1.5rem;
-  margin-bottom: 3rem;
-  max-width: 800px;
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  max-width: 600px;
   margin-left: auto;
   margin-right: auto;
 }
 
 /* Responsive Design */
-@media (min-width: 1400px) {
+@media (min-width: 1280px) {
   .hero-content h1 {
-    font-size: 6rem;
+    font-size: 5rem;
   }
 
   .hero-content p {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .solutions h2,
   .impact h2,
   .testimonials h2,
   .cta-content h2 {
-    font-size: 4rem;
+    font-size: 3.5rem;
   }
 }
 
@@ -342,53 +341,53 @@
   }
 
   .hero-content p {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
   }
 
   .cta-button {
-    padding: 1rem 2.5rem;
-    font-size: 1.2rem;
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
   }
 
   .solutions h2,
   .impact h2,
   .testimonials h2,
   .cta-content h2 {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
   }
 
   .solution-content h3 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
 
   .solution-content p {
-    font-size: 1.1rem;
+    font-size: 0.875rem;
   }
 
   .impact-card h3 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 }
 
 @media (max-width: 768px) {
   .hero-content h1 {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
   }
 
   .hero-content p {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   .cta-buttons {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .solutions,
   .impact,
   .testimonials,
   .cta-section {
-    padding: 5rem 1.5rem;
+    padding: 4rem 1.5rem;
   }
 
   .solutions-grid,
@@ -399,22 +398,22 @@
 
   .solution-card,
   .testimonial-card {
-    min-height: 350px;
+    min-height: 320px;
   }
 }
 
 @media (max-width: 480px) {
   .hero-content h1 {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
 
   .hero-content p {
-    font-size: 1rem;
+    font-size: 0.875rem;
   }
 
   .cta-button {
-    padding: 0.8rem 2rem;
-    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
   }
 
   .solutions h2,
@@ -425,18 +424,18 @@
   }
 
   .solution-content h3 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .solution-content p {
-    font-size: 1rem;
+    font-size: 0.75rem;
   }
 
   .testimonial-card .quote {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   .testimonial-card .author {
-    font-size: 1rem;
+    font-size: 0.875rem;
   }
 }
