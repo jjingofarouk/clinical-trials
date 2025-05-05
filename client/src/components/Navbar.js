@@ -15,7 +15,7 @@ const Navbars = () => {
 
   const styles = {
     navbar: {
-      backgroundColor: '#2C3E50', // Deep blue/slate color for professional medical look
+      backgroundColor: '#2C3E50',
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       transition: 'top 0.3s ease-in-out',
       position: 'sticky',
@@ -24,12 +24,12 @@ const Navbars = () => {
       width: '100%',
       zIndex: 1000,
     },
-    navLink: { 
+    navLink: {
       color: '#FFFFFF',
       fontSize: '1rem',
     },
     ctaButton: {
-      backgroundColor: '#FF8C00', // Claude's orange submit button color
+      backgroundColor: '#FF8C00',
       borderColor: '#FF8C00',
       color: '#FFFFFF',
       fontWeight: 600,
@@ -58,10 +58,9 @@ const Navbars = () => {
       maxWidth: '100%',
       maxHeight: '100%',
       objectFit: 'cover',
-    }
+    },
   };
 
-  // Scroll effect for hide/show
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -77,7 +76,6 @@ const Navbars = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [prevScrollY]);
 
-  // Click outside and Escape key handling
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (navbarRef.current && !navbarRef.current.contains(event.target) && expanded) {
@@ -145,7 +143,7 @@ const Navbars = () => {
           <Nav className="ms-auto align-items-center">
             <Button
               as={NavLink}
-              to="/register"
+              to="/auth"
               style={styles.ctaButton}
               className="cta-button-custom ms-2"
             >
@@ -157,20 +155,20 @@ const Navbars = () => {
 
       <style jsx>{`
         .nav-link-custom:hover {
-          color: #3498DB !important; // Light blue hover effect
+          color: #3498DB !important;
           transition: color 0.2s ease;
         }
         .nav-link-custom.active {
           color: #FFFFFF !important;
-          font-weight: 600;
+          fontWeight: 600;
           border-bottom: 2px solid #3498DB;
         }
         .cta-button-custom {
-          background-color: #FF8C00 !important; // Claude's orange submit button color
+          background-color: #FF8C00 !important;
           border-color: #FF8C00 !important;
         }
         .cta-button-custom:hover {
-          background-color: #FF7000 !important; // Slightly darker on hover
+          background-color: #FF7000 !important;
           border-color: #FF7000 !important;
           transform: scale(1.05);
         }
@@ -178,7 +176,7 @@ const Navbars = () => {
           border-color: #E5E7EB !important;
         }
         .navbar-collapse {
-          background-color: #2C3E50; // Match navbar background for mobile collapse
+          background-color: #2C3E50;
         }
       `}</style>
     </Navbar>
