@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -23,7 +24,9 @@ const Home = () => {
           loop
           muted
           playsInline
-          src="/hospital.mp4"
+          src="/videos/hospital.mp4"
+          preload="auto"
+          onError={(e) => console.error('Video failed to load:', e)}
         />
         <div className="hero-overlay" />
         <motion.div
@@ -32,8 +35,8 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: 'easeOut' }}
         >
-          <h1>Empower Medical Innovation with Dwaliro</h1>
-          <p>Revolutionizing clinical trials through seamless collaboration and cutting-edge technology.</p>
+          <h1>Transforming Clinical Trials with Dwaliro</h1>
+          <p>Empowering researchers, clinicians, and patients with cutting-edge technology.</p>
           <div className="cta-buttons">
             <Link to="/trials" className="cta-button primary" aria-label="Discover Clinical Trials">
               Discover Trials
@@ -53,33 +56,33 @@ const Home = () => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          Enterprise Solutions
+          Advanced Solutions
         </motion.h2>
         <div className="solutions-grid">
           {[
             {
-              title: 'Intelligent Trial Discovery',
-              description: 'Leverage AI-driven search to uncover relevant clinical trials instantly.',
+              title: 'AI-Powered Discovery',
+              description: 'Instantly find relevant trials with intelligent search tools.',
               icon: <Search size={48} />,
-              bg: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c3a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              bg: '/images/trial-discovery.jpg',
             },
             {
-              title: 'Unified Profiles',
-              description: 'Centralized, secure profiles for patients, researchers, and clinicians.',
+              title: 'Secure Profiles',
+              description: 'Manage research and patient data with enterprise-grade security.',
               icon: <User size={48} />,
-              bg: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              bg: '/images/secure-profiles.jpg',
             },
             {
               title: 'Global Collaboration',
-              description: 'Connect with research networks worldwide for unparalleled trial efficiency.',
+              description: 'Connect with international research networks seamlessly.',
               icon: <Users size={48} />,
-              bg: 'https://images.unsplash.com/photo-1585435557343-3b0929fb7806?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              bg: '/images/collaboration.jpg',
             },
             {
-              title: 'Data Integrity',
-              description: 'Real-time, verified trial data for informed decision-making.',
+              title: 'Verified Data',
+              description: 'Access trusted, real-time trial data for informed decisions.',
               icon: <Database size={48} />,
-              bg: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              bg: '/images/data-integrity.jpg',
             },
           ].map((solution, idx) => (
             <motion.div
@@ -110,7 +113,7 @@ const Home = () => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          Global Impact
+          Our Impact
         </motion.h2>
         <div className="impact-grid">
           {[
@@ -142,24 +145,24 @@ const Home = () => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          Trusted by Leaders
+          Voices of Excellence
         </motion.h2>
         <div className="testimonial-grid">
           {[
             {
-              quote: 'Dwaliro’s platform is a game-changer for clinical trial discovery and management.',
-              author: 'Dr. Laura Bennett, Chief Researcher',
-              bg: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              quote: 'Dwaliro has redefined how we approach clinical trial discovery.',
+              author: 'Dr. Sophia Lee, Head Researcher',
+              bg: '/images/testimonial-1.jpg',
             },
             {
-              quote: 'The enterprise tools have streamlined our global trial operations significantly.',
-              author: 'James Carter, Pharma Executive',
-              bg: 'https://images.unsplash.com/photo-1550831107-1553da8c8464?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              quote: 'The platform’s tools have transformed our trial operations.',
+              author: 'Mark Thompson, Pharma Director',
+              bg: '/images/testimonial-2.jpg',
             },
             {
-              quote: 'Dwaliro empowers patients with unmatched access to cutting-edge trials.',
-              author: 'Emma Ruiz, Patient Advocate',
-              bg: 'https://images.unsplash.com/photo-1576091160397-57d6c9a0af77?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+              quote: 'Dwaliro empowers patients with unparalleled trial access.',
+              author: 'Clara Evans, Patient Advocate',
+              bg: '/images/testimonial-3.jpg',
             },
           ].map((testimonial, idx) => (
             <motion.div
@@ -188,8 +191,8 @@ const Home = () => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2>Shape the Future of Medicine</h2>
-          <p>Join a global network driving innovation in clinical research.</p>
+          <h2>Lead the Future of Medicine</h2>
+          <p>Join a global platform driving innovation in clinical research.</p>
           <Link to="/auth" className="cta-button primary" aria-label="Get Started with Dwaliro">
             Get Started
           </Link>
