@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, googleProvider } from './trials/firebase';
+import { auth, db, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, googleProvider, doc, setDoc } from '../firebase';
 import { motion } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
 
@@ -8,12 +8,20 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [cadre, setCadre] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState(null);
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await setDoc(doc(db, 'users', result.user.uid), {
+        name: result.user.displayName || 'User',
+        email: result.user.email,
+        cadre: 'General',
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
       navigate('/trials');
     } catch (err) {
       setError(`Google sign-in failed: ${err.message}`);
@@ -23,10 +31,17 @@ const AuthPage = () => {
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     try {
+      let userCredential;
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          name,
+          email,
+          cadre,
+          createdAt: new Date().toISOString(),
+        });
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
       navigate('/trials');
     } catch (err) {
@@ -66,6 +81,41 @@ const AuthPage = () => {
         Sign {isSignUp ? 'Up' : 'In'} with Google
       </button>
       <form onSubmit={handleEmailAuth}>
+        {isSignUp && (
+          <>
+            <div style={{ marginBottom: '15px' }}>
+              <label htmlFor="name" style={{ display: 'block', marginBottom: '5px' }}>
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label htmlFor="cadre" style={{ display: 'block', marginBottom: '5px' }}>
+                Cadre
+              </label>
+              <select
+                id="cadre"
+                value={cadre}
+                onChange={(e) => setCadre(e.target.value)}
+                required
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="">Select Cadre</option>
+                <option value="Student">Student</option>
+                <option value="Researcher">Researcher</option>
+                <option value="Clinician">Clinician</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+          </>
+        )}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>
             Email
