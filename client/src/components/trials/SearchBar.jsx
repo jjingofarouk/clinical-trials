@@ -1,5 +1,5 @@
 import { Search, Filter, LogIn, LogOut } from 'lucide-react';
-import { auth, googleProvider, signInWithPopup, signOut } from '../firebase';
+import { auth, googleProvider, signInWithPopup, signOut } from './firebase';
 
 const SearchBar = ({ user, searchQuery, setSearchQuery, searchTrials, setShowFilters, setShowAuthModal }) => {
   const handleGoogleSignIn = async () => {
