@@ -26,11 +26,16 @@ const TrialDetailPage = () => {
         const response = await fetch(
           `https://clinicaltrials.gov/api/v2/studies/${nctId}`
         );
-        if (!response.ok) throw new Error('Failed to fetch trial');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch trial: HTTP ${response.status}`);
+        }
         const data = await response.json();
+        if (!data || !data.protocolSection) {
+          throw new Error('Invalid trial data received');
+        }
         setTrial(data);
       } catch (err) {
-        setError(err.message);
+        setError(`Error fetching trial: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -54,6 +59,13 @@ const TrialDetailPage = () => {
         <p className="text-sm text-gray-400 mt-2">
           {error || 'Trial not found.'}
         </p>
+        <button
+          className="back-btn"
+          onClick={() => navigate('/trials')}
+          aria-label="Back to trials list"
+        >
+          <ChevronLeft size={16} className="mr-1" /> Back to Trials
+        </button>
       </div>
     );
   }
