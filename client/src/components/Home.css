@@ -1,4 +1,5 @@
 
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 .home {
@@ -25,7 +26,6 @@
   height: 100%;
   object-fit: cover;
   z-index: -2;
-  filter: none;
 }
 
 .hero-overlay {
@@ -34,7 +34,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(16, 24, 40, 0.6);
+  background: rgba(16, 24, 40, 0.7);
   z-index: -1;
 }
 
@@ -370,6 +370,16 @@
 }
 
 @media (max-width: 768px) {
+  .hero-video {
+    display: none;
+  }
+
+  .hero {
+    background-image: url('/images/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
   .hero-content h1 {
     font-size: 2.5rem;
   }
