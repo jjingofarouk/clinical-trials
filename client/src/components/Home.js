@@ -16,18 +16,7 @@ import './Home.css';
 const Home = () => {
   return (
     <div className="home">
-      {/* Hero Section with Video and Fallback Image */}
       <section className="hero">
-        <video
-          className="hero-video"
-          autoPlay
-          loop
-          muted
-          playsInline
-          src="/videos/hospital.mp4"
-          preload="auto"
-          onError={(e) => console.error('Video failed to load:', e)}
-        />
         <div className="hero-overlay" />
         <motion.div
           className="hero-content"
@@ -48,7 +37,6 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* Solutions Section */}
       <section className="solutions">
         <motion.h2
           initial={{ opacity: 0 }}
@@ -64,25 +52,25 @@ const Home = () => {
               title: 'AI-Powered Discovery',
               description: 'Instantly find relevant trials with intelligent search tools.',
               icon: <Search size={48} />,
-              bg: '/images/trial-discovery.jpeg',
+              bg: '/images/trial-discovery.jpg',
             },
             {
               title: 'Secure Profiles',
               description: 'Manage research and patient data with enterprise-grade security.',
               icon: <User size={48} />,
-              bg: '/images/secure-profiles.jpeg',
+              bg: '/images/secure-profiles.jpg',
             },
             {
               title: 'Global Collaboration',
               description: 'Connect with international research networks seamlessly.',
               icon: <Users size={48} />,
-              bg: '/images/collaboration.jpeg',
+              bg: '/images/collaboration.jpg',
             },
             {
               title: 'Verified Data',
               description: 'Access trusted, real-time trial data for informed decisions.',
               icon: <Database size={48} />,
-              bg: '/images/data-integrity.jpeg',
+              bg: '/images/data-integrity.jpg',
             },
           ].map((solution, idx) => (
             <motion.div
@@ -105,7 +93,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Impact Section */}
       <section className="impact">
         <motion.h2
           initial={{ opacity: 0 }}
@@ -137,7 +124,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
       <section className="testimonials">
         <motion.h2
           initial={{ opacity: 0 }}
@@ -152,17 +138,17 @@ const Home = () => {
             {
               quote: 'Dwaliro has redefined how we approach clinical trial discovery.',
               author: 'Dr. Sophia Lee, Head Researcher',
-              bg: '/images/testimonial-1.jpeg',
+              bg: '/images/testimonial-1.jpg',
             },
             {
               quote: 'The platform’s tools have transformed our trial operations.',
               author: 'Mark Thompson, Pharma Director',
-              bg: '/images/testimonial-2.jpeg',
+              bg: '/images/testimonial-2.jpg',
             },
             {
               quote: 'Dwaliro empowers patients with unparalleled trial access.',
               author: 'Clara Evans, Patient Advocate',
-              bg: '/images/testimonial-3.jpeg',
+              bg: '/images/testimonial-3.jpg',
             },
           ].map((testimonial, idx) => (
             <motion.div
@@ -182,7 +168,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="cta-section">
         <motion.div
           className="cta-content"
