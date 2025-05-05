@@ -19,22 +19,37 @@ const Navbars = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [randomId, setRandomId] = useState(generateRandomId());
+  const [loading, setLoading] = useState(true); // Add loading state
   const navbarRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      setLoading(true); // Set loading to true when auth state changes
       setUser(currentUser);
       if (currentUser) {
-        setRandomId(generateRandomId());
-        const userDoc = await getDocs(query(collection(db, 'users'), where('email', '==', currentUser.email)));
-        if (!userDoc.empty) {
-          setUserData(userDoc.docs[0].data());
+        try {
+          setRandomId(generateRandomId());
+          const q = query(collection(db, 'users'), where('email', '==', currentUser.email));
+          const userDoc = await getDocs(q);
+          if (!userDoc.empty) {
+            setUserData(userDoc.docs[0].data());
+          } else {
+            // Handle case where no user document exists
+            setUserData({ name: currentUser.displayName || 'User', email: currentUser.email });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to auth user data
+          setUserData({ name: currentUser.displayName || 'User', email: currentUser.email });
         }
       } else {
         setUserData(null);
+        setRandomId(generateRandomId());
       }
+      setLoading(false); // Set loading to false after processing
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -154,13 +169,11 @@ const Navbars = () => {
       <Container className="d-flex align-items-center">
         <Navbar.Brand as={NavLink} to="/" style={styles.navLink} className="d-flex align-items-center">
           <div style={styles.logoContainer}>
-            <img
-              src={logo}
-              alt="Dwaliro Logo"
-              style={styles.logo}
-            />
+            <img src={logo} alt="Dwaliro Logo" style={styles.logo} />
           </div>
-          <span style={styles.brandText} className="ms-2">Dwaliro</span>
+          <span style={styles.brandText} className="ms-2">
+            Dwaliro
+          </span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" className="ms-auto" />
@@ -183,7 +196,9 @@ const Navbars = () => {
             </Nav.Link>
           </Nav>
           <Nav className="ms-auto align-items-center">
-            {user && userData ? (
+            {loading ? (
+              <span style={styles.userInfo}>Loading...</span>
+            ) : user && userData ? (
               <>
                 <span style={styles.userInfo}>
                   {userData.name} ({randomId})
@@ -212,25 +227,25 @@ const Navbars = () => {
 
       <style jsx>{`
         .nav-link-custom:hover {
-          color: #3498DB !important;
+          color: #3498db !important;
           transition: color 0.2s ease;
         }
         .nav-link-custom.active {
-          color: #FFFFFF !important;
+          color: #ffffff !important;
           font-weight: 600;
-          border-bottom: 2px solid #3498DB;
+          border-bottom: 2px solid #3498db;
         }
         .cta-button-custom {
-          background-color: #FF8C00 !important;
-          border-color: #FF8C00 !important;
+          background-color: #ff8c00 !important;
+          border-color: #ff8c00 !important;
         }
         .cta-button-custom:hover {
-          background-color: #FF7000 !important;
-          border-color: #FF7000 !important;
+          background-color: #ff7000 !important;
+          border-color: #ff7000 !important;
           transform: scale(1.05);
         }
         .navbar-dark .navbar-toggler {
-          border-color: #E5E7EB !important;
+          border-color: #e5e7eb !important;
         }
         .navbar-collapse {
           background-color: ${user ? '#1A3C34' : '#2C3E50'};
