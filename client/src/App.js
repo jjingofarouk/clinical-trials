@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import Home from './components/Home';
 import ClinicalTrials from './components/trials/ClinicalTrials';
 import TrialDetailPage from './components/trials/TrialDetailPage';
+import AuthPage from './components/AuthPage';
 import About from './components/About';
 import Contact from './components/Contact';
 import Privacy from './components/Privacy';
@@ -15,7 +16,6 @@ function App() {
 
   useEffect(() => {
     try {
-      // Basic initialization check
       if (!window) {
         throw new Error('Window object not available');
       }
@@ -24,7 +24,7 @@ function App() {
     }
   }, []);
 
-  if (error) {
+  if (error && process.env.REACT_APP_DEBUG_MODE === 'true') {
     return (
       <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
         <h1>App Error</h1>
@@ -43,6 +43,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/trials" element={<ClinicalTrials />} />
             <Route path="/trials/:nctId" element={<TrialDetailPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/researchers" element={<div>For Researchers (Placeholder)</div>} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
