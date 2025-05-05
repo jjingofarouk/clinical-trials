@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { auth, db, collection, doc, setDoc, getDocs, query, where } from '../firebase';
+import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import TrialsSection from './TrialsSection';
