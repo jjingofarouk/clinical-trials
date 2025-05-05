@@ -233,84 +233,155 @@ const ClinicalTrials = () => {
     >
       <div className="filter-modal">
         <div className="sidebar-header">
-          <h3>Filters</h3>
+          <h3>Filter Trials</h3>
           <button
             className="close-btn"
             onClick={() => setShowFilters(false)}
             aria-label="Close filters"
           >
-            <X size={16} color="#1E293B" />
+            <X size={20} color="#1E293B" />
           </button>
         </div>
         <div className="filter-grid">
-          {Object.entries(filterOptions).map(([key, options]) => (
-            <div className="filter-group" key={key}>
-              <label htmlFor={`${key}-filter`} className="filter-label">
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </label>
-              <select
-                id={`${key}-filter`}
-                value={filters[key]}
-                onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
-                className="filter-input"
-              >
-                {options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
           <div className="filter-group">
-            <label htmlFor="healthy-volunteers-filter" className="filter-label flex items-center gap-2">
+            <label htmlFor="status-filter" className="filter-label">Status</label>
+            <select
+              id="status-filter"
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.status.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="phase-filter" className="filter-label">Phase</label>
+            <select
+              id="phase-filter"
+              value={filters.phase}
+              onChange={(e) => setFilters({ ...filters, phase: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.phase.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="studyType-filter" className="filter-label">Study Type</label>
+            <select
+              id="studyType-filter"
+              value={filters.studyType}
+              onChange={(e) => setFilters({ ...filters, studyType: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.studyType.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="ageGroup-filter" className="filter-label">Age Group</label>
+            <select
+              id="ageGroup-filter"
+              value={filters.ageGroup}
+              onChange={(e) => setFilters({ ...filters, ageGroup: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.ageGroup.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="gender-filter" className="filter-label">Gender</label>
+            <select
+              id="gender-filter"
+              value={filters.gender}
+              onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.gender.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="fundingType-filter" className="filter-label">Funding Type</label>
+            <select
+              id="fundingType-filter"
+              value={filters.fundingType}
+              onChange={(e) => setFilters({ ...filters, fundingType: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.fundingType.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="interventionType-filter" className="filter-label">Intervention Type</label>
+            <select
+              id="interventionType-filter"
+              value={filters.interventionType}
+              onChange={(e) => setFilters({ ...filters, interventionType: e.target.value })}
+              className="filter-input"
+            >
+              {filterOptions.interventionType.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="healthy-volunteers-filter" className="filter-label">
               Healthy Volunteers
+            </label>
+            <label className="filter-switch">
               <input
                 id="healthy-volunteers-filter"
                 type="checkbox"
                 checked={filters.healthyVolunteers}
                 onChange={(e) => setFilters({ ...filters, healthyVolunteers: e.target.checked })}
-                className="filter-input"
               />
+              <span className="slider"></span>
             </label>
           </div>
           <div className="filter-group">
-            <label htmlFor="has-results-filter" className="filter-label flex items-center gap-2">
+            <label htmlFor="has-results-filter" className="filter-label">
               Has Results
+            </label>
+            <label className="filter-switch">
               <input
                 id="has-results-filter"
                 type="checkbox"
                 checked={filters.hasResults}
                 onChange={(e) => setFilters({ ...filters, hasResults: e.target.checked })}
-                className="filter-input"
               />
+              <span className="slider"></span>
             </label>
-          </div>
-          <div className="filter-group">
-            <label htmlFor="start-date-filter" className="filter-label">Start Date</label>
-            <input
-              id="start-date-filter"
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="filter-input"
-            />
-          </div>
-          <div className="filter-group">
-            <label htmlFor="completion-date-filter" className="filter-label">Completion Date</label>
-            <input
-              id="completion-date-filter"
-              type="date"
-              value={filters.completionDate}
-              onChange={(e) => setFilters({ ...filters, completionDate: e.target.value })}
-              className="filter-input"
-            />
           </div>
           <div className="filter-group">
             <label htmlFor="conditions-filter" className="filter-label">Conditions</label>
             <input
               id="conditions-filter"
               type="text"
+              placeholder="Enter conditions, comma-separated"
               value={filters.conditions.join(',')}
               onChange={(e) =>
                 setFilters({ ...filters, conditions: e.target.value.split(',').map((c) => c.trim()) })
@@ -323,6 +394,7 @@ const ClinicalTrials = () => {
             <input
               id="locations-filter"
               type="text"
+              placeholder="Enter locations, comma-separated"
               value={filters.locations.join(',')}
               onChange={(e) =>
                 setFilters({ ...filters, locations: e.target.value.split(',').map((l) => l.trim()) })
@@ -335,7 +407,7 @@ const ClinicalTrials = () => {
             <div className="range-inputs">
               <input
                 type="number"
-                placeholder="Min"
+                placeholder="Min Age"
                 value={filters.participantAge.min}
                 onChange={(e) =>
                   setFilters({
@@ -348,7 +420,7 @@ const ClinicalTrials = () => {
               />
               <input
                 type="number"
-                placeholder="Max"
+                placeholder="Max Age"
                 value={filters.participantAge.max}
                 onChange={(e) =>
                   setFilters({
@@ -358,37 +430,6 @@ const ClinicalTrials = () => {
                 }
                 className="filter-input"
                 aria-label="Maximum age"
-              />
-            </div>
-          </div>
-          <div className="filter-group">
-            <label className="filter-label">Enrollment Count Range</label>
-            <div className="range-inputs">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.enrollmentCount.min}
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    enrollmentCount: { ...filters.enrollmentCount, min: e.target.value },
-                  })
-                }
-                className="filter-input"
-                aria-label="Minimum enrollment"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.enrollmentCount.max}
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    enrollmentCount: { ...filters.enrollmentCount, max: e.target.value },
-                  })
-                }
-                className="filter-input"
-                aria-label="Maximum enrollment"
               />
             </div>
           </div>
@@ -409,7 +450,7 @@ const ClinicalTrials = () => {
             }}
             aria-label="Apply filters"
           >
-            Apply
+            Apply Filters
           </button>
         </div>
       </div>
@@ -426,7 +467,7 @@ const ClinicalTrials = () => {
               type="text"
               placeholder="Search clinical trials..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e opiskelijä.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && searchTrials()}
               aria-label="Search clinical trials"
               className="search-input"
