@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
+import { auth, db, collection, doc, setDoc, getDocs, query, where } from '../firebase';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import TrialsSection from './TrialsSection';
@@ -9,6 +9,7 @@ import './ClinicalTrials.css';
 
 const ClinicalTrials = () => {
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [trials, setTrials] = useState([]);
   const [savedTrials, setSavedTrials] = useState([]);
@@ -24,21 +25,21 @@ const ClinicalTrials = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(
-      (currentUser) => {
-        setUser(currentUser);
-        if (currentUser) {
-          fetchSavedTrials(currentUser.uid);
-          fetchRecommendedTrials(currentUser.uid);
-        } else {
-          setSavedTrials([]);
-          setRecommendedTrials([]);
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        const userDoc = await getDocs(query(collection(db, 'users'), where('email', '==', currentUser.email)));
+        if (!userDoc.empty) {
+          setUserData(userDoc.docs[0].data());
         }
-      },
-      (err) => {
-        setError(`Authentication error: ${err.message}`);
+        fetchSavedTrials(currentUser.uid);
+        fetchRecommendedTrials(currentUser.uid);
+      } else {
+        setUserData(null);
+        setSavedTrials([]);
+        setRecommendedTrials([]);
       }
-    );
+    });
     return () => unsubscribe();
   }, []);
 
@@ -63,7 +64,8 @@ const ClinicalTrials = () => {
         .filter(Boolean);
       if (conditions.length > 0) {
         const response = await fetch(
-          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?query.cond=${encodeURIComponent(conditions.join('|'))}&pageSize=5`
+          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?query.cond=${encodeURIComponent(conditions.join(' OR '))}&pageSize=5&format=json`,
+          { headers: { 'Accept': 'application/json' } }
         );
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);
@@ -90,17 +92,18 @@ const ClinicalTrials = () => {
           queryParams.append('query.term', encodeURIComponent(searchQuery));
         }
         if (filters.status) {
-          queryParams.append('filter.overallStatus', filters.status);
+          queryParams.append('filter.overallStatus', filters.status.toUpperCase());
         }
         if (filters.phase) {
-          queryParams.append('filter.phase', filters.phase);
+          queryParams.append('filter.phase', filters.phase.replace('PHASE_', ''));
         }
         if (filters.studyType) {
-          queryParams.append('filter.studyType', filters.studyType);
+          queryParams.append('filter.studyType', filters.studyType.toUpperCase());
         }
 
         const response = await fetch(
-          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`
+          `${process.env.REACT_APP_CLINICAL_TRIALS_API}/studies?${queryParams.toString()}`,
+          { headers: { 'Accept': 'application/json' } }
         );
         if (!response.ok) {
           if (response.status === 429 && attempt < retries) {
@@ -112,7 +115,7 @@ const ClinicalTrials = () => {
         const data = await response.json();
         const fetchedTrials = data.studies || [];
         if (fetchedTrials.length === 0 && !isRandom && searchQuery) {
-          setError('No trials found for your search. Try a broader query.');
+          setError('No trials found for your search. Try a broader query, e.g., "cancer" or "diabetes".');
         }
         setTrials(isRandom ? shuffleArray(fetchedTrials) : fetchedTrials);
         setLoading(false);
@@ -121,7 +124,7 @@ const ClinicalTrials = () => {
         if (attempt === retries) {
           setTrials([]);
           setLoading(false);
-          setError(`Failed to load trials: ${err.message}. Please try again later.`);
+          setError(`Failed to load trials: ${err.message}. Please check your network or try again later.`);
         }
       }
     }
@@ -182,9 +185,9 @@ const ClinicalTrials = () => {
 
   return (
     <div className="clinical-trials-container">
-      {user && (
+      {user && userData && (
         <div style={{ padding: '10px', textAlign: 'center', background: '#e6f3ff' }}>
-          <p>Welcome, {user.email.split('@')[0]}! Explore your saved trials below.</p>
+          <p>Welcome, {userData.name}! Explore your saved trials below.</p>
         </div>
       )}
       <SearchBar
