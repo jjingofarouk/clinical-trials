@@ -11,7 +11,7 @@ import {
   Stethoscope, 
   FlaskConical 
 } from 'lucide-react';
-import HeroBg from './hero-bg.jpeg';
+import HeroBg from './trial-discovery.jpeg';
 import './Home.css';
 
 const Home = () => {
