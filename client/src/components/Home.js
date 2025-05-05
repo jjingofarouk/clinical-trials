@@ -1,4 +1,4 @@
-
+```jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,12 +11,13 @@ import {
   Stethoscope, 
   FlaskConical 
 } from 'lucide-react';
+import HeroBg from '../images/hero-bg.jpeg';
 import './Home.css';
 
 const Home = () => {
   return (
     <div className="home">
-      <section className="hero">
+      <section className="hero" style={{ backgroundImage: `url(${HeroBg})` }}>
         <div className="hero-overlay" />
         <motion.div
           className="hero-content"
