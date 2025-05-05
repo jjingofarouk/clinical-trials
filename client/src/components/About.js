@@ -43,7 +43,45 @@ const About = () => (
           , Dwaliro combines expertise in technology and healthcare to drive meaningful change.
         </p>
       </div>
+
+      {/* Connect with Farouk */}
+      <div className="mt-8">
+        <h2 className="text-base font-semibold text-[#1A4A4F] mb-3">Connect with Farouk</h2>
+        <ul className="text-sm text-[#2D6A6F] space-y-2">
+          <li>
+            <a
+              href="https://ug.linkedin.com/in/farouk-jjingo-0341b01a5"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-[#1A4A4F]"
+            >
+              LinkedIn: Farouk Jjingo
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://wa.me/256751360385"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-[#1A4A4F]"
+            >
+              WhatsApp: +256751360385
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://jjingofarouk.xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-[#1A4A4F]"
+            >
+              Website: jjingofarouk.xyz
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
+
     <style jsx>{`
       * {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
