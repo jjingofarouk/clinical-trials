@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { auth } from './firebase';
-import SearchBar from './components/SearchBar';
-import FilterSidebar from './components/FilterSidebar';
-import AuthModal from './components/AuthModal';
-import TrialsSection from './components/TrialsSection';
+import SearchBar from './SearchBar';
+import FilterSidebar from './FilterSidebar';
+import AuthModal from './AuthModal';
+import TrialsSection from './TrialsSection';
 import './ClinicalTrials.css';
 
 const ClinicalTrials = () => {
