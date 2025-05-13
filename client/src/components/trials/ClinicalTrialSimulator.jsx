@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import * as jStat from 'jstat';
+import jStat from 'jstat'; // Use default import for full bundle
 import Papa from 'papaparse';
 import html2canvas from 'html2canvas';
 import { getAuth } from 'firebase/auth';
@@ -68,12 +68,12 @@ const ClinicalTrialSimulator = () => {
     }
 
     const effectiveSampleSize = Math.floor(parsedSampleSize * (1 - parsedDropoutRate));
-    if (effectiveSampleSize < 6) {
-      setError('Effective sample size (after dropout) must be at least 6.');
+    if (effectiveSampleSize < 10) {
+      setError('Effective sample size (after dropout) must be at least 10.');
       return false;
     }
-    if (testType === 'anova' && effectiveSampleSize < 9) {
-      setError('ANOVA requires at least 9 effective samples (3 per group).');
+    if (testType === 'anova' && effectiveSampleSize < 15) {
+      setError('ANOVA requires at least 15 effective samples (5 per group).');
       return false;
     }
 
@@ -96,43 +96,56 @@ const ClinicalTrialSimulator = () => {
         setDebugMessages([...debugMessages, 'Running t-test simulation']);
         for (let i = 0; i < 50; i++) {
           try {
-            if (effectiveSampleSize < 2) throw new Error('Sample size too small for t-test');
-            const control = Array.from({ length: effectiveSampleSize }, () =>
-              jStat.normal.sample(0, 1)
-            );
-            const treatment = Array.from({ length: effectiveSampleSize }, () =>
-              jStat.normal.sample(Number(effectSize), 1)
-            );
+            const control = Array.from({ length: effectiveSampleSize }, () => jStat.normal.sample(0, 1));
+            const treatment = Array.from({ length: effectiveSampleSize }, () => jStat.normal.sample(Number(effectSize), 1));
+            // Validate arrays
+            if (control.some(isNaN) || treatment.some(isNaN)) {
+              setDebugMessages([...debugMessages, `T-test iteration ${i}: Invalid sample data`]);
+              continue; // Skip this iteration
+            }
             const { p } = jStat.ttest(control, treatment, 2);
-            if (isNaN(p) || p === null) throw new Error('Invalid p-value in t-test');
+            if (isNaN(p) || p === null) {
+              setDebugMessages([...debugMessages, `T-test iteration ${i}: Invalid p-value`]);
+              continue; // Skip this iteration
+            }
             simulations.push({ p_value: p, significant: p < Number(alpha) });
           } catch (err) {
-            setDebugMessages([...debugMessages, `T-test error in iteration ${i}: ${err.message}`]);
-            throw new Error(`T-test simulation failed: ${err.message}`);
+            setDebugMessages([...debugMessages, `T-test iteration ${i} warning: ${err.message}`]);
+            continue; // Skip this iteration
           }
+        }
+        if (simulations.length === 0) {
+          throw new Error('No valid t-test simulations completed');
         }
       } else if (testType === 'anova') {
         setDebugMessages([...debugMessages, 'Running ANOVA simulation']);
+        if (typeof jStat.anova !== 'function') {
+          setDebugMessages([...debugMessages, 'ANOVA not supported in current jStat version']);
+          throw new Error('ANOVA is not available. Please use t-test.');
+        }
         for (let i = 0; i < 50; i++) {
           try {
             const groupSize = Math.floor(effectiveSampleSize / 3);
-            if (groupSize < 3) throw new Error('Group size too small for ANOVA');
-            const group1 = Array.from({ length: groupSize }, () =>
-              jStat.normal.sample(0, 1)
-            );
-            const group2 = Array.from({ length: groupSize }, () =>
-              jStat.normal.sample(Number(effectSize) / 2, 1)
-            );
-            const group3 = Array.from({ length: groupSize }, () =>
-              jStat.normal.sample(Number(effectSize), 1)
-            );
+            const group1 = Array.from({ length: groupSize }, () => jStat.normal.sample(0, 1));
+            const group2 = Array.from({ length: groupSize }, () => jStat.normal.sample(Number(effectSize) / 2, 1));
+            const group3 = Array.from({ length: groupSize }, () => jStat.normal.sample(Number(effectSize), 1));
+            if (group1.some(isNaN) || group2.some(isNaN) || group3.some(isNaN)) {
+              setDebugMessages([...debugMessages, `ANOVA iteration ${i}: Invalid sample data`]);
+              continue; // Skip this iteration
+            }
             const { p } = jStat.anova([group1, group2, group3]);
-            if (isNaN(p) || p === null) throw new Error('Invalid p-value in ANOVA');
+            if (isNaN(p) || p === null) {
+              setDebugMessages([...debugMessages, `ANOVA iteration ${i}: Invalid p-value`]);
+              continue; // Skip this iteration
+            }
             simulations.push({ p_value: p, significant: p < Number(alpha) });
           } catch (err) {
-            setDebugMessages([...debugMessages, `ANOVA error in iteration ${i}: ${err.message}`]);
-            throw new Error(`ANOVA simulation failed: ${err.message}`);
+            setDebugMessages([...debugMessages, `ANOVA iteration ${i} warning: ${err.message}`]);
+            continue; // Skip this iteration
           }
+        }
+        if (simulations.length === 0) {
+          throw new Error('No valid ANOVA simulations completed');
         }
       }
 
@@ -152,14 +165,14 @@ const ClinicalTrialSimulator = () => {
         parameters: { sampleSize: Number(sampleSize), effectSize: Number(effectSize), alpha: Number(alpha), dropoutRate: Number(dropoutRate), testType },
       };
       setResult(result);
-      setDebugMessages([...debugMessages, 'Simulation completed successfully']);
+      setDebugMessages([...debugMessages, `Simulation completed with ${simulations.length} valid trials`]);
 
       // Save to localStorage
       try {
         localStorage.setItem('simulatorResults', JSON.stringify(result));
         setDebugMessages([...debugMessages, 'Saved results to localStorage']);
       } catch (err) {
-        setDebugMessages([...debugMessages, `localStorage save error: ${err.message}`]);
+        setDebugMessages([...debugMessages, `localStorage save warning: ${err.message}`]);
       }
 
       // Save to Firebase if authenticated
@@ -175,7 +188,6 @@ const ClinicalTrialSimulator = () => {
           setDebugMessages([...debugMessages, 'Successfully saved to Firebase']);
         } catch (err) {
           setDebugMessages([...debugMessages, `Firebase save warning: ${err.message}`]);
-          // Do not set error state to avoid marking simulation as failed
         }
       }
     } catch (err) {
