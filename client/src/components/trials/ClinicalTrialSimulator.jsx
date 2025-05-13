@@ -65,27 +65,29 @@ const ClinicalTrialSimulator = () => {
     if (method === 'clopper-pearson') {
       const alpha = 1 - (z / 100);
       const x = Math.round(p * n);
-      const lower = jStat.beta.inv(alpha / 2, x, n - x + 1);
-      const upper = jStat.beta.inv(1 - alpha / 2, x + 1, n - x);
-      return [isNaN(lower) ? 0 : lower, isNaN(upper) ? 1 : upper];
+      let lower = jStat.beta.inv(alpha / 2, x, n - x + 1);
+      let upper = jStat.beta.inv(1 - alpha / 2, x + 1, n - x);
+      lower = isNaN(lower) || lower < 0 ? 0 : lower;
+      upper = isNaN(upper) || upper > 1 ? 1 : upper;
+      return [lower, upper];
     }
     return [p, p];
   };
 
   const getPhi = (p0, p1, n0, n1, walter) => {
-    if (!walter) return p1 / p0;
+    if (!walter) return p1 / p0 || 0;
     const x0 = p0 * n0;
     const x1 = p1 * n1;
-    return Math.exp(Math.log((x1 + 0.5) / (n1 + 0.5)) - Math.log((x0 + 0.5) / (n0 + 0.5)));
+    return Math.exp(Math.log((x1 + 0.5) / (n1 + 0.5)) - Math.log((x0 + 0.5) / (n0 + 0.5))) || 0;
   };
 
   const getPar = (p0, p1, n0, n1, walter) => {
     if (!walter) {
-      return Math.sqrt((1 - p0) / (n0 * p0) + (1 - p1) / (n1 * p1));
+      return p0 && p1 ? Math.sqrt((1 - p0) / (n0 * p0) + (1 - p1) / (n1 * p1)) : 0;
     }
     const x0 = p0 * n0;
     const x1 = p1 * n1;
-    return Math.sqrt(1 / (x1 + 0.5) - 1 / (n1 + 0.5) + 1 / (x0 + 0.5) - 1 / (n0 + 0.5));
+    return Math.sqrt(1 / (x1 + 0.5) - 1 / (n1 + 0.5) + 1 / (x0 + 0.5) - 1 / (n0 + 0.5)) || 0;
   };
 
   const getOverlap = (i1, i2) => {
@@ -95,6 +97,7 @@ const ClinicalTrialSimulator = () => {
   };
 
   const getPValue = (p0, p1, n0, n1) => {
+    if (!p0 || !p1) return 0;
     const mean = Math.log(1);
     const stdev = Math.sqrt(((1 / p0 - 1) / n0) + ((1 / p1 - 1) / n1));
     const observedRR = p1 / p0;
@@ -126,7 +129,10 @@ const ClinicalTrialSimulator = () => {
   };
 
   const mkRiskStr = (title, risk, riskL, riskR) => {
-    return `${title}${risk.toFixed(2)} (${riskL.toFixed(2)}-${riskR.toFixed(2)})`;
+    const safeRisk = Number.isFinite(risk) ? risk : 0;
+    const safeRiskL = Number.isFinite(riskL) ? riskL : 0;
+    const safeRiskR = Number.isFinite(riskR) ? riskR : 0;
+    return `${title}${safeRisk.toFixed(2)} (${safeRiskL.toFixed(2)}-${safeRiskR.toFixed(2)})`;
   };
 
   const validateInputs = () => {
@@ -169,7 +175,7 @@ const ClinicalTrialSimulator = () => {
 
     try {
       const confidence = confidenceLevel / 100;
-      const zValue = jStat.normal.inv(1 - confidence / 2, 0, 1);
+      const zValue = jStat.normal.inv(1 - confidence / 2, 0, 1) || 0;
 
       const controlRisk = controlEvents / 100;
       const controlRiskCI = binomialConfidence(controlRisk, controlSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
@@ -192,9 +198,9 @@ const ClinicalTrialSimulator = () => {
 
       const phi = getPhi(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
       const par = getPar(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
-      const riskRatio = testRisk / controlRisk;
-      const riskRatioL = phi * Math.exp(-zValue * par);
-      const riskRatioR = phi * Math.exp(zValue * par);
+      const riskRatio = testRisk / controlRisk || 0;
+      const riskRatioL = phi * Math.exp(-zValue * par) || 0;
+      const riskRatioR = phi * Math.exp(zValue * par) || 0;
       const strRiskRatio = mkRiskStr('Relative Risk: ', riskRatio, riskRatioL, riskRatioR);
 
       const advEffectsThreshold = (1 - (1 - confidence) ** (1 / testSize)) * 100;
