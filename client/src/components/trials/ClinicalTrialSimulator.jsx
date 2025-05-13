@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card, Row, Col, Badge } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ErrorBar } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import jStat from 'jstat';
 import Papa from 'papaparse';
 import html2canvas from 'html2canvas';
@@ -62,19 +62,21 @@ const ClinicalTrialSimulator = () => {
   }, []);
 
   const binomialConfidence = (p, n, z, method) => {
+    if (!Number.isFinite(p) || !Number.isFinite(n) || !Number.isFinite(z)) return [p, p];
     if (method === 'clopper-pearson') {
       const alpha = 1 - (z / 100);
       const x = Math.round(p * n);
       let lower = jStat.beta.inv(alpha / 2, x, n - x + 1);
       let upper = jStat.beta.inv(1 - alpha / 2, x + 1, n - x);
-      lower = isNaN(lower) || lower < 0 ? 0 : lower;
-      upper = isNaN(upper) || upper > 1 ? 1 : upper;
+      lower = Number.isFinite(lower) && lower >= 0 ? lower : 0;
+      upper = Number.isFinite(upper) && upper <= 1 ? upper : 1;
       return [lower, upper];
     }
     return [p, p];
   };
 
   const getPhi = (p0, p1, n0, n1, walter) => {
+    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1)) return 0;
     if (!walter) return p1 / p0 || 0;
     const x0 = p0 * n0;
     const x1 = p1 * n1;
@@ -82,6 +84,7 @@ const ClinicalTrialSimulator = () => {
   };
 
   const getPar = (p0, p1, n0, n1, walter) => {
+    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1)) return 0;
     if (!walter) {
       return p0 && p1 ? Math.sqrt((1 - p0) / (n0 * p0) + (1 - p1) / (n1 * p1)) : 0;
     }
@@ -91,13 +94,14 @@ const ClinicalTrialSimulator = () => {
   };
 
   const getOverlap = (i1, i2) => {
+    if (!i1 || !i2 || !Number.isFinite(i1[0]) || !Number.isFinite(i1[1]) || !Number.isFinite(i2[0]) || !Number.isFinite(i2[1])) return [];
     const a = Math.max(i1[0], i2[0]);
     const b = Math.min(i1[1], i2[1]);
     return a > b ? [] : [a, b];
   };
 
   const getPValue = (p0, p1, n0, n1) => {
-    if (!p0 || !p1) return 0;
+    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1) || !p0 || !p1) return 0;
     const mean = Math.log(1);
     const stdev = Math.sqrt(((1 / p0 - 1) / n0) + ((1 / p1 - 1) / n1));
     const observedRR = p1 / p0;
@@ -108,17 +112,18 @@ const ClinicalTrialSimulator = () => {
   };
 
   const getCValue = (p0, p1, n0, n1, baseValue, step) => {
+    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1)) return 0;
     let contains = false;
     let j = 0;
     let cValue = 0;
     while (!contains) {
       const currentConfidence = baseValue + j * step;
-      const zValue = jStat.normal.inv(1 - currentConfidence / 100 / 2, 0, 1);
+      const zValue = Number.isFinite(jStat.normal.inv(1 - currentConfidence / 100 / 2, 0, 1)) ? jStat.normal.inv(1 - currentConfidence / 100 / 2, 0, 1) : 0;
       const phi = getPhi(p0, p1, n0, n1, WALTER_CI);
       const par = getPar(p0, p1, n0, n1, WALTER_CI);
       const riskRatioL = phi * Math.exp(-zValue * par);
       const riskRatioR = phi * Math.exp(zValue * par);
-      if (1 >= riskRatioL && 1 <= riskRatioR) {
+      if (Number.isFinite(riskRatioL) && Number.isFinite(riskRatioR) && 1 >= riskRatioL && 1 <= riskRatioR) {
         contains = true;
         cValue = 1 - (currentConfidence - step) / 100;
       }
@@ -144,23 +149,23 @@ const ClinicalTrialSimulator = () => {
     const parsedTestEvents = Number(testEvents);
     const parsedConfidenceLevel = Number(confidenceLevel);
 
-    if (isNaN(parsedControlSize) || parsedControlSize < CONTROL_MIN || parsedControlSize > CONTROL_MAX) {
+    if (!Number.isFinite(parsedControlSize) || parsedControlSize < CONTROL_MIN || parsedControlSize > CONTROL_MAX) {
       setError(`Control group size must be between ${CONTROL_MIN} and ${CONTROL_MAX}.`);
       return false;
     }
-    if (isNaN(parsedTestSize) || parsedTestSize < TEST_MIN || parsedTestSize > TEST_MAX) {
+    if (!Number.isFinite(parsedTestSize) || parsedTestSize < TEST_MIN || parsedTestSize > TEST_MAX) {
       setError(`Test group size must be between ${TEST_MIN} and ${TEST_MAX}.`);
       return false;
     }
-    if (isNaN(parsedControlEvents) || parsedControlEvents < EVENTS_CONTROL_MIN || parsedControlEvents > EVENTS_CONTROL_MAX) {
+    if (!Number.isFinite(parsedControlEvents) || parsedControlEvents < EVENTS_CONTROL_MIN || parsedControlEvents > EVENTS_CONTROL_MAX) {
       setError(`Control group events must be between ${EVENTS_CONTROL_MIN} and ${EVENTS_CONTROL_MAX}%.`);
       return false;
     }
-    if (isNaN(parsedTestEvents) || parsedTestEvents < EVENTS_TEST_MIN || parsedTestEvents > EVENTS_TEST_MAX) {
+    if (!Number.isFinite(parsedTestEvents) || parsedTestEvents < EVENTS_TEST_MIN || parsedTestEvents > EVENTS_TEST_MAX) {
       setError(`Test group events must be between ${EVENTS_TEST_MIN} and ${EVENTS_TEST_MAX}%.`);
       return false;
     }
-    if (isNaN(parsedConfidenceLevel) || parsedConfidenceLevel < CI_MIN || parsedConfidenceLevel > CI_MAX) {
+    if (!Number.isFinite(parsedConfidenceLevel) || parsedConfidenceLevel < CI_MIN || parsedConfidenceLevel > CI_MAX) {
       setError(`Confidence level must be between ${CI_MIN} and ${CI_MAX}%.`);
       return false;
     }
@@ -175,56 +180,66 @@ const ClinicalTrialSimulator = () => {
 
     try {
       const confidence = confidenceLevel / 100;
-      const zValue = jStat.normal.inv(1 - confidence / 2, 0, 1) || 0;
+      const zValue = Number.isFinite(jStat.normal.inv(1 - confidence / 2, 0, 1)) ? jStat.normal.inv(1 - confidence / 2, 0, 1) : 0;
 
       const controlRisk = controlEvents / 100;
       const controlRiskCI = binomialConfidence(controlRisk, controlSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
       const controlRiskL = controlRiskCI[0];
       const controlRiskR = controlRiskCI[1];
-      const controlRiskErr = controlRiskR - controlRiskL;
+      const controlRiskErr = Number.isFinite(controlRiskR - controlRiskL) ? controlRiskR - controlRiskL : 0;
       const strControlRisk = mkRiskStr('Control Group Risk: ', controlEvents, controlRiskL, controlRiskR);
 
       const testRisk = testEvents / 100;
       const testRiskCI = binomialConfidence(testRisk, testSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
       const testRiskL = testRiskCI[0];
       const testRiskR = testRiskCI[1];
-      const testRiskErr = testRiskR - testRiskL;
+      const testRiskErr = Number.isFinite(testRiskR - testRiskL) ? testRiskR - testRiskL : 0;
       const strTestRisk = mkRiskStr('Test Group Risk: ', testEvents, testRiskL, testRiskR);
 
       const overlapInterval = getOverlap(testRiskCI, controlRiskCI);
-      const overlapLength = overlapInterval.length > 0 ? overlapInterval[1] - overlapInterval[0] : 0;
-      const strOverlapInterval = `Overlap: ${overlapLength.toFixed(2)}% [${overlapInterval.map(x => x.toFixed(2)).join(', ')}]`;
-      const strOverlapPctTest = `Overlap % for Test Group: ${(overlapLength / testRiskErr * 100).toFixed(2)}%`;
+      const overlapLength = overlapInterval.length > 0 && Number.isFinite(overlapInterval[1] - overlapInterval[0]) ? overlapInterval[1] - overlapInterval[0] : 0;
+      const strOverlapInterval = `Overlap: ${overlapLength.toFixed(2)}% [${overlapInterval.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`;
+      const strOverlapPctTest = `Overlap % for Test Group: ${(Number.isFinite(overlapLength / testRiskErr) ? overlapLength / testRiskErr * 100 : 0).toFixed(2)}%`;
 
       const phi = getPhi(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
       const par = getPar(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
-      const riskRatio = testRisk / controlRisk || 0;
-      const riskRatioL = phi * Math.exp(-zValue * par) || 0;
-      const riskRatioR = phi * Math.exp(zValue * par) || 0;
+      const riskRatio = Number.isFinite(testRisk / controlRisk) ? testRisk / controlRisk : 0;
+      const riskRatioL = Number.isFinite(phi * Math.exp(-zValue * par)) ? phi * Math.exp(-zValue * par) : 0;
+      const riskRatioR = Number.isFinite(phi * Math.exp(zValue * par)) ? phi * Math.exp(zValue * par) : 0;
       const strRiskRatio = mkRiskStr('Relative Risk: ', riskRatio, riskRatioL, riskRatioR);
 
-      const advEffectsThreshold = (1 - (1 - confidence) ** (1 / testSize)) * 100;
+      const advEffectsThreshold = Number.isFinite(1 - (1 - confidence) ** (1 / testSize)) ? (1 - (1 - confidence) ** (1 / testSize)) * 100 : 0;
       const strAdvEffects = `Adverse Effects Threshold: ${advEffectsThreshold.toFixed(2)}%`;
 
       const pValue1 = getPValue(controlRisk, testRisk, controlSize, testSize);
       const strPValue = `P-Value: ${pValue1}`;
 
       const cValue = getCValue(controlRisk, testRisk, controlSize, testSize, 0.5, 0.005);
-      const highestCI = 1 - cValue;
+      const highestCI = Number.isFinite(1 - cValue) ? 1 - cValue : 0;
       const strCValue = `C-Value: ${cValue}`;
       const strCValueExt = `Highest CI: ${(highestCI * 100).toFixed(2)}%`;
 
       let warnings = [];
-      if (1 >= riskRatioL && 1 <= riskRatioR) {
+      if (Number.isFinite(riskRatioL) && Number.isFinite(riskRatioR) && 1 >= riskRatioL && 1 <= riskRatioR) {
         warnings.push('Relative Risk CI contains 1.');
       }
-      if (advEffectsThreshold > controlEvents) {
+      if (Number.isFinite(advEffectsThreshold) && Number.isFinite(controlEvents) && advEffectsThreshold > controlEvents) {
         warnings.push('Adverse effects threshold exceeds control group risk.');
       }
 
       const chartData = [
-        { group: 'Test group', value: testEvents, lower: testRiskL, upper: testRiskR, error: [(testRiskR - testEvents), (testEvents - testRiskL)] },
-        { group: 'Control group', value: controlEvents, lower: controlRiskL, upper: controlRiskR, error: [(controlRiskR - controlEvents), (controlEvents - controlRiskL)] },
+        {
+          group: 'Test group',
+          value: Number.isFinite(testEvents) ? testEvents : 0,
+          lower: Number.isFinite(testRiskL) ? testRiskL : 0,
+          upper: Number.isFinite(testRiskR) ? testRiskR : 0,
+        },
+        {
+          group: 'Control group',
+          value: Number.isFinite(controlEvents) ? controlEvents : 0,
+          lower: Number.isFinite(controlRiskL) ? controlRiskL : 0,
+          upper: Number.isFinite(controlRiskR) ? controlRiskR : 0,
+        },
       ];
 
       const result = {
@@ -283,13 +298,13 @@ const ClinicalTrialSimulator = () => {
         'Control Events (%)': result.controlRisk.value,
         'Test Events (%)': result.testRisk.value,
         'Confidence Level (%)': result.parameters.confidenceLevel,
-        'Control Risk CI': `[${result.controlRisk.ci.map(x => x.toFixed(2)).join(', ')}]`,
-        'Test Risk CI': `[${result.testRisk.ci.map(x => x.toFixed(2)).join(', ')}]`,
-        'Risk Ratio': result.riskRatio.value.toFixed(2),
-        'Risk Ratio CI': `[${result.riskRatio.ci.map(x => x.toFixed(2)).join(', ')}]`,
+        'Control Risk CI': `[${result.controlRisk.ci.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`,
+        'Test Risk CI': `[${result.testRisk.ci.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`,
+        'Risk Ratio': Number.isFinite(result.riskRatio.value) ? result.riskRatio.value.toFixed(2) : '0.00',
+        'Risk Ratio CI': `[${result.riskRatio.ci.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`,
         'P-Value': result.pValue.value1,
         'C-Value': result.cValue.value,
-        'Adverse Effects Threshold (%)': result.adverseEffects.threshold.toFixed(2),
+        'Adverse Effects Threshold (%)': Number.isFinite(result.adverseEffects.threshold) ? result.adverseEffects.threshold.toFixed(2) : '0.00',
       }];
       const csv = Papa.unparse(data);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -432,7 +447,7 @@ const ClinicalTrialSimulator = () => {
                     />
                     <Form.Range
                       value={confidenceLevel}
-                      onChange={(e) => setConfidenceLevel(e.target.value)}
+                      onChange={(e) => setControlEvents(e.target.value)}
                       min={CI_MIN}
                       max={CI_MAX}
                       step={CI_STEP}
@@ -537,12 +552,10 @@ const ClinicalTrialSimulator = () => {
                       <BarChart data={result.chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                         <XAxis dataKey="group" stroke="#333" />
-                        <YAxis domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper))) + PLOT_RANGE_DELTA]} stroke="#333" />
+                        <YAxis domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper)) + PLOT_RANGE_DELTA)]} stroke="#333" />
                         <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e0e0e0' }} />
                         <Legend />
-                        <Bar dataKey="value" fill="#007bff" radius={[4, 4, 0, 0]}>
-                          <ErrorBar dataKey="error" width={4} strokeWidth={2} stroke="#333" />
-                        </Bar>
+                        <Bar dataKey="value" fill="#007bff" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
