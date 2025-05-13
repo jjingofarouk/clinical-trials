@@ -1,7 +1,6 @@
-// ClinicalTrialSimulator.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Container, Form, Button, Alert, Card, Row, Col, Table } from 'react-bootstrap';
+import { Container, Form, Button, Alert, Card, Row, Col, Badge } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ErrorBar } from 'recharts';
 import jStat from 'jstat';
@@ -17,7 +16,6 @@ const ClinicalTrialSimulator = () => {
   const db = getFirestore();
   const chartRef = useRef(null);
 
-  // Configuration constants
   const PLOT_RANGE_DELTA = 5;
   const GROUPS = ['Test group', 'Control group'];
   const CONTROL_MIN = 50;
@@ -43,7 +41,6 @@ const ClinicalTrialSimulator = () => {
   const INDIVIDUAL_CI_METHOD = 'clopper-pearson';
   const WALTER_CI = true;
 
-  // State
   const [controlSize, setControlSize] = useState(CONTROL_START);
   const [testSize, setTestSize] = useState(TEST_START);
   const [controlEvents, setControlEvents] = useState(EVENTS_CONTROL_START);
@@ -53,7 +50,6 @@ const ClinicalTrialSimulator = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load saved results
   useEffect(() => {
     const saved = localStorage.getItem('simulatorResults');
     if (saved) {
@@ -65,7 +61,6 @@ const ClinicalTrialSimulator = () => {
     }
   }, []);
 
-  // Statistical functions
   const binomialConfidence = (p, n, z, method) => {
     if (method === 'clopper-pearson') {
       const alpha = 1 - (z / 100);
@@ -109,18 +104,6 @@ const ClinicalTrialSimulator = () => {
     return Math.round(2 * Math.min(pRight, pLeft) * 10000) / 10000;
   };
 
-  const getPValue2 = (riskRatioObs, riskRatioL, riskRatioR, confidenceLevel) => {
-    const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
-    const logRiskRatioL = Math.log(riskRatioL);
-    const logRiskRatioR = Math.log(riskRatioR);
-    const logRiskRatioObs = Math.log(riskRatioObs);
-    const stdErr = (logRiskRatioR - logRiskRatioL) / (2 * zValue);
-    const zStat = Math.abs(logRiskRatioObs / stdErr);
-    const a = -0.717;
-    const b = -0.416;
-    return Math.round(Math.exp(a * zStat + b * zStat ** 2) * 10000) / 10000;
-  };
-
   const getCValue = (p0, p1, n0, n1, baseValue, step) => {
     let contains = false;
     let j = 0;
@@ -143,14 +126,9 @@ const ClinicalTrialSimulator = () => {
   };
 
   const mkRiskStr = (title, risk, riskL, riskR) => {
-    return {
-      title,
-      value: risk.toFixed(2),
-      ci: `(${riskL.toFixed(2)}-${riskR.toFixed(2)})`,
-    };
+    return `${title}${risk.toFixed(2)} (${riskL.toFixed(2)}-${riskR.toFixed(2)})`;
   };
 
-  // Validation
   const validateInputs = () => {
     setError(null);
 
@@ -184,7 +162,6 @@ const ClinicalTrialSimulator = () => {
     return true;
   };
 
-  // Simulation logic
   const runSimulation = async () => {
     if (!validateInputs()) return;
     setLoading(true);
@@ -194,87 +171,54 @@ const ClinicalTrialSimulator = () => {
       const confidence = confidenceLevel / 100;
       const zValue = jStat.normal.inv(1 - confidence / 2, 0, 1);
 
-      // Control group inference
       const controlRisk = controlEvents / 100;
       const controlRiskCI = binomialConfidence(controlRisk, controlSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
       const controlRiskL = controlRiskCI[0];
       const controlRiskR = controlRiskCI[1];
       const controlRiskErr = controlRiskR - controlRiskL;
-      const strControlRisk = mkRiskStr('Control Group Risk (%)', controlEvents, controlRiskL, controlRiskR);
+      const strControlRisk = mkRiskStr('Control Group Risk: ', controlEvents, controlRiskL, controlRiskR);
 
-      // Test group inference
       const testRisk = testEvents / 100;
       const testRiskCI = binomialConfidence(testRisk, testSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
       const testRiskL = testRiskCI[0];
       const testRiskR = testRiskCI[1];
       const testRiskErr = testRiskR - testRiskL;
-      const strTestRisk = mkRiskStr('Test Group Risk (%)', testEvents, testRiskL, test onRiskR);
+      const strTestRisk = mkRiskStr('Test Group Risk: ', testEvents, testRiskL, testRiskR);
 
-      // Overlap
       const overlapInterval = getOverlap(testRiskCI, controlRiskCI);
       const overlapLength = overlapInterval.length > 0 ? overlapInterval[1] - overlapInterval[0] : 0;
-      const strOverlapInterval = {
-        title: 'Overlap Interval',
-        value: overlapLength.toFixed(2),
-        ci: `[${overlapInterval.map(x => x.toFixed(2)).join(', ')}]`,
-      };
-      const strOverlapPctTest = {
-        title: 'Overlap % for Test Group',
-        value: (overlapLength / testRiskErr * 100).toFixed(2),
-        ci: '',
-      };
+      const strOverlapInterval = `Overlap: ${overlapLength.toFixed(2)}% [${overlapInterval.map(x => x.toFixed(2)).join(', ')}]`;
+      const strOverlapPctTest = `Overlap % for Test Group: ${(overlapLength / testRiskErr * 100).toFixed(2)}%`;
 
-      // Risk ratio
       const phi = getPhi(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
       const par = getPar(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
       const riskRatio = testRisk / controlRisk;
       const riskRatioL = phi * Math.exp(-zValue * par);
       const riskRatioR = phi * Math.exp(zValue * par);
-      const strRiskRatio = mkRiskStr('Relative Risk', riskRatio, riskRatioL, riskRatioR);
+      const strRiskRatio = mkRiskStr('Relative Risk: ', riskRatio, riskRatioL, riskRatioR);
 
-      // Adverse effects threshold
       const advEffectsThreshold = (1 - (1 - confidence) ** (1 / testSize)) * 100;
-      const strAdvEffects = {
-        title: 'Adverse Effects Threshold (%)',
-        value: advEffectsThreshold.toFixed(2),
-        ci: '',
-      };
+      const strAdvEffects = `Adverse Effects Threshold: ${advEffectsThreshold.toFixed(2)}%`;
 
-      // P-values
       const pValue1 = getPValue(controlRisk, testRisk, controlSize, testSize);
-      const strPValue = {
-        title: 'P-Value',
-        value: pValue1,
-        ci: '',
-      };
+      const strPValue = `P-Value: ${pValue1}`;
 
-      // C-value
       const cValue = getCValue(controlRisk, testRisk, controlSize, testSize, 0.5, 0.005);
       const highestCI = 1 - cValue;
-      const strCValue = {
-        title: 'C-Value',
-        value: cValue,
-        ci: '',
-      };
-      const strCValueExt = {
-        title: 'Highest CI',
-        value: highestCI.toFixed(4),
-        ci: `/ ${(highestCI * 100).toFixed(2)}%`,
-      };
+      const strCValue = `C-Value: ${cValue}`;
+      const strCValueExt = `Highest CI: ${(highestCI * 100).toFixed(2)}%`;
 
-      // Warnings
       let warnings = [];
       if (1 >= riskRatioL && 1 <= riskRatioR) {
-        warnings.push('The confidence interval for Relative Risk contains 1.');
+        warnings.push('Relative Risk CI contains 1.');
       }
       if (advEffectsThreshold > controlEvents) {
-        warnings.push('The adverse effects detectability threshold for the test group is above the risk level for the control group.');
+        warnings.push('Adverse effects threshold exceeds control group risk.');
       }
 
-      // Chart data
       const chartData = [
-        { group: 'Test group', value: testEvents, lower: testRiskL, upper: testRiskR },
-        { group: 'Control group', value: controlEvents, lower: controlRiskL, upper: controlRiskR },
+        { group: 'Test group', value: testEvents, lower: testRiskL, upper: testRiskR, error: [(testRiskR - testEvents), (testEvents - testRiskL)] },
+        { group: 'Control group', value: controlEvents, lower: controlRiskL, upper: controlRiskR, error: [(controlRiskR - controlEvents), (controlEvents - controlRiskL)] },
       ];
 
       const result = {
@@ -292,12 +236,10 @@ const ClinicalTrialSimulator = () => {
 
       setResult(result);
 
-      // Save to localStorage
       try {
         localStorage.setItem('simulatorResults', JSON.stringify(result));
       } catch (err) {}
 
-      // Save to Firebase
       const user = auth.currentUser;
       if (user) {
         try {
@@ -314,7 +256,6 @@ const ClinicalTrialSimulator = () => {
     setLoading(false);
   };
 
-  // Reset inputs
   const resetData = () => {
     setControlSize(CONTROL_START);
     setTestSize(TEST_START);
@@ -324,7 +265,6 @@ const ClinicalTrialSimulator = () => {
     runSimulation();
   };
 
-  // Export CSV
   const exportCSV = () => {
     if (!result) {
       setError('No results to export.');
@@ -356,7 +296,6 @@ const ClinicalTrialSimulator = () => {
     }
   };
 
-  // Export PNG
   const exportPNG = async () => {
     if (!chartRef.current) {
       setError('No chart available to export.');
@@ -374,14 +313,14 @@ const ClinicalTrialSimulator = () => {
   };
 
   return (
-    <Container className="py-5 simulator-container">
+    <Container className="simulator-container">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="mb-4 text-center">Clinical Trial Simulator</h2>
-        <Card className="shadow-sm mb-4 border-0">
+        <h2 className="simulator-title">Clinical Trial Simulator</h2>
+        <Card className="simulator-card mb-4">
           <Card.Body>
             <Form>
               <Row>
@@ -396,7 +335,6 @@ const ClinicalTrialSimulator = () => {
                       max={CONTROL_MAX}
                       step={CONTROL_STEP}
                       aria-label="Control group size"
-                      className="form-control-modern"
                     />
                     <Form.Range
                       value={controlSize}
@@ -404,7 +342,6 @@ const ClinicalTrialSimulator = () => {
                       min={CONTROL_MIN}
                       max={CONTROL_MAX}
                       step={CONTROL_STEP}
-                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -419,7 +356,6 @@ const ClinicalTrialSimulator = () => {
                       max={TEST_MAX}
                       step={TEST_STEP}
                       aria-label="Test group size"
-                      className="form-control-modern"
                     />
                     <Form.Range
                       value={testSize}
@@ -427,7 +363,6 @@ const ClinicalTrialSimulator = () => {
                       min={TEST_MIN}
                       max={TEST_MAX}
                       step={TEST_STEP}
-                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -435,7 +370,7 @@ const ClinicalTrialSimulator = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Detected Proportion for Control Group (%)</Form.Label>
+                    <Form.Label>Control Group Events (%)</Form.Label>
                     <Form.Control
                       type="number"
                       value={controlEvents}
@@ -444,7 +379,6 @@ const ClinicalTrialSimulator = () => {
                       max={EVENTS_CONTROL_MAX}
                       step={EVENTS_CONTROL_STEP}
                       aria-label="Control events"
-                      className="form-control-modern"
                     />
                     <Form.Range
                       value={controlEvents}
@@ -452,13 +386,12 @@ const ClinicalTrialSimulator = () => {
                       min={EVENTS_CONTROL_MIN}
                       max={EVENTS_CONTROL_MAX}
                       step={EVENTS_CONTROL_STEP}
-                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Detected Proportion for Test Group (%)</Form.Label>
+                    <Form.Label>Test Group Events (%)</Form.Label>
                     <Form.Control
                       type="number"
                       value={testEvents}
@@ -467,7 +400,6 @@ const ClinicalTrialSimulator = () => {
                       max={EVENTS_TEST_MAX}
                       step={EVENTS_TEST_STEP}
                       aria-label="Test events"
-                      className="form-control-modern"
                     />
                     <Form.Range
                       value={testEvents}
@@ -475,7 +407,6 @@ const ClinicalTrialSimulator = () => {
                       min={EVENTS_TEST_MIN}
                       max={EVENTS_TEST_MAX}
                       step={EVENTS_TEST_STEP}
-                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -483,7 +414,7 @@ const ClinicalTrialSimulator = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Target Confidence Level (%)</Form.Label>
+                    <Form.Label>Confidence Level (%)</Form.Label>
                     <Form.Control
                       type="number"
                       value={confidenceLevel}
@@ -492,7 +423,6 @@ const ClinicalTrialSimulator = () => {
                       max={CI_MAX}
                       step={CI_STEP}
                       aria-label="Confidence level"
-                      className="form-control-modern"
                     />
                     <Form.Range
                       value={confidenceLevel}
@@ -500,28 +430,24 @@ const ClinicalTrialSimulator = () => {
                       min={CI_MIN}
                       max={CI_MAX}
                       step={CI_STEP}
-                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
               </Row>
-              <div className="d-flex justify-content-center gap-2">
-                <Button
-                  variant="primary"
-                  onClick={runSimulation}
-                  disabled={loading}
-                  className="btn-modern"
-                >
-                  {loading ? 'Simulating...' : 'Run Simulation'}
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={resetData}
-                  className="btn-modern-outline"
-                >
-                  Reset
-                </Button>
-              </div>
+              <Button
+                variant="primary"
+                onClick={runSimulation}
+                disabled={loading}
+                className="me-2"
+              >
+                {loading ? 'Simulating...' : 'Run Simulation'}
+              </Button>
+              <Button
+                variant="outline-secondary"
+                onClick={resetData}
+              >
+                Reset
+              </Button>
             </Form>
           </Card.Body>
         </Card>
@@ -532,7 +458,7 @@ const ClinicalTrialSimulator = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Alert variant="danger" className="modern-alert">{error}</Alert>
+              <Alert variant="danger">{error}</Alert>
             </motion.div>
           )}
           {result && (
@@ -541,99 +467,75 @@ const ClinicalTrialSimulator = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mt-4"
             >
-              <Card className="shadow-sm border-0">
+              <Card className="simulator-results-card">
                 <Card.Body>
-                  <h3 className="mb-4 text-center">Simulation Results</h3>
-                  <Table responsive className="modern-table">
-                    <thead>
-                      <tr>
-                        <th>Metric</th>
-                        <th>Value</th>
-                        <th>Confidence Interval</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{result.testRisk.str.title}</td>
-                        <td>{result.testRisk.str.value}</td>
-                        <td>{result.testRisk.str.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.controlRisk.str.title}</td>
-                        <td>{result.controlRisk.str.value}</td>
-                        <td>{result.controlRisk.str.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.overlap.strInterval.title}</td>
-                        <td>{result.overlap.strInterval.value}</td>
-                        <td>{result.overlap.strInterval.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.overlap.strPctTest.title}</td>
-                        <td>{result.overlap.strPctTest.value}%</td>
-                        <td>{result.overlap.strPctTest.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.riskRatio.str.title}</td>
-                        <td>{result.riskRatio.str.value}</td>
-                        <td>{result.riskRatio.str.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.pValue.str.title}</td>
-                        <td>{result.pValue.str.value}</td>
-                        <td>{result.pValue.str.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.cValue.str.title}</td>
-                        <td>{result.cValue.str.value}</td>
-                        <td>{result.cValue.str.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.cValue.strExt.title}</td>
-                        <td>{result.cValue.strExt.value}</td>
-                        <td>{result.cValue.strExt.ci}</td>
-                      </tr>
-                      <tr>
-                        <td>{result.adverseEffects.str.title}</td>
-                        <td>{result.adverseEffects.str.value}</td>
-                        <td>{result.adverseEffects.str.ci}</td>
-                      </tr>
-                    </tbody>
-                  </Table>
+                  <h3 className="results-title">Experimental Results</h3>
+                  <Row>
+                    <Col md={6}>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Test Group Risk</Badge>
+                        <span>{result.testRisk.value.toFixed(2)}% ({result.testRisk.ci[0].toFixed(2)}-{result.testRisk.ci[1].toFixed(2)})</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Control Group Risk</Badge>
+                        <span>{result.controlRisk.value.toFixed(2)}% ({result.controlRisk.ci[0].toFixed(2)}-{result.controlRisk.ci[1].toFixed(2)})</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Overlap</Badge>
+                        <span>{result.overlap.length.toFixed(2)}% [{result.overlap.interval.map(x => x.toFixed(2)).join(', ')}]</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Overlap % Test</Badge>
+                        <span>{(result.overlap.length / (result.testRisk.ci[1] - result.testRisk.ci[0]) * 100).toFixed(2)}%</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Relative Risk</Badge>
+                        <span>{result.riskRatio.value.toFixed(2)} ({result.riskRatio.ci[0].toFixed(2)}-{result.riskRatio.ci[1].toFixed(2)})</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">P-Value</Badge>
+                        <span>{result.pValue.value1}</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">C-Value</Badge>
+                        <span>{result.cValue.value}</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Highest CI</Badge>
+                        <span>{(result.cValue.highestCI * 100).toFixed(2)}%</span>
+                      </div>
+                      <div className="result-item">
+                        <Badge bg="primary" className="result-badge">Adverse Effects</Badge>
+                        <span>{result.adverseEffects.threshold.toFixed(2)}%</span>
+                      </div>
+                    </Col>
+                  </Row>
                   {result.warnings.length > 0 && (
-                    <Alert variant="warning" className="modern-alert mt-3">
-                      <strong>Warnings:</strong>
-                      <ul className="mb-0">
-                        {result.warnings.map((warning, idx) => (
-                          <li key={idx}>{warning}</li>
-                        ))}
-                      </ul>
-                    </Alert>
+                    <div className="warnings mt-3">
+                      <h5>Warnings</h5>
+                      {result.warnings.map((warning, idx) => (
+                        <Badge key={idx} bg="warning" className="warning-badge">{warning}</Badge>
+                      ))}
+                    </div>
                   )}
-                  <div className="d-flex justify-content-center gap-2 mt-4">
-                    <Button variant="primary" onClick={exportCSV} className="btn-modern">
-                      Export CSV
-                    </Button>
-                    <Button variant="outline-secondary" onClick={exportPNG} className="btn-modern-outline">
-                      Export PNG
-                    </Button>
-                  </div>
-                  <div ref={chartRef} className="mt-5">
-                    <ResponsiveContainer width="100%" height={400}>
+                  <Button variant="success" onClick={exportCSV} className="me-2 mt-3">
+                    Export CSV
+                  </Button>
+                  <Button variant="outline-primary" onClick={exportPNG} className="mt-3">
+                    Export PNG
+                  </Button>
+                  <div ref={chartRef} className="mt-4">
+                    <ResponsiveContainer width="100%" height={350}>
                       <BarChart data={result.chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="group" tick={{ fill: '#333' }} />
-                        <YAxis
-                          domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper))) + PLOT_RANGE_DELTA]}
-                          tick={{ fill: '#333' }}
-                        />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px' }}
-                        />
-                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                        <Bar dataKey="value" fill="#3b82f6">
-                          <ErrorBar dataKey="upper" width={4} strokeWidth={2} stroke="#333" direction="upper" />
-                          <ErrorBar dataKey="lower" width={4} strokeWidth={2} stroke="#333" direction="lower" />
+                        <XAxis dataKey="group" stroke="#333" />
+                        <YAxis domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper))) + PLOT_RANGE_DELTA]} stroke="#333" />
+                        <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e0e0e0' }} />
+                        <Legend />
+                        <Bar dataKey="value" fill="#007bff" radius={[4, 4, 0, 0]}>
+                          <ErrorBar dataKey="error" width={4} strokeWidth={2} stroke="#333" />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
