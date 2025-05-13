@@ -1,6 +1,7 @@
+// ClinicalTrialSimulator.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Container, Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
+import { Container, Form, Button, Alert, Card, Row, Col, Table } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ErrorBar } from 'recharts';
 import jStat from 'jstat';
@@ -50,7 +51,6 @@ const ClinicalTrialSimulator = () => {
   const [confidenceLevel, setConfidenceLevel] = useState(CI_START);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const [debugMessages, setDebugMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Load saved results
@@ -59,7 +59,6 @@ const ClinicalTrialSimulator = () => {
     if (saved) {
       try {
         setResult(JSON.parse(saved));
-        setDebugMessages([...debugMessages, 'Loaded saved results from localStorage']);
       } catch (err) {
         setError('Failed to load saved results.');
       }
@@ -75,7 +74,7 @@ const ClinicalTrialSimulator = () => {
       const upper = jStat.beta.inv(1 - alpha / 2, x + 1, n - x);
       return [isNaN(lower) ? 0 : lower, isNaN(upper) ? 1 : upper];
     }
-    return [p, p]; // Fallback
+    return [p, p];
   };
 
   const getPhi = (p0, p1, n0, n1, walter) => {
@@ -138,18 +137,21 @@ const ClinicalTrialSimulator = () => {
         cValue = 1 - (currentConfidence - step) / 100;
       }
       j++;
-      if (j > 1000) break; // Prevent infinite loop
+      if (j > 1000) break;
     }
     return Math.round(cValue * 10000) / 10000;
   };
 
   const mkRiskStr = (title, risk, riskL, riskR) => {
-    return `${title}${risk.toFixed(2)} (${riskL.toFixed(2)}-${riskR.toFixed(2)})`;
+    return {
+      title,
+      value: risk.toFixed(2),
+      ci: `(${riskL.toFixed(2)}-${riskR.toFixed(2)})`,
+    };
   };
 
   // Validation
   const validateInputs = () => {
-    setDebugMessages([]);
     setError(null);
 
     const parsedControlSize = Number(controlSize);
@@ -179,7 +181,6 @@ const ClinicalTrialSimulator = () => {
       return false;
     }
 
-    setDebugMessages([...debugMessages, 'Input validation passed']);
     return true;
   };
 
@@ -188,7 +189,6 @@ const ClinicalTrialSimulator = () => {
     if (!validateInputs()) return;
     setLoading(true);
     setError(null);
-    setDebugMessages([...debugMessages, 'Starting simulation...']);
 
     try {
       const confidence = confidenceLevel / 100;
@@ -200,7 +200,7 @@ const ClinicalTrialSimulator = () => {
       const controlRiskL = controlRiskCI[0];
       const controlRiskR = controlRiskCI[1];
       const controlRiskErr = controlRiskR - controlRiskL;
-      const strControlRisk = mkRiskStr('Risk on control group (%): ', controlEvents, controlRiskL, controlRiskR);
+      const strControlRisk = mkRiskStr('Control Group Risk (%)', controlEvents, controlRiskL, controlRiskR);
 
       // Test group inference
       const testRisk = testEvents / 100;
@@ -208,13 +208,21 @@ const ClinicalTrialSimulator = () => {
       const testRiskL = testRiskCI[0];
       const testRiskR = testRiskCI[1];
       const testRiskErr = testRiskR - testRiskL;
-      const strTestRisk = mkRiskStr('Risk on test group (%): ', testEvents, testRiskL, testRiskR);
+      const strTestRisk = mkRiskStr('Test Group Risk (%)', testEvents, testRiskL, test onRiskR);
 
       // Overlap
       const overlapInterval = getOverlap(testRiskCI, controlRiskCI);
       const overlapLength = overlapInterval.length > 0 ? overlapInterval[1] - overlapInterval[0] : 0;
-      const strOverlapInterval = `Overlap: ${overlapLength.toFixed(2)} [${overlapInterval.map(x => x.toFixed(2)).join(', ')}]`;
-      const strOverlapPctTest = `Overlap % for test group: ${(overlapLength / testRiskErr * 100).toFixed(2)}`;
+      const strOverlapInterval = {
+        title: 'Overlap Interval',
+        value: overlapLength.toFixed(2),
+        ci: `[${overlapInterval.map(x => x.toFixed(2)).join(', ')}]`,
+      };
+      const strOverlapPctTest = {
+        title: 'Overlap % for Test Group',
+        value: (overlapLength / testRiskErr * 100).toFixed(2),
+        ci: '',
+      };
 
       // Risk ratio
       const phi = getPhi(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
@@ -222,22 +230,37 @@ const ClinicalTrialSimulator = () => {
       const riskRatio = testRisk / controlRisk;
       const riskRatioL = phi * Math.exp(-zValue * par);
       const riskRatioR = phi * Math.exp(zValue * par);
-      const strRiskRatio = mkRiskStr('Relative risk: ', riskRatio, riskRatioL, riskRatioR);
+      const strRiskRatio = mkRiskStr('Relative Risk', riskRatio, riskRatioL, riskRatioR);
 
       // Adverse effects threshold
       const advEffectsThreshold = (1 - (1 - confidence) ** (1 / testSize)) * 100;
-      const strAdvEffects = `Adverse effects detectability threshold (%): ${advEffectsThreshold.toFixed(2)}`;
+      const strAdvEffects = {
+        title: 'Adverse Effects Threshold (%)',
+        value: advEffectsThreshold.toFixed(2),
+        ci: '',
+      };
 
       // P-values
       const pValue1 = getPValue(controlRisk, testRisk, controlSize, testSize);
-      const pValue2 = getPValue2(riskRatio, riskRatioL, riskRatioR, confidence);
-      const strPValue = `p-value: ${pValue1}`;
+      const strPValue = {
+        title: 'P-Value',
+        value: pValue1,
+        ci: '',
+      };
 
       // C-value
       const cValue = getCValue(controlRisk, testRisk, controlSize, testSize, 0.5, 0.005);
       const highestCI = 1 - cValue;
-      const strCValue = `c-value: ${cValue}`;
-      const strCValueExt = `highest CI: ${highestCI.toFixed(4)} / ${(highestCI * 100).toFixed(2)}%`;
+      const strCValue = {
+        title: 'C-Value',
+        value: cValue,
+        ci: '',
+      };
+      const strCValueExt = {
+        title: 'Highest CI',
+        value: highestCI.toFixed(4),
+        ci: `/ ${(highestCI * 100).toFixed(2)}%`,
+      };
 
       // Warnings
       let warnings = [];
@@ -247,7 +270,6 @@ const ClinicalTrialSimulator = () => {
       if (advEffectsThreshold > controlEvents) {
         warnings.push('The adverse effects detectability threshold for the test group is above the risk level for the control group.');
       }
-      const strWarnings = warnings.length > 0 ? `<b>Warnings:</b><br/>${warnings.join('<br/>')}` : '';
 
       // Chart data
       const chartData = [
@@ -261,42 +283,33 @@ const ClinicalTrialSimulator = () => {
         overlap: { interval: overlapInterval, length: overlapLength, strInterval: strOverlapInterval, strPctTest: strOverlapPctTest },
         riskRatio: { value: riskRatio, ci: [riskRatioL, riskRatioR], str: strRiskRatio },
         adverseEffects: { threshold: advEffectsThreshold, str: strAdvEffects },
-        pValue: { value1: pValue1, value2: pValue2, str: strPValue },
+        pValue: { value1: pValue1, str: strPValue },
         cValue: { value: cValue, highestCI, str: strCValue, strExt: strCValueExt },
-        warnings: { str: strWarnings },
+        warnings,
         chartData,
         parameters: { controlSize, testSize, controlEvents, testEvents, confidenceLevel },
       };
 
       setResult(result);
-      setDebugMessages([...debugMessages, 'Simulation completed successfully']);
 
       // Save to localStorage
       try {
         localStorage.setItem('simulatorResults', JSON.stringify(result));
-        setDebugMessages([...debugMessages, 'Saved results to localStorage']);
-      } catch (err) {
-        setDebugMessages([...debugMessages, `localStorage save warning: ${err.message}`]);
-      }
+      } catch (err) {}
 
       // Save to Firebase
       const user = auth.currentUser;
       if (user) {
-        setDebugMessages([...debugMessages, 'Attempting to save to Firebase...']);
         try {
           await addDoc(collection(db, 'simulations'), {
             userId: user.uid,
             result,
             timestamp: new Date(),
           });
-          setDebugMessages([...debugMessages, 'Successfully saved to Firebase']);
-        } catch (err) {
-          setDebugMessages([...debugMessages, `Firebase save warning: ${err.message}`]);
-        }
+        } catch (err) {}
       }
     } catch (err) {
       setError(`Simulation failed: ${err.message}`);
-      setDebugMessages([...debugMessages, `General error: ${err.message}`]);
     }
     setLoading(false);
   };
@@ -338,10 +351,8 @@ const ClinicalTrialSimulator = () => {
       link.href = URL.createObjectURL(blob);
       link.download = 'simulation_results.csv';
       link.click();
-      setDebugMessages([...debugMessages, 'Exported CSV successfully']);
     } catch (err) {
       setError(`CSV export failed: ${err.message}`);
-      setDebugMessages([...debugMessages, `CSV export error: ${err.message}`]);
     }
   };
 
@@ -357,22 +368,20 @@ const ClinicalTrialSimulator = () => {
       link.href = canvas.toDataURL('image/png');
       link.download = 'simulation_chart.png';
       link.click();
-      setDebugMessages([...debugMessages, 'Exported PNG successfully']);
     } catch (err) {
       setError(`PNG export failed: ${err.message}`);
-      setDebugMessages([...debugMessages, `PNG export error: ${err.message}`]);
     }
   };
 
   return (
-    <Container className="py-4">
+    <Container className="py-5 simulator-container">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="mb-4">Clinical Trial Simulator</h2>
-        <Card className="mb-4">
+        <h2 className="mb-4 text-center">Clinical Trial Simulator</h2>
+        <Card className="shadow-sm mb-4 border-0">
           <Card.Body>
             <Form>
               <Row>
@@ -387,6 +396,7 @@ const ClinicalTrialSimulator = () => {
                       max={CONTROL_MAX}
                       step={CONTROL_STEP}
                       aria-label="Control group size"
+                      className="form-control-modern"
                     />
                     <Form.Range
                       value={controlSize}
@@ -394,6 +404,7 @@ const ClinicalTrialSimulator = () => {
                       min={CONTROL_MIN}
                       max={CONTROL_MAX}
                       step={CONTROL_STEP}
+                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -408,6 +419,7 @@ const ClinicalTrialSimulator = () => {
                       max={TEST_MAX}
                       step={TEST_STEP}
                       aria-label="Test group size"
+                      className="form-control-modern"
                     />
                     <Form.Range
                       value={testSize}
@@ -415,6 +427,7 @@ const ClinicalTrialSimulator = () => {
                       min={TEST_MIN}
                       max={TEST_MAX}
                       step={TEST_STEP}
+                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -431,6 +444,7 @@ const ClinicalTrialSimulator = () => {
                       max={EVENTS_CONTROL_MAX}
                       step={EVENTS_CONTROL_STEP}
                       aria-label="Control events"
+                      className="form-control-modern"
                     />
                     <Form.Range
                       value={controlEvents}
@@ -438,6 +452,7 @@ const ClinicalTrialSimulator = () => {
                       min={EVENTS_CONTROL_MIN}
                       max={EVENTS_CONTROL_MAX}
                       step={EVENTS_CONTROL_STEP}
+                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -452,6 +467,7 @@ const ClinicalTrialSimulator = () => {
                       max={EVENTS_TEST_MAX}
                       step={EVENTS_TEST_STEP}
                       aria-label="Test events"
+                      className="form-control-modern"
                     />
                     <Form.Range
                       value={testEvents}
@@ -459,6 +475,7 @@ const ClinicalTrialSimulator = () => {
                       min={EVENTS_TEST_MIN}
                       max={EVENTS_TEST_MAX}
                       step={EVENTS_TEST_STEP}
+                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
@@ -475,6 +492,7 @@ const ClinicalTrialSimulator = () => {
                       max={CI_MAX}
                       step={CI_STEP}
                       aria-label="Confidence level"
+                      className="form-control-modern"
                     />
                     <Form.Range
                       value={confidenceLevel}
@@ -482,24 +500,28 @@ const ClinicalTrialSimulator = () => {
                       min={CI_MIN}
                       max={CI_MAX}
                       step={CI_STEP}
+                      className="range-modern"
                     />
                   </Form.Group>
                 </Col>
               </Row>
-              <Button
-                variant="primary"
-                onClick={runSimulation}
-                disabled={loading}
-                className="me-2"
-              >
-                {loading ? 'Simulating...' : 'Run Simulation'}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={resetData}
-              >
-                Reset
-              </Button>
+              <div className="d-flex justify-content-center gap-2">
+                <Button
+                  variant="primary"
+                  onClick={runSimulation}
+                  disabled={loading}
+                  className="btn-modern"
+                >
+                  {loading ? 'Simulating...' : 'Run Simulation'}
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={resetData}
+                  className="btn-modern-outline"
+                >
+                  Reset
+                </Button>
+              </div>
             </Form>
           </Card.Body>
         </Card>
@@ -510,25 +532,7 @@ const ClinicalTrialSimulator = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Alert variant="danger">{error}</Alert>
-            </motion.div>
-          )}
-          {debugMessages.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Card className="mb-4">
-                <Card.Body>
-                  <h4>Debug Log</h4>
-                  <ul>
-                    {debugMessages.map((msg, idx) => (
-                      <li key={idx}>{msg}</li>
-                    ))}
-                  </ul>
-                </Card.Body>
-              </Card>
+              <Alert variant="danger" className="modern-alert">{error}</Alert>
             </motion.div>
           )}
           {result && (
@@ -537,38 +541,99 @@ const ClinicalTrialSimulator = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mt-4"
             >
-              <Card>
+              <Card className="shadow-sm border-0">
                 <Card.Body>
-                  <h3>Inference from Experimental Results</h3>
-                  <div dangerouslySetInnerHTML={{ __html: result.testRisk.str }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.controlRisk.str }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.overlap.strInterval }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.overlap.strPctTest }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.riskRatio.str }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.pValue.str }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.cValue.str }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.cValue.strExt }} />
-                  <div dangerouslySetInnerHTML={{ __html: result.adverseEffects.str }} />
-                  {result.warnings.str && (
-                    <div dangerouslySetInnerHTML={{ __html: result.warnings.str }} />
+                  <h3 className="mb-4 text-center">Simulation Results</h3>
+                  <Table responsive className="modern-table">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Confidence Interval</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{result.testRisk.str.title}</td>
+                        <td>{result.testRisk.str.value}</td>
+                        <td>{result.testRisk.str.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.controlRisk.str.title}</td>
+                        <td>{result.controlRisk.str.value}</td>
+                        <td>{result.controlRisk.str.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.overlap.strInterval.title}</td>
+                        <td>{result.overlap.strInterval.value}</td>
+                        <td>{result.overlap.strInterval.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.overlap.strPctTest.title}</td>
+                        <td>{result.overlap.strPctTest.value}%</td>
+                        <td>{result.overlap.strPctTest.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.riskRatio.str.title}</td>
+                        <td>{result.riskRatio.str.value}</td>
+                        <td>{result.riskRatio.str.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.pValue.str.title}</td>
+                        <td>{result.pValue.str.value}</td>
+                        <td>{result.pValue.str.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.cValue.str.title}</td>
+                        <td>{result.cValue.str.value}</td>
+                        <td>{result.cValue.str.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.cValue.strExt.title}</td>
+                        <td>{result.cValue.strExt.value}</td>
+                        <td>{result.cValue.strExt.ci}</td>
+                      </tr>
+                      <tr>
+                        <td>{result.adverseEffects.str.title}</td>
+                        <td>{result.adverseEffects.str.value}</td>
+                        <td>{result.adverseEffects.str.ci}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                  {result.warnings.length > 0 && (
+                    <Alert variant="warning" className="modern-alert mt-3">
+                      <strong>Warnings:</strong>
+                      <ul className="mb-0">
+                        {result.warnings.map((warning, idx) => (
+                          <li key={idx}>{warning}</li>
+                        ))}
+                      </ul>
+                    </Alert>
                   )}
-                  <Button variant="success" onClick={exportCSV} className="me-2 mt-2">
-                    Export CSV
-                  </Button>
-                  <Button variant="secondary" onClick={exportPNG} className="mt-2">
-                    Export PNG
-                  </Button>
-                  <div ref={chartRef} className="mt-4">
-                    <ResponsiveContainer width="100%" height={350}>
+                  <div className="d-flex justify-content-center gap-2 mt-4">
+                    <Button variant="primary" onClick={exportCSV} className="btn-modern">
+                      Export CSV
+                    </Button>
+                    <Button variant="outline-secondary" onClick={exportPNG} className="btn-modern-outline">
+                      Export PNG
+                    </Button>
+                  </div>
+                  <div ref={chartRef} className="mt-5">
+                    <ResponsiveContainer width="100%" height={400}>
                       <BarChart data={result.chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="group" />
-                        <YAxis domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper))) + PLOT_RANGE_DELTA]} />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="value" fill="#8884d8">
-                          <ErrorBar dataKey="upper" width={4} strokeWidth={2} stroke="black" direction="upper" />
-                          <ErrorBar dataKey="lower" width={4} strokeWidth={2} stroke="black" direction="lower" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="group" tick={{ fill: '#333' }} />
+                        <YAxis
+                          domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper))) + PLOT_RANGE_DELTA]}
+                          tick={{ fill: '#333' }}
+                        />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px' }}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                        <Bar dataKey="value" fill="#3b82f6">
+                          <ErrorBar dataKey="upper" width={4} strokeWidth={2} stroke="#333" direction="upper" />
+                          <ErrorBar dataKey="lower" width={4} strokeWidth={2} stroke="#333" direction="lower" />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
