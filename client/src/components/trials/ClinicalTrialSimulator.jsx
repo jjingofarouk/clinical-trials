@@ -45,7 +45,6 @@ const ClinicalTrialSimulator = () => {
     setDebugMessages([]);
     setError(null);
 
-    // Convert inputs to numbers and check for NaN
     const parsedSampleSize = Number(sampleSize);
     const parsedEffectSize = Number(effectSize);
     const parsedAlpha = Number(alpha);
@@ -68,7 +67,6 @@ const ClinicalTrialSimulator = () => {
       return false;
     }
 
-    // Check effective sample size
     const effectiveSampleSize = Math.floor(parsedSampleSize * (1 - parsedDropoutRate));
     if (effectiveSampleSize < 6) {
       setError('Effective sample size (after dropout) must be at least 6.');
@@ -98,10 +96,15 @@ const ClinicalTrialSimulator = () => {
         setDebugMessages([...debugMessages, 'Running t-test simulation']);
         for (let i = 0; i < 50; i++) {
           try {
-            const control = jStat.normal.sample(effectiveSampleSize, 0, 1);
-            const treatment = jStat.normal.sample(effectiveSampleSize, Number(effectSize), 1);
+            if (effectiveSampleSize < 2) throw new Error('Sample size too small for t-test');
+            const control = Array.from({ length: effectiveSampleSize }, () =>
+              jStat.normal.sample(0, 1)
+            );
+            const treatment = Array.from({ length: effectiveSampleSize }, () =>
+              jStat.normal.sample(Number(effectSize), 1)
+            );
             const { p } = jStat.ttest(control, treatment, 2);
-            if (isNaN(p)) throw new Error('Invalid p-value in t-test');
+            if (isNaN(p) || p === null) throw new Error('Invalid p-value in t-test');
             simulations.push({ p_value: p, significant: p < Number(alpha) });
           } catch (err) {
             setDebugMessages([...debugMessages, `T-test error in iteration ${i}: ${err.message}`]);
@@ -112,11 +115,19 @@ const ClinicalTrialSimulator = () => {
         setDebugMessages([...debugMessages, 'Running ANOVA simulation']);
         for (let i = 0; i < 50; i++) {
           try {
-            const group1 = jStat.normal.sample(Math.floor(effectiveSampleSize / 3), 0, 1);
-            const group2 = jStat.normal.sample(Math.floor(effectiveSampleSize / 3), Number(effectSize) / 2, 1);
-            const group3 = jStat.normal.sample(Math.floor(effectiveSampleSize / 3), Number(effectSize), 1);
+            const groupSize = Math.floor(effectiveSampleSize / 3);
+            if (groupSize < 3) throw new Error('Group size too small for ANOVA');
+            const group1 = Array.from({ length: groupSize }, () =>
+              jStat.normal.sample(0, 1)
+            );
+            const group2 = Array.from({ length: groupSize }, () =>
+              jStat.normal.sample(Number(effectSize) / 2, 1)
+            );
+            const group3 = Array.from({ length: groupSize }, () =>
+              jStat.normal.sample(Number(effectSize), 1)
+            );
             const { p } = jStat.anova([group1, group2, group3]);
-            if (isNaN(p)) throw new Error('Invalid p-value in ANOVA');
+            if (isNaN(p) || p === null) throw new Error('Invalid p-value in ANOVA');
             simulations.push({ p_value: p, significant: p < Number(alpha) });
           } catch (err) {
             setDebugMessages([...debugMessages, `ANOVA error in iteration ${i}: ${err.message}`]);
@@ -129,7 +140,7 @@ const ClinicalTrialSimulator = () => {
       let power;
       try {
         power = jStat.ttest.power(Number(effectSize), effectiveSampleSize, Number(alpha), 2);
-        if (isNaN(power)) throw new Error('Invalid power calculation');
+        if (isNaN(power) || power === null) throw new Error('Invalid power calculation');
       } catch (err) {
         setDebugMessages([...debugMessages, `Power calculation error: ${err.message}`]);
         throw new Error(`Power calculation failed: ${err.message}`);
@@ -154,17 +165,17 @@ const ClinicalTrialSimulator = () => {
       // Save to Firebase if authenticated
       const user = auth.currentUser;
       if (user) {
-        setDebugMessages([...debugMessages, 'Saving to Firebase...']);
+        setDebugMessages([...debugMessages, 'Attempting to save to Firebase...']);
         try {
           await addDoc(collection(db, 'simulations'), {
             userId: user.uid,
             result,
             timestamp: new Date(),
           });
-          setDebugMessages([...debugMessages, 'Saved to Firebase']);
+          setDebugMessages([...debugMessages, 'Successfully saved to Firebase']);
         } catch (err) {
-          setDebugMessages([...debugMessages, `Firebase save error: ${err.message}`]);
-          setError(`Simulation completed but failed to save to Firebase: ${err.message}`);
+          setDebugMessages([...debugMessages, `Firebase save warning: ${err.message}`]);
+          // Do not set error state to avoid marking simulation as failed
         }
       }
     } catch (err) {
