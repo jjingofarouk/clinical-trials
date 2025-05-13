@@ -59,6 +59,6 @@ function App() {
         <Footer />
       </div>
     </Router>
-산업
+
 
 export default App;
