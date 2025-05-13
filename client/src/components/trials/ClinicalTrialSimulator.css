@@ -1,309 +1,101 @@
 /* ClinicalTrialSimulator.css */
-
-/* Base styles */
-.clinical-trial-simulator {
-  font-family: 'Arial', sans-serif;
-  color: #333;
-  background-color: #f8f9fa;
+.simulator-container {
+  background-color: #ffffff !important;
   min-height: 100vh;
-  padding: 2rem 1rem;
-}
-
-/* Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-/* Headings */
-h2 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-h3 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #34495e;
-  margin-bottom: 1rem;
-}
-
-/* Card styles */
-.card {
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
-  margin-bottom: 2rem;
-  transition: transform 0.3s ease;
-}
-
-.card-body {
   padding: 2rem;
 }
 
-/* Form styles */
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-label {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-}
-
-.form-control {
-  border-radius: 6px;
-  border: 1px solid #ced4da;
+.form-control-modern {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   padding: 0.75rem;
-  font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.form-control:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+.form-control-modern:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
 }
 
-.form-select {
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 1rem;
+.range-modern {
+  accent-color: #3b82f6;
 }
 
-.form-range {
-  margin-top: 0.5rem;
-}
-
-/* Buttons */
-.btn {
-  border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-  border-color: #0056b3;
-  transform: translateY(-2px);
-}
-
-.btn-success {
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-  border-color: #218838;
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-secondary:hover {
-  background-color: #5a6268;
-  border-color: #5a6268;
-  transform: translateY(-2px);
-}
-
-.btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-/* Alert */
-.alert {
-  border-radius: 6px;
-  padding: 1rem;
-  font-size: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Chart container */
-.chart-container {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #fff;
+.btn-modern {
+  background-color: #3b82f6;
+  border: none;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
 }
 
-/* Responsive grid */
-.row {
-  margin-left: -0.75rem;
-  margin-right: -0.75rem;
+.btn-modern:hover {
+  background-color: #2563eb;
 }
 
-.col-md-6 {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+.btn-modern-outline {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  color: #333;
+  transition: border-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
-/* Results section */
-.results-section {
-  margin-top: 2rem;
+.btn-modern-outline:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
-.results-section p {
-  font-size: 1rem;
-  color: #2c3e50;
-  margin-bottom: 0.75rem;
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-/* Animations */
-motion.div {
-  will-change: opacity, transform;
+.modern-table th,
+.modern-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
 }
 
-/* Media Queries */
-
-/* Small devices (phones, 576px and up) */
-@media (min-width: 576px) {
-  h2 {
-    font-size: 2.5rem;
-  }
-
-  .card-body {
-    padding: 2.5rem;
-  }
-
-  .form-control,
-  .form-select {
-    font-size: 1.1rem;
-  }
-
-  .btn {
-    padding: 0.85rem 2rem;
-  }
+.modern-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
 }
 
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  .container {
-    padding: 0 2rem;
-  }
-
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-  }
-
-  .col-md-6 {
-    flex: 0 0 50%;
-    max-width: 50%;
-  }
-
-  h2 {
-    font-size: 3rem;
-  }
-
-  .card {
-    margin-bottom: 3rem;
-  }
+.modern-table tbody tr:hover {
+  background-color: #f1f5f9;
 }
 
-/* Large devices (desktops, 992px and up) */
-@media (min-width: 992px) {
-  .form-group {
-    margin-bottom: 2rem;
-  }
-
-  .form-label {
-    font-size: 1.1rem;
-  }
-
-  .btn {
-    font-size: 1.1rem;
-  }
-
-  .chart-container {
-    padding: 1.5rem;
-  }
+.modern-alert {
+  border-radius: 8px;
+  border: none;
+  background-color: #fef2f2;
+  color: #991b1b;
 }
 
-/* Extra large devices (large desktops, 1200px and up) */
-@media (min-width: 1200px) {
-  .container {
-    max-width: 1400px;
-  }
-
-  h2 {
-    font-size: 3.5rem;
-  }
-
-  .card-body {
-    padding: 3rem;
-  }
+.modern-alert.warning {
+  background-color: #fefce8;
+  color: #854d0e;
 }
 
-/* Small devices (phones, less than 576px) */
-@media (max-width: 575.98px) {
-  h2 {
-    font-size: 1.8rem;
-  }
-
-  .card-body {
-    padding: 1.5rem;
-  }
-
-  .form-control,
-  .form-select {
-    font-size: 0.9rem;
-    padding: 0.65rem;
-  }
-
-  .btn {
-    padding: 0.65rem 1.2rem;
-    font-size: 0.9rem;
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  .btn-success,
-  .btn-secondary {
-    margin-bottom: 0.5rem;
-  }
-
-  .chart-container {
-    padding: 0.5rem;
-  }
-
-  .results-section p {
-    font-size: 0.9rem;
-  }
+.card {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
-/* Accessibility */
-:focus {
-  outline: 3px solid #007bff;
-  outline-offset: 2px;
+h2, h3 {
+  color: #1e293b;
+  font-weight: 600;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
+/* Override potential app.css styles */
+body, .App, .container, .container-fluid {
+  background-color: #ffffff !important;
 }
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
