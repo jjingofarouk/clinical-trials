@@ -110,11 +110,11 @@ const Navbars = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" className="ms-auto" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            {['Home', 'Find Trials', 'Saved Trials', 'For Researchers', 'About Us', 'Contact'].map((text, idx) => (
+            {['Home', 'Find Trials', 'Trial Simulator', 'Saved Trials', 'For Researchers', 'About Us', 'Contact'].map((text, idx) => (
               <Nav.Link
                 key={idx}
                 as={NavLink}
-                to={text === 'Home' ? '/' : `/${text.toLowerCase().replace(/\s/g, '')}`}
+                to={text === 'Home' ? '/' : text === 'Trial Simulator' ? '/trials/simulator' : `/${text.toLowerCase().replace(/\s/g, '')}`}
                 style={{ color: '#FFFFFF', fontSize: '1rem', display: user || text !== 'Saved Trials' ? 'block' : 'none' }}
                 className="nav-link-custom"
               >
