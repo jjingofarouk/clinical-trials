@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card, Row, Col } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import jStat from 'jstat'; // Use default import for full bundle
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ErrorBar } from 'recharts';
+import jStat from 'jstat';
 import Papa from 'papaparse';
 import html2canvas from 'html2canvas';
 import { getAuth } from 'firebase/auth';
@@ -16,16 +16,42 @@ const ClinicalTrialSimulator = () => {
   const db = getFirestore();
   const chartRef = useRef(null);
 
+  // Configuration constants
+  const PLOT_RANGE_DELTA = 5;
+  const GROUPS = ['Test group', 'Control group'];
+  const CONTROL_MIN = 50;
+  const CONTROL_MAX = 25000;
+  const CONTROL_START = 1000;
+  const CONTROL_STEP = 10;
+  const TEST_MIN = 50;
+  const TEST_MAX = 25000;
+  const TEST_START = 1000;
+  const TEST_STEP = 10;
+  const EVENTS_CONTROL_MIN = 0.25;
+  const EVENTS_CONTROL_MAX = 100;
+  const EVENTS_CONTROL_START = 3;
+  const EVENTS_CONTROL_STEP = 0.25;
+  const EVENTS_TEST_MIN = 0;
+  const EVENTS_TEST_MAX = 100;
+  const EVENTS_TEST_START = 1.5;
+  const EVENTS_TEST_STEP = 0.25;
+  const CI_MIN = 60;
+  const CI_MAX = 99;
+  const CI_START = 95;
+  const CI_STEP = 0.5;
+  const INDIVIDUAL_CI_METHOD = 'clopper-pearson';
+  const WALTER_CI = true;
+
   // State
-  const [sampleSize, setSampleSize] = useState(location.state?.sampleSize || 100);
-  const [effectSize, setEffectSize] = useState(location.state?.effectSize || 0.5);
-  const [alpha, setAlpha] = useState(0.05);
-  const [dropoutRate, setDropoutRate] = useState(0.1);
-  const [testType, setTestType] = useState('ttest');
+  const [controlSize, setControlSize] = useState(CONTROL_START);
+  const [testSize, setTestSize] = useState(TEST_START);
+  const [controlEvents, setControlEvents] = useState(EVENTS_CONTROL_START);
+  const [testEvents, setTestEvents] = useState(EVENTS_TEST_START);
+  const [confidenceLevel, setConfidenceLevel] = useState(CI_START);
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [debugMessages, setDebugMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Load saved results
   useEffect(() => {
@@ -40,40 +66,116 @@ const ClinicalTrialSimulator = () => {
     }
   }, []);
 
+  // Statistical functions
+  const binomialConfidence = (p, n, z, method) => {
+    if (method === 'clopper-pearson') {
+      const alpha = 1 - (z / 100);
+      const x = Math.round(p * n);
+      const lower = jStat.beta.inv(alpha / 2, x, n - x + 1);
+      const upper = jStat.beta.inv(1 - alpha / 2, x + 1, n - x);
+      return [isNaN(lower) ? 0 : lower, isNaN(upper) ? 1 : upper];
+    }
+    return [p, p]; // Fallback
+  };
+
+  const getPhi = (p0, p1, n0, n1, walter) => {
+    if (!walter) return p1 / p0;
+    const x0 = p0 * n0;
+    const x1 = p1 * n1;
+    return Math.exp(Math.log((x1 + 0.5) / (n1 + 0.5)) - Math.log((x0 + 0.5) / (n0 + 0.5)));
+  };
+
+  const getPar = (p0, p1, n0, n1, walter) => {
+    if (!walter) {
+      return Math.sqrt((1 - p0) / (n0 * p0) + (1 - p1) / (n1 * p1));
+    }
+    const x0 = p0 * n0;
+    const x1 = p1 * n1;
+    return Math.sqrt(1 / (x1 + 0.5) - 1 / (n1 + 0.5) + 1 / (x0 + 0.5) - 1 / (n0 + 0.5));
+  };
+
+  const getOverlap = (i1, i2) => {
+    const a = Math.max(i1[0], i2[0]);
+    const b = Math.min(i1[1], i2[1]);
+    return a > b ? [] : [a, b];
+  };
+
+  const getPValue = (p0, p1, n0, n1) => {
+    const mean = Math.log(1);
+    const stdev = Math.sqrt(((1 / p0 - 1) / n0) + ((1 / p1 - 1) / n1));
+    const observedRR = p1 / p0;
+    const logObservedRR = Math.log(observedRR);
+    const pLeft = jStat.normal.cdf(logObservedRR, mean, stdev);
+    const pRight = 1 - pLeft;
+    return Math.round(2 * Math.min(pRight, pLeft) * 10000) / 10000;
+  };
+
+  const getPValue2 = (riskRatioObs, riskRatioL, riskRatioR, confidenceLevel) => {
+    const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
+    const logRiskRatioL = Math.log(riskRatioL);
+    const logRiskRatioR = Math.log(riskRatioR);
+    const logRiskRatioObs = Math.log(riskRatioObs);
+    const stdErr = (logRiskRatioR - logRiskRatioL) / (2 * zValue);
+    const zStat = Math.abs(logRiskRatioObs / stdErr);
+    const a = -0.717;
+    const b = -0.416;
+    return Math.round(Math.exp(a * zStat + b * zStat ** 2) * 10000) / 10000;
+  };
+
+  const getCValue = (p0, p1, n0, n1, baseValue, step) => {
+    let contains = false;
+    let j = 0;
+    let cValue = 0;
+    while (!contains) {
+      const currentConfidence = baseValue + j * step;
+      const zValue = jStat.normal.inv(1 - currentConfidence / 100 / 2, 0, 1);
+      const phi = getPhi(p0, p1, n0, n1, WALTER_CI);
+      const par = getPar(p0, p1, n0, n1, WALTER_CI);
+      const riskRatioL = phi * Math.exp(-zValue * par);
+      const riskRatioR = phi * Math.exp(zValue * par);
+      if (1 >= riskRatioL && 1 <= riskRatioR) {
+        contains = true;
+        cValue = 1 - (currentConfidence - step) / 100;
+      }
+      j++;
+      if (j > 1000) break; // Prevent infinite loop
+    }
+    return Math.round(cValue * 10000) / 10000;
+  };
+
+  const mkRiskStr = (title, risk, riskL, riskR) => {
+    return `${title}${risk.toFixed(2)} (${riskL.toFixed(2)}-${riskR.toFixed(2)})`;
+  };
+
   // Validation
   const validateInputs = () => {
     setDebugMessages([]);
     setError(null);
 
-    const parsedSampleSize = Number(sampleSize);
-    const parsedEffectSize = Number(effectSize);
-    const parsedAlpha = Number(alpha);
-    const parsedDropoutRate = Number(dropoutRate);
+    const parsedControlSize = Number(controlSize);
+    const parsedTestSize = Number(testSize);
+    const parsedControlEvents = Number(controlEvents);
+    const parsedTestEvents = Number(testEvents);
+    const parsedConfidenceLevel = Number(confidenceLevel);
 
-    if (isNaN(parsedSampleSize) || parsedSampleSize < 10 || parsedSampleSize > 10000) {
-      setError('Sample size must be a number between 10 and 10,000.');
+    if (isNaN(parsedControlSize) || parsedControlSize < CONTROL_MIN || parsedControlSize > CONTROL_MAX) {
+      setError(`Control group size must be between ${CONTROL_MIN} and ${CONTROL_MAX}.`);
       return false;
     }
-    if (isNaN(parsedEffectSize) || parsedEffectSize < 0 || parsedEffectSize > 2) {
-      setError('Effect size must be a number between 0 and 2.');
+    if (isNaN(parsedTestSize) || parsedTestSize < TEST_MIN || parsedTestSize > TEST_MAX) {
+      setError(`Test group size must be between ${TEST_MIN} and ${TEST_MAX}.`);
       return false;
     }
-    if (isNaN(parsedAlpha) || parsedAlpha < 0.01 || parsedAlpha > 0.5) {
-      setError('Alpha must be a number between 0.01 and 0.5.');
+    if (isNaN(parsedControlEvents) || parsedControlEvents < EVENTS_CONTROL_MIN || parsedControlEvents > EVENTS_CONTROL_MAX) {
+      setError(`Control group events must be between ${EVENTS_CONTROL_MIN} and ${EVENTS_CONTROL_MAX}%.`);
       return false;
     }
-    if (isNaN(parsedDropoutRate) || parsedDropoutRate < 0 || parsedDropoutRate > 0.5) {
-      setError('Dropout rate must be a number between 0 and 0.5.');
+    if (isNaN(parsedTestEvents) || parsedTestEvents < EVENTS_TEST_MIN || parsedTestEvents > EVENTS_TEST_MAX) {
+      setError(`Test group events must be between ${EVENTS_TEST_MIN} and ${EVENTS_TEST_MAX}%.`);
       return false;
     }
-
-    const effectiveSampleSize = Math.floor(parsedSampleSize * (1 - parsedDropoutRate));
-    if (effectiveSampleSize < 10) {
-      setError('Effective sample size (after dropout) must be at least 10.');
-      return false;
-    }
-    if (testType === 'anova' && effectiveSampleSize < 15) {
-      setError('ANOVA requires at least 15 effective samples (5 per group).');
+    if (isNaN(parsedConfidenceLevel) || parsedConfidenceLevel < CI_MIN || parsedConfidenceLevel > CI_MAX) {
+      setError(`Confidence level must be between ${CI_MIN} and ${CI_MAX}%.`);
       return false;
     }
 
@@ -89,83 +191,85 @@ const ClinicalTrialSimulator = () => {
     setDebugMessages([...debugMessages, 'Starting simulation...']);
 
     try {
-      const effectiveSampleSize = Math.floor(Number(sampleSize) * (1 - Number(dropoutRate)));
-      const simulations = [];
+      const confidence = confidenceLevel / 100;
+      const zValue = jStat.normal.inv(1 - confidence / 2, 0, 1);
 
-      if (testType === 'ttest') {
-        setDebugMessages([...debugMessages, 'Running t-test simulation']);
-        for (let i = 0; i < 50; i++) {
-          try {
-            const control = Array.from({ length: effectiveSampleSize }, () => jStat.normal.sample(0, 1));
-            const treatment = Array.from({ length: effectiveSampleSize }, () => jStat.normal.sample(Number(effectSize), 1));
-            // Validate arrays
-            if (control.some(isNaN) || treatment.some(isNaN)) {
-              setDebugMessages([...debugMessages, `T-test iteration ${i}: Invalid sample data`]);
-              continue; // Skip this iteration
-            }
-            const { p } = jStat.ttest(control, treatment, 2);
-            if (isNaN(p) || p === null) {
-              setDebugMessages([...debugMessages, `T-test iteration ${i}: Invalid p-value`]);
-              continue; // Skip this iteration
-            }
-            simulations.push({ p_value: p, significant: p < Number(alpha) });
-          } catch (err) {
-            setDebugMessages([...debugMessages, `T-test iteration ${i} warning: ${err.message}`]);
-            continue; // Skip this iteration
-          }
-        }
-        if (simulations.length === 0) {
-          throw new Error('No valid t-test simulations completed');
-        }
-      } else if (testType === 'anova') {
-        setDebugMessages([...debugMessages, 'Running ANOVA simulation']);
-        if (typeof jStat.anova !== 'function') {
-          setDebugMessages([...debugMessages, 'ANOVA not supported in current jStat version']);
-          throw new Error('ANOVA is not available. Please use t-test.');
-        }
-        for (let i = 0; i < 50; i++) {
-          try {
-            const groupSize = Math.floor(effectiveSampleSize / 3);
-            const group1 = Array.from({ length: groupSize }, () => jStat.normal.sample(0, 1));
-            const group2 = Array.from({ length: groupSize }, () => jStat.normal.sample(Number(effectSize) / 2, 1));
-            const group3 = Array.from({ length: groupSize }, () => jStat.normal.sample(Number(effectSize), 1));
-            if (group1.some(isNaN) || group2.some(isNaN) || group3.some(isNaN)) {
-              setDebugMessages([...debugMessages, `ANOVA iteration ${i}: Invalid sample data`]);
-              continue; // Skip this iteration
-            }
-            const { p } = jStat.anova([group1, group2, group3]);
-            if (isNaN(p) || p === null) {
-              setDebugMessages([...debugMessages, `ANOVA iteration ${i}: Invalid p-value`]);
-              continue; // Skip this iteration
-            }
-            simulations.push({ p_value: p, significant: p < Number(alpha) });
-          } catch (err) {
-            setDebugMessages([...debugMessages, `ANOVA iteration ${i} warning: ${err.message}`]);
-            continue; // Skip this iteration
-          }
-        }
-        if (simulations.length === 0) {
-          throw new Error('No valid ANOVA simulations completed');
-        }
-      }
+      // Control group inference
+      const controlRisk = controlEvents / 100;
+      const controlRiskCI = binomialConfidence(controlRisk, controlSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
+      const controlRiskL = controlRiskCI[0];
+      const controlRiskR = controlRiskCI[1];
+      const controlRiskErr = controlRiskR - controlRiskL;
+      const strControlRisk = mkRiskStr('Risk on control group (%): ', controlEvents, controlRiskL, controlRiskR);
 
-      setDebugMessages([...debugMessages, 'Calculating power...']);
-      let power;
-      try {
-        power = jStat.ttest.power(Number(effectSize), effectiveSampleSize, Number(alpha), 2);
-        if (isNaN(power) || power === null) throw new Error('Invalid power calculation');
-      } catch (err) {
-        setDebugMessages([...debugMessages, `Power calculation error: ${err.message}`]);
-        throw new Error(`Power calculation failed: ${err.message}`);
+      // Test group inference
+      const testRisk = testEvents / 100;
+      const testRiskCI = binomialConfidence(testRisk, testSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
+      const testRiskL = testRiskCI[0];
+      const testRiskR = testRiskCI[1];
+      const testRiskErr = testRiskR - testRiskL;
+      const strTestRisk = mkRiskStr('Risk on test group (%): ', testEvents, testRiskL, testRiskR);
+
+      // Overlap
+      const overlapInterval = getOverlap(testRiskCI, controlRiskCI);
+      const overlapLength = overlapInterval.length > 0 ? overlapInterval[1] - overlapInterval[0] : 0;
+      const strOverlapInterval = `Overlap: ${overlapLength.toFixed(2)} [${overlapInterval.map(x => x.toFixed(2)).join(', ')}]`;
+      const strOverlapPctTest = `Overlap % for test group: ${(overlapLength / testRiskErr * 100).toFixed(2)}`;
+
+      // Risk ratio
+      const phi = getPhi(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
+      const par = getPar(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
+      const riskRatio = testRisk / controlRisk;
+      const riskRatioL = phi * Math.exp(-zValue * par);
+      const riskRatioR = phi * Math.exp(zValue * par);
+      const strRiskRatio = mkRiskStr('Relative risk: ', riskRatio, riskRatioL, riskRatioR);
+
+      // Adverse effects threshold
+      const advEffectsThreshold = (1 - (1 - confidence) ** (1 / testSize)) * 100;
+      const strAdvEffects = `Adverse effects detectability threshold (%): ${advEffectsThreshold.toFixed(2)}`;
+
+      // P-values
+      const pValue1 = getPValue(controlRisk, testRisk, controlSize, testSize);
+      const pValue2 = getPValue2(riskRatio, riskRatioL, riskRatioR, confidence);
+      const strPValue = `p-value: ${pValue1}`;
+
+      // C-value
+      const cValue = getCValue(controlRisk, testRisk, controlSize, testSize, 0.5, 0.005);
+      const highestCI = 1 - cValue;
+      const strCValue = `c-value: ${cValue}`;
+      const strCValueExt = `highest CI: ${highestCI.toFixed(4)} / ${(highestCI * 100).toFixed(2)}%`;
+
+      // Warnings
+      let warnings = [];
+      if (1 >= riskRatioL && 1 <= riskRatioR) {
+        warnings.push('The confidence interval for Relative Risk contains 1.');
       }
+      if (advEffectsThreshold > controlEvents) {
+        warnings.push('The adverse effects detectability threshold for the test group is above the risk level for the control group.');
+      }
+      const strWarnings = warnings.length > 0 ? `<b>Warnings:</b><br/>${warnings.join('<br/>')}` : '';
+
+      // Chart data
+      const chartData = [
+        { group: 'Test group', value: testEvents, lower: testRiskL, upper: testRiskR },
+        { group: 'Control group', value: controlEvents, lower: controlRiskL, upper: controlRiskR },
+      ];
 
       const result = {
-        power,
-        simulations,
-        parameters: { sampleSize: Number(sampleSize), effectSize: Number(effectSize), alpha: Number(alpha), dropoutRate: Number(dropoutRate), testType },
+        controlRisk: { value: controlEvents, ci: [controlRiskL, controlRiskR], str: strControlRisk },
+        testRisk: { value: testEvents, ci: [testRiskL, testRiskR], str: strTestRisk },
+        overlap: { interval: overlapInterval, length: overlapLength, strInterval: strOverlapInterval, strPctTest: strOverlapPctTest },
+        riskRatio: { value: riskRatio, ci: [riskRatioL, riskRatioR], str: strRiskRatio },
+        adverseEffects: { threshold: advEffectsThreshold, str: strAdvEffects },
+        pValue: { value1: pValue1, value2: pValue2, str: strPValue },
+        cValue: { value: cValue, highestCI, str: strCValue, strExt: strCValueExt },
+        warnings: { str: strWarnings },
+        chartData,
+        parameters: { controlSize, testSize, controlEvents, testEvents, confidenceLevel },
       };
+
       setResult(result);
-      setDebugMessages([...debugMessages, `Simulation completed with ${simulations.length} valid trials`]);
+      setDebugMessages([...debugMessages, 'Simulation completed successfully']);
 
       // Save to localStorage
       try {
@@ -175,7 +279,7 @@ const ClinicalTrialSimulator = () => {
         setDebugMessages([...debugMessages, `localStorage save warning: ${err.message}`]);
       }
 
-      // Save to Firebase if authenticated
+      // Save to Firebase
       const user = auth.currentUser;
       if (user) {
         setDebugMessages([...debugMessages, 'Attempting to save to Firebase...']);
@@ -197,6 +301,16 @@ const ClinicalTrialSimulator = () => {
     setLoading(false);
   };
 
+  // Reset inputs
+  const resetData = () => {
+    setControlSize(CONTROL_START);
+    setTestSize(TEST_START);
+    setControlEvents(EVENTS_CONTROL_START);
+    setTestEvents(EVENTS_TEST_START);
+    setConfidenceLevel(CI_START);
+    runSimulation();
+  };
+
   // Export CSV
   const exportCSV = () => {
     if (!result) {
@@ -204,11 +318,20 @@ const ClinicalTrialSimulator = () => {
       return;
     }
     try {
-      const data = result.simulations.map((sim, i) => ({
-        Trial: i + 1,
-        P_Value: sim.p_value,
-        Significant: sim.significant,
-      }));
+      const data = [{
+        'Control Group Size': result.parameters.controlSize,
+        'Test Group Size': result.parameters.testSize,
+        'Control Events (%)': result.controlRisk.value,
+        'Test Events (%)': result.testRisk.value,
+        'Confidence Level (%)': result.parameters.confidenceLevel,
+        'Control Risk CI': `[${result.controlRisk.ci.map(x => x.toFixed(2)).join(', ')}]`,
+        'Test Risk CI': `[${result.testRisk.ci.map(x => x.toFixed(2)).join(', ')}]`,
+        'Risk Ratio': result.riskRatio.value.toFixed(2),
+        'Risk Ratio CI': `[${result.riskRatio.ci.map(x => x.toFixed(2)).join(', ')}]`,
+        'P-Value': result.pValue.value1,
+        'C-Value': result.cValue.value,
+        'Adverse Effects Threshold (%)': result.adverseEffects.threshold.toFixed(2),
+      }];
       const csv = Papa.unparse(data);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -241,12 +364,6 @@ const ClinicalTrialSimulator = () => {
     }
   };
 
-  // Chart data
-  const chartData = result ? result.simulations.map((sim, i) => ({
-    trial: `Trial ${i + 1}`,
-    p_value: sim.p_value,
-  })) : [];
-
   return (
     <Container className="py-4">
       <motion.div
@@ -261,42 +378,43 @@ const ClinicalTrialSimulator = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Sample Size</Form.Label>
+                    <Form.Label>Control Group Size</Form.Label>
                     <Form.Control
                       type="number"
-                      value={sampleSize}
-                      onChange={(e) => setSampleSize(e.target.value)}
-                      min="10"
-                      max="10000"
-                      aria-label="Sample size"
+                      value={controlSize}
+                      onChange={(e) => setControlSize(e.target.value)}
+                      min={CONTROL_MIN}
+                      max={CONTROL_MAX}
+                      step={CONTROL_STEP}
+                      aria-label="Control group size"
                     />
                     <Form.Range
-                      value={sampleSize}
-                      onChange={(e) => setSampleSize(e.target.value)}
-                      min="10"
-                      max="1000"
-                      step="10"
+                      value={controlSize}
+                      onChange={(e) => setControlSize(e.target.value)}
+                      min={CONTROL_MIN}
+                      max={CONTROL_MAX}
+                      step={CONTROL_STEP}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Effect Size</Form.Label>
+                    <Form.Label>Test Group Size</Form.Label>
                     <Form.Control
                       type="number"
-                      step="0.1"
-                      value={effectSize}
-                      onChange={(e) => setEffectSize(e.target.value)}
-                      min="0"
-                      max="2"
-                      aria-label="Effect size"
+                      value={testSize}
+                      onChange={(e) => setTestSize(e.target.value)}
+                      min={TEST_MIN}
+                      max={TEST_MAX}
+                      step={TEST_STEP}
+                      aria-label="Test group size"
                     />
                     <Form.Range
-                      value={effectSize}
-                      onChange={(e) => setEffectSize(e.target.value)}
-                      min="0"
-                      max="2"
-                      step="0.1"
+                      value={testSize}
+                      onChange={(e) => setTestSize(e.target.value)}
+                      min={TEST_MIN}
+                      max={TEST_MAX}
+                      step={TEST_STEP}
                     />
                   </Form.Group>
                 </Col>
@@ -304,50 +422,83 @@ const ClinicalTrialSimulator = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Alpha</Form.Label>
+                    <Form.Label>Detected Proportion for Control Group (%)</Form.Label>
                     <Form.Control
                       type="number"
-                      step="0.01"
-                      value={alpha}
-                      onChange={(e) => setAlpha(e.target.value)}
-                      min="0.01"
-                      max="0.5"
-                      aria-label="Alpha"
+                      value={controlEvents}
+                      onChange={(e) => setControlEvents(e.target.value)}
+                      min={EVENTS_CONTROL_MIN}
+                      max={EVENTS_CONTROL_MAX}
+                      step={EVENTS_CONTROL_STEP}
+                      aria-label="Control events"
+                    />
+                    <Form.Range
+                      value={controlEvents}
+                      onChange={(e) => setControlEvents(e.target.value)}
+                      min={EVENTS_CONTROL_MIN}
+                      max={EVENTS_CONTROL_MAX}
+                      step={EVENTS_CONTROL_STEP}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Dropout Rate</Form.Label>
+                    <Form.Label>Detected Proportion for Test Group (%)</Form.Label>
                     <Form.Control
                       type="number"
-                      step="0.01"
-                      value={dropoutRate}
-                      onChange={(e) => setDropoutRate(e.target.value)}
-                      min="0"
-                      max="0.5"
-                      aria-label="Dropout rate"
+                      value={testEvents}
+                      onChange={(e) => setTestEvents(e.target.value)}
+                      min={EVENTS_TEST_MIN}
+                      max={EVENTS_TEST_MAX}
+                      step={EVENTS_TEST_STEP}
+                      aria-label="Test events"
+                    />
+                    <Form.Range
+                      value={testEvents}
+                      onChange={(e) => setTestEvents(e.target.value)}
+                      min={EVENTS_TEST_MIN}
+                      max={EVENTS_TEST_MAX}
+                      step={EVENTS_TEST_STEP}
                     />
                   </Form.Group>
                 </Col>
               </Row>
-              <Form.Group className="mb-3">
-                <Form.Label>Test Type</Form.Label>
-                <Form.Select
-                  value={testType}
-                  onChange={(e) => setTestType(e.target.value)}
-                  aria-label="Test type"
-                >
-                  <option value="ttest">Two-Sample T-Test</option>
-                  <option value="anova">One-Way ANOVA</option>
-                </Form.Select>
-              </Form.Group>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Target Confidence Level (%)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={confidenceLevel}
+                      onChange={(e) => setConfidenceLevel(e.target.value)}
+                      min={CI_MIN}
+                      max={CI_MAX}
+                      step={CI_STEP}
+                      aria-label="Confidence level"
+                    />
+                    <Form.Range
+                      value={confidenceLevel}
+                      onChange={(e) => setConfidenceLevel(e.target.value)}
+                      min={CI_MIN}
+                      max={CI_MAX}
+                      step={CI_STEP}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
               <Button
                 variant="primary"
                 onClick={runSimulation}
                 disabled={loading}
+                className="me-2"
               >
                 {loading ? 'Simulating...' : 'Run Simulation'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={resetData}
+              >
+                Reset
               </Button>
             </Form>
           </Card.Body>
@@ -388,28 +539,38 @@ const ClinicalTrialSimulator = () => {
             >
               <Card>
                 <Card.Body>
-                  <h3>Results</h3>
-                  <p>Statistical Power: {(result.power * 100).toFixed(2)}%</p>
-                  <p>
-                    Significant Trials: {result.simulations.filter((sim) => sim.significant).length} /{' '}
-                    {result.simulations.length}
-                  </p>
-                  <Button variant="success" onClick={exportCSV} className="me-2">
+                  <h3>Inference from Experimental Results</h3>
+                  <div dangerouslySetInnerHTML={{ __html: result.testRisk.str }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.controlRisk.str }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.overlap.strInterval }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.overlap.strPctTest }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.riskRatio.str }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.pValue.str }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.cValue.str }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.cValue.strExt }} />
+                  <div dangerouslySetInnerHTML={{ __html: result.adverseEffects.str }} />
+                  {result.warnings.str && (
+                    <div dangerouslySetInnerHTML={{ __html: result.warnings.str }} />
+                  )}
+                  <Button variant="success" onClick={exportCSV} className="me-2 mt-2">
                     Export CSV
                   </Button>
-                  <Button variant="secondary" onClick={exportPNG}>
+                  <Button variant="secondary" onClick={exportPNG} className="mt-2">
                     Export PNG
                   </Button>
                   <div ref={chartRef} className="mt-4">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={chartData}>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={result.chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="trial" />
-                        <YAxis />
+                        <XAxis dataKey="group" />
+                        <YAxis domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper))) + PLOT_RANGE_DELTA]} />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="p_value" stroke="#8884d8" />
-                      </LineChart>
+                        <Bar dataKey="value" fill="#8884d8">
+                          <ErrorBar dataKey="upper" width={4} strokeWidth={2} stroke="black" direction="upper" />
+                          <ErrorBar dataKey="lower" width={4} strokeWidth={2} stroke="black" direction="lower" />
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </Card.Body>
