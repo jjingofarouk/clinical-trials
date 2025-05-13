@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
+import './components/trials/ClinicalTrialSimulator.css';
 import Navbars from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './components/Home';
 import ClinicalTrials from './components/trials/ClinicalTrials';
 import TrialDetailPage from './components/trials/TrialDetailPage';
 import SavedTrials from './components/trials/SavedTrials';
+import ClinicalTrialSimulator from './components/trials/ClinicalTrialSimulator';
 import AuthPage from './components/AuthPage';
 import About from './components/About';
 import Contact from './components/Contact';
@@ -44,6 +46,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/trials/*" element={<ClinicalTrials />} />
             <Route path="/trials/:nctId" element={<TrialDetailPage />} />
+            <Route path="/trials/simulator" element={<ClinicalTrialSimulator />} />
             <Route path="/savedtrials" element={<SavedTrials />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/researchers" element={<div>For Researchers (Placeholder)</div>} />
@@ -56,7 +59,6 @@ function App() {
         <Footer />
       </div>
     </Router>
-  );
-}
+산업
 
 export default App;
