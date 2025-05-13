@@ -25,33 +25,61 @@ const ClinicalTrialSimulator = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [debugMessages, setDebugMessages] = useState([]);
 
   // Load saved results
   useEffect(() => {
     const saved = localStorage.getItem('simulatorResults');
     if (saved) {
-      setResult(JSON.parse(saved));
+      try {
+        setResult(JSON.parse(saved));
+        setDebugMessages([...debugMessages, 'Loaded saved results from localStorage']);
+      } catch (err) {
+        setError('Failed to load saved results.');
+      }
     }
   }, []);
 
   // Validation
   const validateInputs = () => {
-    if (sampleSize < 10 || sampleSize > 10000) {
-      setError('Sample size must be between 10 and 10,000.');
+    setDebugMessages([]);
+    setError(null);
+
+    // Convert inputs to numbers and check for NaN
+    const parsedSampleSize = Number(sampleSize);
+    const parsedEffectSize = Number(effectSize);
+    const parsedAlpha = Number(alpha);
+    const parsedDropoutRate = Number(dropoutRate);
+
+    if (isNaN(parsedSampleSize) || parsedSampleSize < 10 || parsedSampleSize > 10000) {
+      setError('Sample size must be a number between 10 and 10,000.');
       return false;
     }
-    if (effectSize < 0 || effectSize > 2) {
-      setError('Effect size must be between 0 and 2.');
+    if (isNaN(parsedEffectSize) || parsedEffectSize < 0 || parsedEffectSize > 2) {
+      setError('Effect size must be a number between 0 and 2.');
       return false;
     }
-    if (alpha < 0.01 || alpha > 0.5) {
-      setError('Alpha must be between 0.01 and 0.5.');
+    if (isNaN(parsedAlpha) || parsedAlpha < 0.01 || parsedAlpha > 0.5) {
+      setError('Alpha must be a number between 0.01 and 0.5.');
       return false;
     }
-    if (dropoutRate < 0 || dropoutRate > 0.5) {
-      setError('Dropout rate must be between 0 and 0.5.');
+    if (isNaN(parsedDropoutRate) || parsedDropoutRate < 0 || parsedDropoutRate > 0.5) {
+      setError('Dropout rate must be a number between 0 and 0.5.');
       return false;
     }
+
+    // Check effective sample size
+    const effectiveSampleSize = Math.floor(parsedSampleSize * (1 - parsedDropoutRate));
+    if (effectiveSampleSize < 6) {
+      setError('Effective sample size (after dropout) must be at least 6.');
+      return false;
+    }
+    if (testType === 'anova' && effectiveSampleSize < 9) {
+      setError('ANOVA requires at least 9 effective samples (3 per group).');
+      return false;
+    }
+
+    setDebugMessages([...debugMessages, 'Input validation passed']);
     return true;
   };
 
@@ -60,78 +88,133 @@ const ClinicalTrialSimulator = () => {
     if (!validateInputs()) return;
     setLoading(true);
     setError(null);
+    setDebugMessages([...debugMessages, 'Starting simulation...']);
+
     try {
-      const effectiveSampleSize = Math.floor(sampleSize * (1 - dropoutRate));
+      const effectiveSampleSize = Math.floor(Number(sampleSize) * (1 - Number(dropoutRate)));
       const simulations = [];
 
       if (testType === 'ttest') {
+        setDebugMessages([...debugMessages, 'Running t-test simulation']);
         for (let i = 0; i < 50; i++) {
-          const control = jStat.normal.sample(effectiveSampleSize, 0, 1);
-          const treatment = jStat.normal.sample(effectiveSampleSize, effectSize, 1);
-          const { p } = jStat.ttest(control, treatment, 2);
-          simulations.push({ p_value: p, significant: p < alpha });
+          try {
+            const control = jStat.normal.sample(effectiveSampleSize, 0, 1);
+            const treatment = jStat.normal.sample(effectiveSampleSize, Number(effectSize), 1);
+            const { p } = jStat.ttest(control, treatment, 2);
+            if (isNaN(p)) throw new Error('Invalid p-value in t-test');
+            simulations.push({ p_value: p, significant: p < Number(alpha) });
+          } catch (err) {
+            setDebugMessages([...debugMessages, `T-test error in iteration ${i}: ${err.message}`]);
+            throw new Error(`T-test simulation failed: ${err.message}`);
+          }
         }
       } else if (testType === 'anova') {
+        setDebugMessages([...debugMessages, 'Running ANOVA simulation']);
         for (let i = 0; i < 50; i++) {
-          const group1 = jStat.normal.sample(effectiveSampleSize / 3, 0, 1);
-          const group2 = jStat.normal.sample(effectiveSampleSize / 3, effectSize / 2, 1);
-          const group3 = jStat.normal.sample(effectiveSampleSize / 3, effectSize, 1);
-          const { p } = jStat.anova([group1, group2, group3]);
-          simulations.push({ p_value: p, significant: p < alpha });
+          try {
+            const group1 = jStat.normal.sample(Math.floor(effectiveSampleSize / 3), 0, 1);
+            const group2 = jStat.normal.sample(Math.floor(effectiveSampleSize / 3), Number(effectSize) / 2, 1);
+            const group3 = jStat.normal.sample(Math.floor(effectiveSampleSize / 3), Number(effectSize), 1);
+            const { p } = jStat.anova([group1, group2, group3]);
+            if (isNaN(p)) throw new Error('Invalid p-value in ANOVA');
+            simulations.push({ p_value: p, significant: p < Number(alpha) });
+          } catch (err) {
+            setDebugMessages([...debugMessages, `ANOVA error in iteration ${i}: ${err.message}`]);
+            throw new Error(`ANOVA simulation failed: ${err.message}`);
+          }
         }
       }
 
-      const power = jStat.ttest.power(effectSize, effectiveSampleSize, alpha, 2);
+      setDebugMessages([...debugMessages, 'Calculating power...']);
+      let power;
+      try {
+        power = jStat.ttest.power(Number(effectSize), effectiveSampleSize, Number(alpha), 2);
+        if (isNaN(power)) throw new Error('Invalid power calculation');
+      } catch (err) {
+        setDebugMessages([...debugMessages, `Power calculation error: ${err.message}`]);
+        throw new Error(`Power calculation failed: ${err.message}`);
+      }
 
       const result = {
         power,
         simulations,
-        parameters: { sampleSize, effectSize, alpha, dropoutRate, testType },
+        parameters: { sampleSize: Number(sampleSize), effectSize: Number(effectSize), alpha: Number(alpha), dropoutRate: Number(dropoutRate), testType },
       };
       setResult(result);
+      setDebugMessages([...debugMessages, 'Simulation completed successfully']);
 
       // Save to localStorage
-      localStorage.setItem('simulatorResults', JSON.stringify(result));
+      try {
+        localStorage.setItem('simulatorResults', JSON.stringify(result));
+        setDebugMessages([...debugMessages, 'Saved results to localStorage']);
+      } catch (err) {
+        setDebugMessages([...debugMessages, `localStorage save error: ${err.message}`]);
+      }
 
       // Save to Firebase if authenticated
       const user = auth.currentUser;
       if (user) {
-        await addDoc(collection(db, 'simulations'), {
-          userId: user.uid,
-          result,
-          timestamp: new Date(),
-        });
+        setDebugMessages([...debugMessages, 'Saving to Firebase...']);
+        try {
+          await addDoc(collection(db, 'simulations'), {
+            userId: user.uid,
+            result,
+            timestamp: new Date(),
+          });
+          setDebugMessages([...debugMessages, 'Saved to Firebase']);
+        } catch (err) {
+          setDebugMessages([...debugMessages, `Firebase save error: ${err.message}`]);
+          setError(`Simulation completed but failed to save to Firebase: ${err.message}`);
+        }
       }
     } catch (err) {
-      setError('Simulation failed. Please try again.');
+      setError(`Simulation failed: ${err.message}`);
+      setDebugMessages([...debugMessages, `General error: ${err.message}`]);
     }
     setLoading(false);
   };
 
   // Export CSV
   const exportCSV = () => {
-    if (!result) return;
-    const data = result.simulations.map((sim, i) => ({
-      Trial: i + 1,
-      P_Value: sim.p_value,
-      Significant: sim.significant,
-    }));
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'simulation_results.csv';
-    link.click();
+    if (!result) {
+      setError('No results to export.');
+      return;
+    }
+    try {
+      const data = result.simulations.map((sim, i) => ({
+        Trial: i + 1,
+        P_Value: sim.p_value,
+        Significant: sim.significant,
+      }));
+      const csv = Papa.unparse(data);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'simulation_results.csv';
+      link.click();
+      setDebugMessages([...debugMessages, 'Exported CSV successfully']);
+    } catch (err) {
+      setError(`CSV export failed: ${err.message}`);
+      setDebugMessages([...debugMessages, `CSV export error: ${err.message}`]);
+    }
   };
 
   // Export PNG
   const exportPNG = async () => {
-    if (chartRef.current) {
+    if (!chartRef.current) {
+      setError('No chart available to export.');
+      return;
+    }
+    try {
       const canvas = await html2canvas(chartRef.current);
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
       link.download = 'simulation_chart.png';
       link.click();
+      setDebugMessages([...debugMessages, 'Exported PNG successfully']);
+    } catch (err) {
+      setError(`PNG export failed: ${err.message}`);
+      setDebugMessages([...debugMessages, `PNG export error: ${err.message}`]);
     }
   };
 
@@ -159,14 +242,14 @@ const ClinicalTrialSimulator = () => {
                     <Form.Control
                       type="number"
                       value={sampleSize}
-                      onChange={(e) => setSampleSize(Number(e.target.value))}
+                      onChange={(e) => setSampleSize(e.target.value)}
                       min="10"
                       max="10000"
                       aria-label="Sample size"
                     />
                     <Form.Range
                       value={sampleSize}
-                      onChange={(e) => setSampleSize(Number(e.target.value))}
+                      onChange={(e) => setSampleSize(e.target.value)}
                       min="10"
                       max="1000"
                       step="10"
@@ -180,14 +263,14 @@ const ClinicalTrialSimulator = () => {
                       type="number"
                       step="0.1"
                       value={effectSize}
-                      onChange={(e) => setEffectSize(Number(e.target.value))}
+                      onChange={(e) => setEffectSize(e.target.value)}
                       min="0"
                       max="2"
                       aria-label="Effect size"
                     />
                     <Form.Range
                       value={effectSize}
-                      onChange={(e) => setEffectSize(Number(e.target.value))}
+                      onChange={(e) => setEffectSize(e.target.value)}
                       min="0"
                       max="2"
                       step="0.1"
@@ -203,7 +286,7 @@ const ClinicalTrialSimulator = () => {
                       type="number"
                       step="0.01"
                       value={alpha}
-                      onChange={(e) => setAlpha(Number(e.target.value))}
+                      onChange={(e) => setAlpha(e.target.value)}
                       min="0.01"
                       max="0.5"
                       aria-label="Alpha"
@@ -217,7 +300,7 @@ const ClinicalTrialSimulator = () => {
                       type="number"
                       step="0.01"
                       value={dropoutRate}
-                      onChange={(e) => setDropoutRate(Number(e.target.value))}
+                      onChange={(e) => setDropoutRate(e.target.value)}
                       min="0"
                       max="0.5"
                       aria-label="Dropout rate"
@@ -254,6 +337,24 @@ const ClinicalTrialSimulator = () => {
               exit={{ opacity: 0 }}
             >
               <Alert variant="danger">{error}</Alert>
+            </motion.div>
+          )}
+          {debugMessages.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Card className="mb-4">
+                <Card.Body>
+                  <h4>Debug Log</h4>
+                  <ul>
+                    {debugMessages.map((msg, idx) => (
+                      <li key={idx}>{msg}</li>
+                    ))}
+                  </ul>
+                </Card.Body>
+              </Card>
             </motion.div>
           )}
           {result && (
