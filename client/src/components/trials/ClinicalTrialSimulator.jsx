@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from ‘react’;
-import { useLocation } from ‘react-router-dom’;
-import { Container, Form, Button, Alert, Card, Row, Col, Badge } from ‘react-bootstrap’;
-import { motion, AnimatePresence } from ‘framer-motion’;
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from ‘recharts’;
-import Papa from ‘papaparse’;
-import html2canvas from ‘html2canvas’;
-import { collection, addDoc } from ‘firebase/firestore’;
-import { auth, db } from ‘./firebase’;
-import ‘./ClinicalTrialSimulator.css’;
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Container, Form, Button, Alert, Card, Row, Col, Badge } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Papa from 'papaparse';
+import html2canvas from 'html2canvas';
+import { collection, addDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
+import './ClinicalTrialSimulator.css';
 
 const ClinicalTrialSimulator = () => {
   const location = useLocation();
@@ -223,7 +223,7 @@ const ClinicalTrialSimulator = () => {
 
         if (treatment1Prob > controlProb) {
           const diff = treatment1Prob - controlProb;
-          const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * ( 1 - controlProb)) / trialResult.finalSampleSize);
+          const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * (1 - controlProb)) / trialResult.finalSampleSize);
           if (diff > zValue * se) powerTreatment1++;
         }
         if (treatment2Prob > controlProb) {
