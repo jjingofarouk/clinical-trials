@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import './components/trials/ClinicalTrialSimulator.css';
-import Navbars from './components/Navbars'; // Adjusted to match the provided Navbars component name
+import Navbars from './components/Navbar'; // Adjusted to match the provided Navbars component name
 import Footer from './components/Footer';
 import Home from './components/Home';
 import ClinicalTrials from './components/trials/ClinicalTrials';
