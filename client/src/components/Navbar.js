@@ -110,11 +110,19 @@ const Navbars = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" className="ms-auto" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            {['Home', 'Find Trials', 'Trial Simulator', 'Saved Trials', 'For Researchers', 'About Us', 'Contact'].map((text, idx) => (
+            {[
+              { text: 'Home', path: '/' },
+              { text: 'Find Trials', path: '/trials' },
+              { text: 'Trial Simulator', path: '/trials/simulator' },
+              { text: 'Saved Trials', path: '/savedtrials' },
+              { text: 'For Researchers', path: '/researchers' },
+              { text: 'About Us', path: '/about' },
+              { text: 'Contact', path: '/contact' },
+            ].map(({ text, path }, idx) => (
               <Nav.Link
                 key={idx}
                 as={NavLink}
-                to={text === 'Home' ? '/' : text === 'Trial Simulator' ? '/trials/simulator' : `/${text.toLowerCase().replace(/\s/g, '')}`}
+                to={path}
                 style={{ color: '#FFFFFF', fontSize: '1rem', display: user || text !== 'Saved Trials' ? 'block' : 'none' }}
                 className="nav-link-custom"
               >
@@ -141,7 +149,7 @@ const Navbars = () => {
             ) : (
               <Button
                 as={NavLink}
-                to="/auth"
+               to="/auth"
                 style={{ backgroundColor: '#FF8C00', borderColor: '#FF8C00', color: '#FFFFFF', fontWeight: 600, padding: '0.5rem 1rem', transition: 'all 0.2s ease' }}
                 className="cta-button-custom ms-2"
               >
