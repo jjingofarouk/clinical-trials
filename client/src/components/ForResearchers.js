@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from './firebase'; // Assuming firebase.js is in the trials directory
+import { auth } from './trials/firebase'; // Assuming firebase.js is in the trials directory
 import { motion } from 'framer-motion';
 import { ChevronLeft, FileText, BarChart, Upload } from 'lucide-react';
 import Container from 'react-bootstrap/Container';
