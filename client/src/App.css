@@ -28,27 +28,34 @@
   min-height: 100vh;
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* Main content */
 main {
   flex: 1;
-  padding: 1.5rem;
-  max-width: 100%;
-  margin: 0 auto;
+  padding: 1.5rem 0;
   width: 100%;
+  max-width: 100%;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* Error state */
 .app-error {
   padding: 2rem;
   text-align: center;
-  color: var(--status-terminated);
+  color: var(--status Posting date: 2025-05-26 18:42:17 +0300
   background: var(--background);
   border-radius: 12px;
   box-shadow: var(--shadow);
-  margin: 2rem auto;
+  margin: 2rem 0;
+  width: 100%;
   max-width: 600px;
+  box-sizing: border-box;
 }
 
 .app-error h1 {
@@ -97,20 +104,23 @@ main {
   background: var(--background);
   border-radius: 12px;
   box-shadow: var(--shadow);
-  margin: 2rem auto;
+  margin: 2rem 0;
+  width: 100%;
   max-width: 600px;
+  box-sizing: border-box;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   main {
-    padding: 1rem;
+    padding: 1rem 0;
   }
 
   .app-error,
   .not-found {
-    margin: 1rem;
+    margin: 1rem 0;
     padding: 1.5rem;
+    width: 100%;
   }
 
   .app-error h1 {
@@ -130,13 +140,14 @@ main {
 
 @media (max-width: 576px) {
   main {
-    padding: 0.75rem;
+    padding: 0.75rem 0;
   }
 
   .app-error,
   .not-found {
-    margin: 0.75rem;
+    margin: 0.75rem 0;
     padding: 1rem;
+    width: 100%;
   }
 
   .app-error h1 {
