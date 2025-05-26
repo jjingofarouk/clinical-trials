@@ -3,12 +3,11 @@ import { useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card, Row, Col, Badge } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import jStat from 'jstat';
 import Papa from 'papaparse';
 import html2canvas from 'html2canvas';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import './ClinicalTrialSimulator.css'; // Reuse existing CSS for styling consistency
+import { collection, addDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
+import './ClinicalTrialSimulator.css';
 
 const ClinicalTrialSimulator = () => {
   const location = useLocation();
@@ -62,7 +61,7 @@ const ClinicalTrialSimulator = () => {
     }
   }, []);
 
-  const binomialSample = (n, p) => {
+  const generateBinomialSample = (n, p) => {
     let successes = 0;
     for (let i = 0; i < n; i++) {
       if (Math.random() < p) successes++;
@@ -84,44 +83,44 @@ const ClinicalTrialSimulator = () => {
 
   const validateInputs = () => {
     setError(null);
-    const parsedSampleSize = Number(sampleSize);
-    const parsedControlEffect = Number(controlEffect);
-    const parsedTreatment1Effect = Number(treatment1Effect);
-    const parsedTreatment2Effect = Number(treatment2Effect);
-    const parsedInterimLooks = Number(interimLooks);
-    const parsedFutilityThreshold = Number(futilityThreshold);
-    const parsedConfidenceLevel = Number(confidenceLevel);
-    const parsedNumSimulations = Number(numSimulations);
+    const parsedSampleSize = parseFloat(sampleSize);
+    const parsedControlEffect = parseFloat(controlEffect);
+    const parsedTreatment1Effect = parseFloat(treatment1Effect);
+    const parsedTreatment2Effect = parseFloat(treatment2Effect);
+    const parsedInterimLooks = parseInt(interimLooks, 10);
+    const parsedFutilityThreshold = parseFloat(futilityThreshold);
+    const parsedConfidenceLevel = parseFloat(confidenceLevel);
+    const parsedNumSimulations = parseInt(numSimulations, 10);
 
-    if (!Number.isFinite(parsedSampleSize) || parsedSampleSize < SAMPLE_MIN || parsedSampleSize > SAMPLE_MAX) {
+    if (isNaN(parsedSampleSize) || parsedSampleSize < SAMPLE_MIN || parsedSampleSize > SAMPLE_MAX) {
       setError(`Sample size per arm must be between ${SAMPLE_MIN} and ${SAMPLE_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedControlEffect) || parsedControlEffect < EFFECT_MIN || parsedControlEffect > EFFECT_MAX) {
+    if (isNaN(parsedControlEffect) || parsedControlEffect < EFFECT_MIN || parsedControlEffect > EFFECT_MAX) {
       setError(`Control effect (%) must be between ${EFFECT_MIN} and ${EFFECT_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedTreatment1Effect) || parsedTreatment1Effect < EFFECT_MIN || parsedTreatment1Effect > EFFECT_MAX) {
+    if (isNaN(parsedTreatment1Effect) || parsedTreatment1Effect < EFFECT_MIN || parsedTreatment1Effect > EFFECT_MAX) {
       setError(`Treatment 1 effect (%) must be between ${EFFECT_MIN} and ${EFFECT_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedTreatment2Effect) || parsedTreatment2Effect < EFFECT_MIN || parsedTreatment2Effect > EFFECT_MAX) {
+    if (isNaN(parsedTreatment2Effect) || parsedTreatment2Effect < EFFECT_MIN || parsedTreatment2Effect > EFFECT_MAX) {
       setError(`Treatment 2 effect (%) must be between ${EFFECT_MIN} and ${EFFECT_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedInterimLooks) || parsedInterimLooks < INTERIM_LOOKS_MIN || parsedInterimLooks > INTERIM_LOOKS_MAX) {
+    if (isNaN(parsedInterimLooks) || parsedInterimLooks < INTERIM_LOOKS_MIN || parsedInterimLooks > INTERIM_LOOKS_MAX) {
       setError(`Number of interim looks must be between ${INTERIM_LOOKS_MIN} and ${INTERIM_LOOKS_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedFutilityThreshold) || parsedFutilityThreshold < FUTILITY_THRESHOLD_MIN || parsedFutilityThreshold > FUTILITY_THRESHOLD_MAX) {
+    if (isNaN(parsedFutilityThreshold) || parsedFutilityThreshold < FUTILITY_THRESHOLD_MIN || parsedFutilityThreshold > FUTILITY_THRESHOLD_MAX) {
       setError(`Futility threshold must be between ${FUTILITY_THRESHOLD_MIN} and ${FUTILITY_THRESHOLD_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedConfidenceLevel) || parsedConfidenceLevel < CI_MIN || parsedConfidenceLevel > CI_MAX) {
+    if (isNaN(parsedConfidenceLevel) || parsedConfidenceLevel < CI_MIN || parsedConfidenceLevel > CI_MAX) {
       setError(`Confidence level must be between ${CI_MIN} and ${CI_MAX}%.`);
       return false;
     }
-    if (!Number.isFinite(parsedNumSimulations) || parsedNumSimulations < SIMULATIONS_MIN || parsedNumSimulations > SIMULATIONS_MAX) {
+    if (isNaN(parsedNumSimulations) || parsedNumSimulations < SIMULATIONS_MIN || parsedNumSimulations > SIMULATIONS_MAX) {
       setError(`Number of simulations must be between ${SIMULATIONS_MIN} and ${SIMULATIONS_MAX}.`);
       return false;
     }
@@ -144,9 +143,9 @@ const ClinicalTrialSimulator = () => {
       currentSample += interimSample;
       if (currentSample > sampleSize) currentSample = sampleSize;
 
-      const controlSuccesses = activeArms[0] ? binomialSample(currentSample, controlEffect / 100) : 0;
-      const treatment1Successes = activeArms[1] ? binomialSample(currentSample, treatmentEffects[0] / 100) : 0;
-      const treatment2Successes = activeArms[2] ? binomialSample(currentSample, treatmentEffects[1] / 100) : 0;
+      const controlSuccesses = activeArms[0] ? generateBinomialSample(currentSample, controlEffect / 100) : 0;
+      const treatment1Successes = activeArms[1] ? generateBinomialSample(currentSample, treatmentEffects[0] / 100) : 0;
+      const treatment2Successes = activeArms[2] ? generateBinomialSample(currentSample, treatmentEffects[1] / 100) : 0;
 
       const controlProb = activeArms[0] ? computePosteriorProbability(controlSuccesses, currentSample) : 0;
       const treatment1Prob = activeArms[1] ? computePosteriorProbability(treatment1Successes, currentSample) : 0;
@@ -196,12 +195,17 @@ const ClinicalTrialSimulator = () => {
   };
 
   const runSimulation = async () => {
-    if (!validateInputs()) return;
-    setLoading(true);
-    setError(null);
-
     try {
-      const treatmentEffects = [treatment1Effect, treatment2Effect];
+      if (!validateInputs()) return;
+      setLoading(true);
+      setError(null);
+
+      if (!auth || !db) {
+        setError('Firebase is not properly initialized.');
+        return;
+      }
+
+      const treatmentEffects = [parseFloat(treatment1Effect), parseFloat(treatment2Effect)];
       let powerTreatment1 = 0;
       let powerTreatment2 = 0;
       let typeIError = 0;
@@ -209,17 +213,17 @@ const ClinicalTrialSimulator = () => {
       const chartData = [];
 
       for (let i = 0; i < numSimulations; i++) {
-        const trialResult = simulateTrial(sampleSize, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel);
+        const trialResult = simulateTrial(parseFloat(sampleSize), parseFloat(controlEffect), treatmentEffects, parseInt(interimLooks, 10), parseFloat(futilityThreshold), parseFloat(confidenceLevel));
         sampleSizes.push(trialResult.finalSampleSize);
 
         const controlProb = trialResult.control[trialResult.control.length - 1] / 100;
         const treatment1Prob = trialResult.treatment1[trialResult.treatment1.length - 1] / 100;
         const treatment2Prob = trialResult.treatment2[trialResult.treatment2.length - 1] / 100;
-        const zValue = normalInv(1 - confidenceLevel / 100 / 2);
+        const zValue = normalInv(1 - parseFloat(confidenceLevel) / 100 / 2);
 
         if (treatment1Prob > controlProb) {
           const diff = treatment1Prob - controlProb;
-          const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * (1 - controlProb)) / trialResult.finalSampleSize);
+          const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * ( 1 - controlProb)) / trialResult.finalSampleSize);
           if (diff > zValue * se) powerTreatment1++;
         }
         if (treatment2Prob > controlProb) {
@@ -228,7 +232,7 @@ const ClinicalTrialSimulator = () => {
           if (diff > zValue * se) powerTreatment2++;
         }
 
-        const nullTrial = simulateTrial(sampleSize, controlEffect, [controlEffect, controlEffect], interimLooks, futilityThreshold, confidenceLevel);
+        const nullTrial = simulateTrial(parseFloat(sampleSize), parseFloat(controlEffect), [parseFloat(controlEffect), parseFloat(controlEffect)], parseInt(interimLooks, 10), parseFloat(futilityThreshold), parseFloat(confidenceLevel));
         const nullTreatment1Prob = nullTrial.treatment1[nullTrial.treatment1.length - 1] / 100;
         const nullTreatment2Prob = nullTrial.treatment2[nullTrial.treatment2.length - 1] / 100;
         if (nullTreatment1Prob > controlProb || nullTreatment2Prob > controlProb) typeIError++;
@@ -246,11 +250,11 @@ const ClinicalTrialSimulator = () => {
         let tempPower1 = 0;
         let tempPower2 = 0;
         for (let i = 0; i < 100; i++) {
-          const trial = simulateTrial(size, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel);
+          const trial = simulateTrial(size, parseFloat(controlEffect), treatmentEffects, parseInt(interimLooks, 10), parseFloat(futilityThreshold), parseFloat(confidenceLevel));
           const controlProb = trial.control[trial.control.length - 1] / 100;
           const treatment1Prob = trial.treatment1[trial.treatment1.length - 1] / 100;
           const treatment2Prob = trial.treatment2[trial.treatment2.length - 1] / 100;
-          const zValue = normalInv(1 - confidenceLevel / 100 / 2);
+          const zValue = normalInv(1 - parseFloat(confidenceLevel) / 100 / 2);
           if (treatment1Prob > controlProb) {
             const diff = treatment1Prob - controlProb;
             const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * (1 - controlProb)) / trial.finalSampleSize);
@@ -281,7 +285,7 @@ const ClinicalTrialSimulator = () => {
       setResult(result);
       localStorage.setItem('simulatorResults', JSON.stringify(result));
 
-      if (auth && db && auth.currentUser) {
+      if (auth.currentUser) {
         try {
           await addDoc(collection(db, 'simulations'), {
             userId: auth.currentUser.uid,
@@ -293,13 +297,14 @@ const ClinicalTrialSimulator = () => {
           setError('Failed to save simulation to Firebase.');
         }
       } else {
-        console.warn('Firebase not initialized or user not authenticated.');
+        console.warn('User not authenticated.');
       }
     } catch (err) {
       setError(`Simulation failed: ${err.message}`);
       console.error('Simulation error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const resetData = () => {
@@ -311,7 +316,8 @@ const ClinicalTrialSimulator = () => {
     setFutilityThreshold(FUTILITY_THRESHOLD_START);
     setConfidenceLevel(CI_START);
     setNumSimulations(SIMULATIONS_START);
-    runSimulation();
+    setResult(null);
+    setError(null);
   };
 
   const exportCSV = () => {
@@ -426,7 +432,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={sampleSize}
-                        onChange={(e) => setSampleSize(e.target.value)}
+                        onChange={(e) => setSampleSize(parseFloat(e.target.value) || SAMPLE_START)}
                         min={SAMPLE_MIN}
                         max={SAMPLE_MAX}
                         step={SAMPLE_STEP}
@@ -434,7 +440,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={sampleSize}
-                        onChange={(e) => setSampleSize(e.target.value)}
+                        onChange={(e) => setSampleSize(parseFloat(e.target.value) || SAMPLE_START)}
                         min={SAMPLE_MIN}
                         max={SAMPLE_MAX}
                         step={SAMPLE_STEP}
@@ -447,7 +453,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={controlEffect}
-                        onChange={(e) => setControlEffect(e.target.value)}
+                        onChange={(e) => setControlEffect(parseFloat(e.target.value) || EFFECT_START)}
                         min={EFFECT_MIN}
                         max={EFFECT_MAX}
                         step={EFFECT_STEP}
@@ -455,7 +461,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={controlEffect}
-                        onChange={(e) => setControlEffect(e.target.value)}
+                        onChange={(e) => setControlEffect(parseFloat(e.target.value) || EFFECT_START)}
                         min={EFFECT_MIN}
                         max={EFFECT_MAX}
                         step={EFFECT_STEP}
@@ -470,7 +476,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={treatment1Effect}
-                        onChange={(e) => setTreatment1Effect(e.target.value)}
+                        onChange={(e) => setTreatment1Effect(parseFloat(e.target.value) || EFFECT_START + 2)}
                         min={EFFECT_MIN}
                         max={EFFECT_MAX}
                         step={EFFECT_STEP}
@@ -478,7 +484,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={treatment1Effect}
-                        onChange={(e) => setTreatment1Effect(e.target.value)}
+                        onChange={(e) => setTreatment1Effect(parseFloat(e.target.value) || EFFECT_START + 2)}
                         min={EFFECT_MIN}
                         max={EFFECT_MAX}
                         step={EFFECT_STEP}
@@ -491,7 +497,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={treatment2Effect}
-                        onChange={(e) => setTreatment2Effect(e.target.value)}
+                        onChange={(e) => setTreatment2Effect(parseFloat(e.target.value) || EFFECT_START + 4)}
                         min={EFFECT_MIN}
                         max={EFFECT_MAX}
                         step={EFFECT_STEP}
@@ -499,7 +505,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={treatment2Effect}
-                        onChange={(e) => setTreatment2Effect(e.target.value)}
+                        onChange={(e) => setTreatment2Effect(parseFloat(e.target.value) || EFFECT_START + 4)}
                         min={EFFECT_MIN}
                         max={EFFECT_MAX}
                         step={EFFECT_STEP}
@@ -514,7 +520,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={interimLooks}
-                        onChange={(e) => setInterimLooks(e.target.value)}
+                        onChange={(e) => setInterimLooks(parseInt(e.target.value, 10) || INTERIM_LOOKS_START)}
                         min={INTERIM_LOOKS_MIN}
                         max={INTERIM_LOOKS_MAX}
                         step={1}
@@ -522,7 +528,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={interimLooks}
-                        onChange={(e) => setInterimLooks(e.target.value)}
+                        onChange={(e) => setInterimLooks(parseInt(e.target.value, 10) || INTERIM_LOOKS_START)}
                         min={INTERIM_LOOKS_MIN}
                         max={INTERIM_LOOKS_MAX}
                         step={1}
@@ -535,7 +541,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={futilityThreshold}
-                        onChange={(e) => setFutilityThreshold(e.target.value)}
+                        onChange={(e) => setFutilityThreshold(parseFloat(e.target.value) || FUTILITY_THRESHOLD_START)}
                         min={FUTILITY_THRESHOLD_MIN}
                         max={FUTILITY_THRESHOLD_MAX}
                         step={FUTILITY_THRESHOLD_STEP}
@@ -543,7 +549,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={futilityThreshold}
-                        onChange={(e) => setFutilityThreshold(e.target.value)}
+                        onChange={(e) => setFutilityThreshold(parseFloat(e.target.value) || FUTILITY_THRESHOLD_START)}
                         min={FUTILITY_THRESHOLD_MIN}
                         max={FUTILITY_THRESHOLD_MAX}
                         step={FUTILITY_THRESHOLD_STEP}
@@ -558,7 +564,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={confidenceLevel}
-                        onChange={(e) => setConfidenceLevel(e.target.value)}
+                        onChange={(e) => setConfidenceLevel(parseFloat(e.target.value) || CI_START)}
                         min={CI_MIN}
                         max={CI_MAX}
                         step={CI_STEP}
@@ -566,7 +572,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={confidenceLevel}
-                        onChange={(e) => setConfidenceLevel(e.target.value)}
+                        onChange={(e) => setConfidenceLevel(parseFloat(e.target.value) || CI_START)}
                         min={CI_MIN}
                         max={CI_MAX}
                         step={CI_STEP}
@@ -579,7 +585,7 @@ const ClinicalTrialSimulator = () => {
                       <Form.Control
                         type="number"
                         value={numSimulations}
-                        onChange={(e) => setNumSimulations(e.target.value)}
+                        onChange={(e) => setNumSimulations(parseInt(e.target.value, 10) || SIMULATIONS_START)}
                         min={SIMULATIONS_MIN}
                         max={SIMULATIONS_MAX}
                         step={100}
@@ -587,7 +593,7 @@ const ClinicalTrialSimulator = () => {
                       />
                       <Form.Range
                         value={numSimulations}
-                        onChange={(e) => setNumSimulations(e.target.value)}
+                        onChange={(e) => setNumSimulations(parseInt(e.target.value, 10) || SIMULATIONS_START)}
                         min={SIMULATIONS_MIN}
                         max={SIMULATIONS_MAX}
                         step={100}
@@ -610,7 +616,7 @@ const ClinicalTrialSimulator = () => {
                 <Alert variant="danger">{error}</Alert>
               </motion.div>
             )}
-            {result && (
+            {result && result.chartData && result.chartData.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
                 <Card className="simulator-results-card">
                   <Card.Body>
