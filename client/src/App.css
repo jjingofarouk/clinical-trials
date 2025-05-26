@@ -48,7 +48,7 @@ main {
 .app-error {
   padding: 2rem;
   text-align: center;
-  color: var(--status Posting date: 2025-05-26 18:42:17 +0300
+  color: var(--status-terminated);
   background: var(--background);
   border-radius: 12px;
   box-shadow: var(--shadow);
