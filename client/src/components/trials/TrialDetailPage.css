@@ -1,0 +1,233 @@
+/* TrialDetailPage.css */
+
+/* Reuse variables from TrialCard.css for consistency */
+:root {
+  --primary-color: #1e40af; /* Professional blue */
+  --secondary-color: #3b82f6; /* Lighter blue for accents */
+  --text-primary: #1f2937; /* Dark gray for text */
+  --text-secondary: #4b5563; /* Lighter gray for secondary text */
+  --background: #ffffff; /* White background */
+  --border-color: #e5e7eb; /* Light gray for borders */
+  --status-recruiting: #10b981; /* Green for recruiting status */
+  --status-active: #3b82f6; /* Blue for active status */
+  --status-completed: #6b7280; /* Gray for completed status */
+  --status-upcoming: #f59e0b; /* Yellow for upcoming status */
+  --status-terminated: #ef4444; /* Red for terminated status */
+  --status-suspended: #f97316; /* Orange for suspended status */
+  --status-default: #9ca3af; /* Neutral gray for default */
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.3s ease;
+}
+
+/* Base page styling */
+.trial-detail-page {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: var(--background);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Back button */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  margin-bottom: 1.5rem;
+}
+
+.back-btn:hover {
+  background-color: var(--border-color);
+  color: var(--primary-color);
+}
+
+.back-btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Save trial button (override Bootstrap) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: var(--transition);
+  border: none;
+  box-shadow: var(--shadow);
+}
+
+.btn:disabled {
+  background-color: var(--status-completed);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn:not(:disabled):hover {
+  background-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.btn:not(:disabled):focus {
+  outline: 2px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+/* Trial detail content */
+.trial-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 4rem auto;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Error message */
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 4rem auto;
+  text-align: center;
+}
+
+.error-message .text-gray-400 {
+  color: var(--text-secondary);
+}
+
+/* Sub-component styles (generalized for consistency) */
+.trial-detail-content > div {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.trial-detail-content h2,
+.trial-detail-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.trial-detail-content p,
+.trial-detail-content li {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.trial-detail-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trial-detail-content li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.trial-detail-content li:last-child {
+  border-bottom: none;
+}
+
+/* Specific sub-component styling (example for tables, if used) */
+.trial-detail-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.trial-detail-content th,
+.trial-detail-content td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.trial-detail-content th {
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--border-color);
+}
+
+/* Animation for spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .trial-detail-page {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .back-btn {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .trial-detail-content > div {
+    padding: 1rem;
+  }
+
+  .trial-detail-content h2,
+  .trial-detail-content h3 {
+    font-size: 1rem;
+  }
+
+  .trial-detail-content p,
+  .trial-detail-content li {
+    font-size: 0.75rem;
+  }
+}
+
+/* Accessibility enhancements */
+.trial-detail-page:focus-within {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
