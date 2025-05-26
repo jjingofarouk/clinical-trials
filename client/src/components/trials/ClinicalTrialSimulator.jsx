@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card, Row, Col, Badge } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import jStat from 'jstat';
 import Papa from 'papaparse';
 import html2canvas from 'html2canvas';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import './ClinicalTrialSimulator.css';
+import './ClinicalTrialSimulator.css'; // Reuse existing CSS for styling consistency
 
 const ClinicalTrialSimulator = () => {
   const location = useLocation();
@@ -16,40 +16,46 @@ const ClinicalTrialSimulator = () => {
   const db = getFirestore();
   const chartRef = useRef(null);
 
-  const PLOT_RANGE_DELTA = 5;
-  const GROUPS = ['Test group', 'Control group'];
-  const CONTROL_MIN = 50;
-  const CONTROL_MAX = 25000;
-  const CONTROL_START = 1000;
-  const CONTROL_STEP = 10;
-  const TEST_MIN = 50;
-  const TEST_MAX = 25000;
-  const TEST_START = 1000;
-  const TEST_STEP = 10;
-  const EVENTS_CONTROL_MIN = 0.25;
-  const EVENTS_CONTROL_MAX = 100;
-  const EVENTS_CONTROL_START = 3;
-  const EVENTS_CONTROL_STEP = 0.25;
-  const EVENTS_TEST_MIN = 0;
-  const EVENTS_TEST_MAX = 100;
-  const EVENTS_TEST_START = 1.5;
-  const EVENTS_TEST_STEP = 0.25;
-  const CI_MIN = 60;
+  // Constants for input ranges
+  const PLOT_RANGE_DELTA = 10;
+  const GROUPS = ['Control', 'Treatment 1', 'Treatment 2']; // Support multiple arms for platform trials
+  const SAMPLE_MIN = 50;
+  const SAMPLE_MAX = 10000;
+  const SAMPLE_START = 500;
+  const SAMPLE_STEP = 10;
+  const EFFECT_MIN = 0;
+  const EFFECT_MAX = 50;
+  const EFFECT_START = 10;
+  const EFFECT_STEP = 0.5;
+  const INTERIM_LOOKS_MIN = 1;
+  const INTERIM_LOOKS_MAX = 5;
+  const INTERIM_LOOKS_START = 2;
+  const FUTILITY_THRESHOLD_MIN = 0;
+  const FUTILITY_THRESHOLD_MAX = 0.5;
+  const FUTILITY_THRESHOLD_START = 0.1;
+  const FUTILITY_THRESHOLD_STEP = 0.01;
+  const CI_MIN = 80;
   const CI_MAX = 99;
   const CI_START = 95;
   const CI_STEP = 0.5;
-  const INDIVIDUAL_CI_METHOD = 'clopper-pearson';
-  const WALTER_CI = true;
+  const SIMULATIONS_MIN = 100;
+  const SIMULATIONS_MAX = 2000;
+  const SIMULATIONS_START = 1000;
 
-  const [controlSize, setControlSize] = useState(CONTROL_START);
-  const [testSize, setTestSize] = useState(TEST_START);
-  const [controlEvents, setControlEvents] = useState(EVENTS_CONTROL_START);
-  const [testEvents, setTestEvents] = useState(EVENTS_TEST_START);
+  // State for inputs and results
+  const [sampleSize, setSampleSize] = useState(SAMPLE_START);
+  const [controlEffect, setControlEffect] = useState(EFFECT_START);
+  const [treatment1Effect, setTreatment1Effect] = useState(EFFECT_START + 2);
+  const [treatment2Effect, setTreatment2Effect] = useState(EFFECT_START + 4);
+  const [interimLooks, setInterimLooks] = useState(INTERIM_LOOKS_START);
+  const [futilityThreshold, setFutilityThreshold] = useState(FUTILITY_THRESHOLD_START);
   const [confidenceLevel, setConfidenceLevel] = useState(CI_START);
+  const [numSimulations, setNumSimulations] = useState(SIMULATIONS_START);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Load saved results from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('simulatorResults');
     if (saved) {
@@ -61,215 +67,226 @@ const ClinicalTrialSimulator = () => {
     }
   }, []);
 
-  const binomialConfidence = (p, n, z, method) => {
-    if (!Number.isFinite(p) || !Number.isFinite(n) || !Number.isFinite(z)) return [p, p];
-    if (method === 'clopper-pearson') {
-      const alpha = 1 - (z / 100);
-      const x = Math.round(p * n);
-      let lower = jStat.beta.inv(alpha / 2, x, n - x + 1);
-      let upper = jStat.beta.inv(1 - alpha / 2, x + 1, n - x);
-      lower = Number.isFinite(lower) && lower >= 0 ? lower : 0;
-      upper = Number.isFinite(upper) && upper <= 1 ? upper : 1;
-      return [lower, upper];
-    }
-    return [p, p];
-  };
-
-  const getPhi = (p0, p1, n0, n1, walter) => {
-    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1)) return 0;
-    if (!walter) return p1 / p0 || 0;
-    const x0 = p0 * n0;
-    const x1 = p1 * n1;
-    return Math.exp(Math.log((x1 + 0.5) / (n1 + 0.5)) - Math.log((x0 + 0.5) / (n0 + 0.5))) || 0;
-  };
-
-  const getPar = (p0, p1, n0, n1, walter) => {
-    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1)) return 0;
-    if (!walter) {
-      return p0 && p1 ? Math.sqrt((1 - p0) / (n0 * p0) + (1 - p1) / (n1 * p1)) : 0;
-    }
-    const x0 = p0 * n0;
-    const x1 = p1 * n1;
-    return Math.sqrt(1 / (x1 + 0.5) - 1 / (n1 + 0.5) + 1 / (x0 + 0.5) - 1 / (n0 + 0.5)) || 0;
-  };
-
-  const getOverlap = (i1, i2) => {
-    if (!i1 || !i2 || !Number.isFinite(i1[0]) || !Number.isFinite(i1[1]) || !Number.isFinite(i2[0]) || !Number.isFinite(i2[1])) return [];
-    const a = Math.max(i1[0], i2[0]);
-    const b = Math.min(i1[1], i2[1]);
-    return a > b ? [] : [a, b];
-  };
-
-  const getPValue = (p0, p1, n0, n1) => {
-    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1) || !p0 || !p1) return 0;
-    const mean = Math.log(1);
-    const stdev = Math.sqrt(((1 / p0 - 1) / n0) + ((1 / p1 - 1) / n1));
-    const observedRR = p1 / p0;
-    const logObservedRR = Math.log(observedRR);
-    const pLeft = jStat.normal.cdf(logObservedRR, mean, stdev);
-    const pRight = 1 - pLeft;
-    return Math.round(2 * Math.min(pRight, pLeft) * 10000) / 10000;
-  };
-
-  const getCValue = (p0, p1, n0, n1, baseValue, step) => {
-    if (!Number.isFinite(p0) || !Number.isFinite(p1) || !Number.isFinite(n0) || !Number.isFinite(n1)) return 0;
-    let contains = false;
-    let j = 0;
-    let cValue = 0;
-    while (!contains) {
-      const currentConfidence = baseValue + j * step;
-      const zValue = Number.isFinite(jStat.normal.inv(1 - currentConfidence / 100 / 2, 0, 1)) ? jStat.normal.inv(1 - currentConfidence / 100 / 2, 0, 1) : 0;
-      const phi = getPhi(p0, p1, n0, n1, WALTER_CI);
-      const par = getPar(p0, p1, n0, n1, WALTER_CI);
-      const riskRatioL = phi * Math.exp(-zValue * par);
-      const riskRatioR = phi * Math.exp(zValue * par);
-      if (Number.isFinite(riskRatioL) && Number.isFinite(riskRatioR) && 1 >= riskRatioL && 1 <= riskRatioR) {
-        contains = true;
-        cValue = 1 - (currentConfidence - step) / 100;
-      }
-      j++;
-      if (j > 1000) break;
-    }
-    return Math.round(cValue * 10000) / 10000;
-  };
-
-  const mkRiskStr = (title, risk, riskL, riskR) => {
-    const safeRisk = Number.isFinite(risk) ? risk : 0;
-    const safeRiskL = Number.isFinite(riskL) ? riskL : 0;
-    const safeRiskR = Number.isFinite(riskR) ? riskR : 0;
-    return `${title}${safeRisk.toFixed(2)} (${safeRiskL.toFixed(2)}-${safeRiskR.toFixed(2)})`;
-  };
-
+  // Validate inputs
   const validateInputs = () => {
     setError(null);
-
-    const parsedControlSize = Number(controlSize);
-    const parsedTestSize = Number(testSize);
-    const parsedControlEvents = Number(controlEvents);
-    const parsedTestEvents = Number(testEvents);
+    const parsedSampleSize = Number(sampleSize);
+    const parsedControlEffect = Number(controlEffect);
+    const parsedTreatment1Effect = Number(treatment1Effect);
+    const parsedTreatment2Effect = Number(treatment2Effect);
+    const parsedInterimLooks = Number(interimLooks);
+    const parsedFutilityThreshold = Number(futilityThreshold);
     const parsedConfidenceLevel = Number(confidenceLevel);
+    const parsedNumSimulations = Number(numSimulations);
 
-    if (!Number.isFinite(parsedControlSize) || parsedControlSize < CONTROL_MIN || parsedControlSize > CONTROL_MAX) {
-      setError(`Control group size must be between ${CONTROL_MIN} and ${CONTROL_MAX}.`);
+    if (!Number.isFinite(parsedSampleSize) || parsedSampleSize < SAMPLE_MIN || parsedSampleSize > SAMPLE_MAX) {
+      setError(`Sample size per arm must be between ${SAMPLE_MIN} and ${SAMPLE_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedTestSize) || parsedTestSize < TEST_MIN || parsedTestSize > TEST_MAX) {
-      setError(`Test group size must be between ${TEST_MIN} and ${TEST_MAX}.`);
+    if (!Number.isFinite(parsedControlEffect) || parsedControlEffect < EFFECT_MIN || parsedControlEffect > EFFECT_MAX) {
+      setError(`Control effect (%) must be between ${EFFECT_MIN} and ${EFFECT_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedControlEvents) || parsedControlEvents < EVENTS_CONTROL_MIN || parsedControlEvents > EVENTS_CONTROL_MAX) {
-      setError(`Control group events must be between ${EVENTS_CONTROL_MIN} and ${EVENTS_CONTROL_MAX}%.`);
+    if (!Number.isFinite(parsedTreatment1Effect) || parsedTreatment1Effect < EFFECT_MIN || parsedTreatment1Effect > EFFECT_MAX) {
+      setError(`Treatment 1 effect (%) must be between ${EFFECT_MIN} and ${EFFECT_MAX}.`);
       return false;
     }
-    if (!Number.isFinite(parsedTestEvents) || parsedTestEvents < EVENTS_TEST_MIN || parsedTestEvents > EVENTS_TEST_MAX) {
-      setError(`Test group events must be between ${EVENTS_TEST_MIN} and ${EVENTS_TEST_MAX}%.`);
+    if (!Number.isFinite(parsedTreatment2Effect) || parsedTreatment2Effect < EFFECT_MIN || parsedTreatment2Effect > EFFECT_MAX) {
+      setError(`Treatment 2 effect (%) must be between ${EFFECT_MIN} and ${EFFECT_MAX}.`);
+      return false;
+    }
+    if (!Number.isFinite(parsedInterimLooks) || parsedInterimLooks < INTERIM_LOOKS_MIN || parsedInterimLooks > INTERIM_LOOKS_MAX) {
+      setError(`Number of interim looks must be between ${INTERIM_LOOKS_MIN} and ${INTERIM_LOOKS_MAX}.`);
+      return false;
+    }
+    if (!Number.isFinite(parsedFutilityThreshold) || parsedFutilityThreshold < FUTILITY_THRESHOLD_MIN || parsedFutilityThreshold > FUTILITY_THRESHOLD_MAX) {
+      setError(`Futility threshold must be between ${FUTILITY_THRESHOLD_MIN} and ${FUTILITY_THRESHOLD_MAX}.`);
       return false;
     }
     if (!Number.isFinite(parsedConfidenceLevel) || parsedConfidenceLevel < CI_MIN || parsedConfidenceLevel > CI_MAX) {
       setError(`Confidence level must be between ${CI_MIN} and ${CI_MAX}%.`);
       return false;
     }
-
+    if (!Number.isFinite(parsedNumSimulations) || parsedNumSimulations < SIMULATIONS_MIN || parsedNumSimulations > SIMULATIONS_MAX) {
+      setError(`Number of simulations must be between ${SIMULATIONS_MIN} and ${SIMULATIONS_MAX}.`);
+      return false;
+    }
     return true;
   };
 
+  // Bayesian posterior probability for futility/superiority
+  const computePosteriorProbability = (successes, trials, priorAlpha = 1, priorBeta = 1) => {
+    const posteriorAlpha = priorAlpha + successes;
+    const posteriorBeta = priorBeta + trials - successes;
+    return jStat.beta.mean(posteriorAlpha, posteriorBeta);
+  };
+
+  // Simulate a single adaptive trial
+  const simulateTrial = (sampleSize, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel) => {
+    const interimSample = Math.floor(sampleSize / interimLooks);
+    const results = { control: [], treatment1: [], treatment2: [], stoppedEarly: false, reason: null };
+    let activeArms = [true, true, true]; // [control, treatment1, treatment2]
+    let currentSample = 0;
+
+    for (let i = 0; i < interimLooks; i++) {
+      currentSample += interimSample;
+      if (currentSample > sampleSize) currentSample = sampleSize;
+
+      // Simulate outcomes for active arms
+      const controlSuccesses = activeArms[0] ? Math.round(jStat.binomial.sample(currentSample, controlEffect / 100)) : 0;
+      const treatment1Successes = activeArms[1] ? Math.round(jStat.binomial.sample(currentSample, treatmentEffects[0] / 100)) : 0;
+      const treatment2Successes = activeArms[2] ? Math.round(jStat.binomial.sample(currentSample, treatmentEffects[1] / 100)) : 0;
+
+      // Compute posterior probabilities
+      const controlProb = activeArms[0] ? computePosteriorProbability(controlSuccesses, currentSample) : 0;
+      const treatment1Prob = activeArms[1] ? computePosteriorProbability(treatment1Successes, currentSample) : 0;
+      const treatment2Prob = activeArms[2] ? computePosteriorProbability(treatment2Successes, currentSample) : 0;
+
+      // Store interim results
+      results.control.push(controlProb * 100);
+      results.treatment1.push(treatment1Prob * 100);
+      results.treatment2.push(treatment2Prob * 100);
+
+      // Futility check: Drop arms with low posterior probability of beating control
+      if (activeArms[1] && treatment1Prob < controlProb + futilityThreshold) {
+        activeArms[1] = false;
+        results.reason = `Treatment 1 dropped at look ${i + 1} (futility)`;
+      }
+      if (activeArms[2] && treatment2Prob < controlProb + futilityThreshold) {
+        activeArms[2] = false;
+        results.reason = `Treatment 2 dropped at look ${i + 1} (futility)`;
+      }
+
+      // Superiority check: Stop trial if any treatment significantly beats control
+      const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
+      if (activeArms[1]) {
+        const diff = treatment1Prob - controlProb;
+        const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob)) / currentSample + (controlProb * (1 - controlProb)) / currentSample);
+        if (diff > zValue * se) {
+          results.stoppedEarly = true;
+          results.reason = `Stopped at look ${i + 1} (Treatment 1 superior)`;
+          break;
+        }
+      }
+      if (activeArms[2]) {
+        const diff = treatment2Prob - controlProb;
+        const se = Math.sqrt((treatment2Prob * (1 - treatment2Prob)) / currentSample + (controlProb * (1 - controlProb)) / currentSample);
+        if (diff > zValue * se) {
+          results.stoppedEarly = true;
+          results.reason = `Stopped at look ${i + 1} (Treatment 2 superior)`;
+          break;
+        }
+      }
+
+      if (!activeArms[1] && !activeArms[2]) {
+        results.stoppedEarly = true;
+        results.reason = `Stopped at look ${i + 1} (all treatments dropped)`;
+        break;
+      }
+    }
+
+    return { ...results, finalSampleSize: currentSample };
+  };
+
+  // Run multiple simulations to estimate power and Type I error
   const runSimulation = async () => {
     if (!validateInputs()) return;
     setLoading(true);
     setError(null);
 
     try {
-      const confidence = confidenceLevel / 100;
-      const zValue = Number.isFinite(jStat.normal.inv(1 - confidence / 2, 0, 1)) ? jStat.normal.inv(1 - confidence / 2, 0, 1) : 0;
+      const treatmentEffects = [treatment1Effect, treatment2Effect];
+      let powerTreatment1 = 0;
+      let powerTreatment2 = 0;
+      let typeIError = 0;
+      const sampleSizes = [];
+      const chartData = [];
 
-      const controlRisk = controlEvents / 100;
-      const controlRiskCI = binomialConfidence(controlRisk, controlSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
-      const controlRiskL = controlRiskCI[0];
-      const controlRiskR = controlRiskCI[1];
-      const controlRiskErr = Number.isFinite(controlRiskR - controlRiskL) ? controlRiskR - controlRiskL : 0;
-      const strControlRisk = mkRiskStr('Control Group Risk: ', controlEvents, controlRiskL, controlRiskR);
+      // Run simulations
+      for (let i = 0; i < numSimulations; i++) {
+        const trialResult = simulateTrial(sampleSize, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel);
+        sampleSizes.push(trialResult.finalSampleSize);
 
-      const testRisk = testEvents / 100;
-      const testRiskCI = binomialConfidence(testRisk, testSize, zValue * 100, INDIVIDUAL_CI_METHOD).map(x => x * 100);
-      const testRiskL = testRiskCI[0];
-      const testRiskR = testRiskCI[1];
-      const testRiskErr = Number.isFinite(testRiskR - testRiskL) ? testRiskR - testRiskL : 0;
-      const strTestRisk = mkRiskStr('Test Group Risk: ', testEvents, testRiskL, testRiskR);
+        // Check for significant results (power or Type I error)
+        const controlProb = trialResult.control[trialResult.control.length - 1] / 100;
+        const treatment1Prob = trialResult.treatment1[trialResult.treatment1.length - 1] / 100;
+        const treatment2Prob = trialResult.treatment2[trialResult.treatment2.length - 1] / 100;
+        const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
 
-      const overlapInterval = getOverlap(testRiskCI, controlRiskCI);
-      const overlapLength = overlapInterval.length > 0 && Number.isFinite(overlapInterval[1] - overlapInterval[0]) ? overlapInterval[1] - overlapInterval[0] : 0;
-      const strOverlapInterval = `Overlap: ${overlapLength.toFixed(2)}% [${overlapInterval.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`;
-      const strOverlapPctTest = `Overlap % for Test Group: ${(Number.isFinite(overlapLength / testRiskErr) ? overlapLength / testRiskErr * 100 : 0).toFixed(2)}%`;
+        if (treatment1Prob > controlProb) {
+          const diff = treatment1Prob - controlProb;
+          const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * (1 - controlProb)) / trialResult.finalSampleSize);
+          if (diff > zValue * se) powerTreatment1++;
+        }
+        if (treatment2Prob > controlProb) {
+          const diff = treatment2Prob - controlProb;
+          const se = Math.sqrt((treatment2Prob * (1 - treatment2Prob) + controlProb * (1 - controlProb)) / trialResult.finalSampleSize);
+          if (diff > zValue * se) powerTreatment2++;
+        }
 
-      const phi = getPhi(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
-      const par = getPar(controlRisk, testRisk, controlSize, testSize, WALTER_CI);
-      const riskRatio = Number.isFinite(testRisk / controlRisk) ? testRisk / controlRisk : 0;
-      const riskRatioL = Number.isFinite(phi * Math.exp(-zValue * par)) ? phi * Math.exp(-zValue * par) : 0;
-      const riskRatioR = Number.isFinite(phi * Math.exp(zValue * par)) ? phi * Math.exp(zValue * par) : 0;
-      const strRiskRatio = mkRiskStr('Relative Risk: ', riskRatio, riskRatioL, riskRatioR);
-
-      const advEffectsThreshold = Number.isFinite(1 - (1 - confidence) ** (1 / testSize)) ? (1 - (1 - confidence) ** (1 / testSize)) * 100 : 0;
-      const strAdvEffects = `Adverse Effects Threshold: ${advEffectsThreshold.toFixed(2)}%`;
-
-      const pValue1 = getPValue(controlRisk, testRisk, controlSize, testSize);
-      const strPValue = `P-Value: ${pValue1}`;
-
-      const cValue = getCValue(controlRisk, testRisk, controlSize, testSize, 0.5, 0.005);
-      const highestCI = Number.isFinite(1 - cValue) ? 1 - cValue : 0;
-      const strCValue = `C-Value: ${cValue}`;
-      const strCValueExt = `Highest CI: ${(highestCI * 100).toFixed(2)}%`;
-
-      let warnings = [];
-      if (Number.isFinite(riskRatioL) && Number.isFinite(riskRatioR) && 1 >= riskRatioL && 1 <= riskRatioR) {
-        warnings.push('Relative Risk CI contains 1.');
-      }
-      if (Number.isFinite(advEffectsThreshold) && Number.isFinite(controlEvents) && advEffectsThreshold > controlEvents) {
-        warnings.push('Adverse effects threshold exceeds control group risk.');
+        // Simulate null hypothesis for Type I error (all effects equal)
+        const nullTrial = simulateTrial(sampleSize, controlEffect, [controlEffect, controlEffect], interimLooks, futilityThreshold, confidenceLevel);
+        const nullTreatment1Prob = nullTrial.treatment1[nullTrial.treatment1.length - 1] / 100;
+        const nullTreatment2Prob = nullTrial.treatment2[nullTrial.treatment2.length - 1] / 100;
+        if (nullTreatment1Prob > controlProb || nullTreatment2Prob > controlProb) typeIError++;
       }
 
-      const chartData = [
-        {
-          group: 'Test group',
-          value: Number.isFinite(testEvents) ? testEvents : 0,
-          lower: Number.isFinite(testRiskL) ? testRiskL : 0,
-          upper: Number.isFinite(testRiskR) ? testRiskR : 0,
-        },
-        {
-          group: 'Control group',
-          value: Number.isFinite(controlEvents) ? controlEvents : 0,
-          lower: Number.isFinite(controlRiskL) ? controlRiskL : 0,
-          upper: Number.isFinite(controlRiskR) ? controlRiskR : 0,
-        },
-      ];
+      // Aggregate results
+      const power = {
+        treatment1: (powerTreatment1 / numSimulations * 100).toFixed(2),
+        treatment2: (powerTreatment2 / numSimulations * 100).toFixed(2),
+      };
+      const typeIErrorRate = (typeIError / numSimulations * 100).toFixed(2);
+      const avgSampleSize = (sampleSizes.reduce((a, b) => a + b, 0) / numSimulations).toFixed(0);
+
+      // Generate chart data for power curves
+      const sampleSizesRange = Array.from({ length: 5 }, (_, i) => SAMPLE_MIN + (i * (SAMPLE_MAX - SAMPLE_MIN)) / 4);
+      for (const size of sampleSizesRange) {
+        let tempPower1 = 0;
+        let tempPower2 = 0;
+        for (let i = 0; i < 100; i++) { // Reduced simulations for chart
+          const trial = simulateTrial(size, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel);
+          const controlProb = trial.control[trial.control.length - 1] / 100;
+          const treatment1Prob = trial.treatment1[trial.treatment1.length - 1] / 100;
+          const treatment2Prob = trial.treatment2[trial.treatment2.length - 1] / 100;
+          const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
+          if (treatment1Prob > controlProb) {
+            const diff = treatment1Prob - controlProb;
+            const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * (1 - controlProb)) / trial.finalSampleSize);
+            if (diff > zValue * se) tempPower1++;
+          }
+          if (treatment2Prob > controlProb) {
+            const diff = treatment2Prob - controlProb;
+            const se = Math.sqrt((treatment2Prob * (1 - treatment2Prob) + controlProb * (1 - controlProb)) / trial.finalSampleSize);
+            if (diff > zValue * se) tempPower2++;
+          }
+        }
+        chartData.push({
+          sampleSize: size,
+          powerTreatment1: (tempPower1 / 100 * 100).toFixed(2),
+          powerTreatment2: (tempPower2 / 100 * 100).toFixed(2),
+        });
+      }
 
       const result = {
-        controlRisk: { value: controlEvents, ci: [controlRiskL, controlRiskR], str: strControlRisk },
-        testRisk: { value: testEvents, ci: [testRiskL, testRiskR], str: strTestRisk },
-        overlap: { interval: overlapInterval, length: overlapLength, strInterval: strOverlapInterval, strPctTest: strOverlapPctTest },
-        riskRatio: { value: riskRatio, ci: [riskRatioL, riskRatioR], str: strRiskRatio },
-        adverseEffects: { threshold: advEffectsThreshold, str: strAdvEffects },
-        pValue: { value1: pValue1, str: strPValue },
-        cValue: { value: cValue, highestCI, str: strCValue, strExt: strCValueExt },
-        warnings,
+        power,
+        typeIError: typeIErrorRate,
+        avgSampleSize,
         chartData,
-        parameters: { controlSize, testSize, controlEvents, testEvents, confidenceLevel },
+        parameters: { sampleSize, controlEffect, treatment1Effect, treatment2Effect, interimLooks, futilityThreshold, confidenceLevel, numSimulations },
+        warnings: typeIErrorRate > 5 ? ['Type I error rate exceeds 5%. Consider adjusting futility threshold or sample size.'] : [],
       };
 
       setResult(result);
-
-      try {
-        localStorage.setItem('simulatorResults', JSON.stringify(result));
-      } catch (err) {}
+      localStorage.setItem('simulatorResults', JSON.stringify(result));
 
       const user = auth.currentUser;
       if (user) {
-        try {
-          await addDoc(collection(db, 'simulations'), {
-            userId: user.uid,
-            result,
-            timestamp: new Date(),
-          });
-        } catch (err) {}
+        await addDoc(collection(db, 'simulations'), {
+          userId: user.uid,
+          result,
+          timestamp: new Date(),
+        });
       }
     } catch (err) {
       setError(`Simulation failed: ${err.message}`);
@@ -277,15 +294,20 @@ const ClinicalTrialSimulator = () => {
     setLoading(false);
   };
 
+  // Reset inputs to default values
   const resetData = () => {
-    setControlSize(CONTROL_START);
-    setTestSize(TEST_START);
-    setControlEvents(EVENTS_CONTROL_START);
-    setTestEvents(EVENTS_TEST_START);
+    setSampleSize(SAMPLE_START);
+    setControlEffect(EFFECT_START);
+    setTreatment1Effect(EFFECT_START + 2);
+    setTreatment2Effect(EFFECT_START + 4);
+    setInterimLooks(INTERIM_LOOKS_START);
+    setFutilityThreshold(FUTILITY_THRESHOLD_START);
     setConfidenceLevel(CI_START);
+    setNumSimulations(SIMULATIONS_START);
     runSimulation();
   };
 
+  // Export results as CSV
   const exportCSV = () => {
     if (!result) {
       setError('No results to export.');
@@ -293,30 +315,31 @@ const ClinicalTrialSimulator = () => {
     }
     try {
       const data = [{
-        'Control Group Size': result.parameters.controlSize,
-        'Test Group Size': result.parameters.testSize,
-        'Control Events (%)': result.controlRisk.value,
-        'Test Events (%)': result.testRisk.value,
+        'Sample Size per Arm': result.parameters.sampleSize,
+        'Control Effect (%)': result.parameters.controlEffect,
+        'Treatment 1 Effect (%)': result.parameters.treatment1Effect,
+        'Treatment 2 Effect (%)': result.parameters.treatment2Effect,
+        'Interim Looks': result.parameters.interimLooks,
+        'Futility Threshold': result.parameters.futilityThreshold,
         'Confidence Level (%)': result.parameters.confidenceLevel,
-        'Control Risk CI': `[${result.controlRisk.ci.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`,
-        'Test Risk CI': `[${result.testRisk.ci.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`,
-        'Risk Ratio': Number.isFinite(result.riskRatio.value) ? result.riskRatio.value.toFixed(2) : '0.00',
-        'Risk Ratio CI': `[${result.riskRatio.ci.map(x => Number.isFinite(x) ? x.toFixed(2) : '0.00').join(', ')}]`,
-        'P-Value': result.pValue.value1,
-        'C-Value': result.cValue.value,
-        'Adverse Effects Threshold (%)': Number.isFinite(result.adverseEffects.threshold) ? result.adverseEffects.threshold.toFixed(2) : '0.00',
+        'Number of Simulations': result.parameters.numSimulations,
+        'Power Treatment 1 (%)': result.power.treatment1,
+        'Power Treatment 2 (%)': result.power.treatment2,
+        'Type I Error (%)': result.typeIError,
+        'Average Sample Size': result.avgSampleSize,
       }];
       const csv = Papa.unparse(data);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'simulation_results.csv';
+      link.download = 'adaptive_simulation_results.csv';
       link.click();
     } catch (err) {
       setError(`CSV export failed: ${err.message}`);
     }
   };
 
+  // Export chart as PNG
   const exportPNG = async () => {
     if (!chartRef.current) {
       setError('No chart available to export.');
@@ -326,64 +349,61 @@ const ClinicalTrialSimulator = () => {
       const canvas = await html2canvas(chartRef.current);
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
-      link.download = 'simulation_chart.png';
+      link.download = 'adaptive_simulation_chart.png';
       link.click();
     } catch (err) {
       setError(`PNG export failed: ${err.message}`);
     }
   };
 
+  // Render the component
   return (
     <Container className="simulator-container">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2 className="simulator-title">Clinical Trial Simulator</h2>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <h2 className="simulator-title">Adaptive Clinical Trial Simulator</h2>
         <Card className="simulator-card mb-4">
           <Card.Body>
             <Form>
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Control Group Size</Form.Label>
+                    <Form.Label>Sample Size per Arm</Form.Label>
                     <Form.Control
                       type="number"
-                      value={controlSize}
-                      onChange={(e) => setControlSize(e.target.value)}
-                      min={CONTROL_MIN}
-                      max={CONTROL_MAX}
-                      step={CONTROL_STEP}
-                      aria-label="Control group size"
+                      value={sampleSize}
+                      onChange={(e) => setSampleSize(e.target.value)}
+                      min={SAMPLE_MIN}
+                      max={SAMPLE_MAX}
+                      step={SAMPLE_STEP}
+                      aria-label="Sample size per arm"
                     />
                     <Form.Range
-                      value={controlSize}
-                      onChange={(e) => setControlSize(e.target.value)}
-                      min={CONTROL_MIN}
-                      max={CONTROL_MAX}
-                      step={CONTROL_STEP}
+                      value={sampleSize}
+                      onChange={(e) => setSampleSize(e.target.value)}
+                      min={SAMPLE_MIN}
+                      max={SAMPLE_MAX}
+                      step={SAMPLE_STEP}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Test Group Size</Form.Label>
+                    <Form.Label>Control Effect (%)</Form.Label>
                     <Form.Control
                       type="number"
-                      value={testSize}
-                      onChange={(e) => setTestSize(e.target.value)}
-                      min={TEST_MIN}
-                      max={TEST_MAX}
-                      step={TEST_STEP}
-                      aria-label="Test group size"
+                      value={controlEffect}
+                      onChange={(e) => setControlEffect(e.target.value)}
+                      min={EFFECT_MIN}
+                      max={EFFECT_MAX}
+                      step={EFFECT_STEP}
+                      aria-label="Control effect"
                     />
                     <Form.Range
-                      value={testSize}
-                      onChange={(e) => setTestSize(e.target.value)}
-                      min={TEST_MIN}
-                      max={TEST_MAX}
-                      step={TEST_STEP}
+                      value={controlEffect}
+                      onChange={(e) => setControlEffect(e.target.value)}
+                      min={EFFECT_MIN}
+                      max={EFFECT_MAX}
+                      step={EFFECT_STEP}
                     />
                   </Form.Group>
                 </Col>
@@ -391,43 +411,87 @@ const ClinicalTrialSimulator = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Control Group Events (%)</Form.Label>
+                    <Form.Label>Treatment 1 Effect (%)</Form.Label>
                     <Form.Control
                       type="number"
-                      value={controlEvents}
-                      onChange={(e) => setControlEvents(e.target.value)}
-                      min={EVENTS_CONTROL_MIN}
-                      max={EVENTS_CONTROL_MAX}
-                      step={EVENTS_CONTROL_STEP}
-                      aria-label="Control events"
+                      value={treatment1Effect}
+                      onChange={(e) => setTreatment1Effect(e.target.value)}
+                      min={EFFECT_MIN}
+                      max={EFFECT_MAX}
+                      step={EFFECT_STEP}
+                      aria-label="Treatment 1 effect"
                     />
                     <Form.Range
-                      value={controlEvents}
-                      onChange={(e) => setControlEvents(e.target.value)}
-                      min={EVENTS_CONTROL_MIN}
-                      max={EVENTS_CONTROL_MAX}
-                      step={EVENTS_CONTROL_STEP}
+                      value={treatment1Effect}
+                      onChange={(e) => setTreatment1Effect(e.target.value)}
+                      min={EFFECT_MIN}
+                      max={EFFECT_MAX}
+                      step={EFFECT_STEP}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Test Group Events (%)</Form.Label>
+                    <Form.Label>Treatment 2 Effect (%)</Form.Label>
                     <Form.Control
                       type="number"
-                      value={testEvents}
-                      onChange={(e) => setTestEvents(e.target.value)}
-                      min={EVENTS_TEST_MIN}
-                      max={EVENTS_TEST_MAX}
-                      step={EVENTS_TEST_STEP}
-                      aria-label="Test events"
+                      value={treatment2Effect}
+                      onChange={(e) => setTreatment2Effect(e.target.value)}
+                      min={EFFECT_MIN}
+                      max={EFFECT_MAX}
+                      step={EFFECT_STEP}
+                      aria-label="Treatment 2 effect"
                     />
                     <Form.Range
-                      value={testEvents}
-                      onChange={(e) => setTestEvents(e.target.value)}
-                      min={EVENTS_TEST_MIN}
-                      max={EVENTS_TEST_MAX}
-                      step={EVENTS_TEST_STEP}
+                      value={treatment2Effect}
+                      onChange={(e) => setTreatment2Effect(e.target.value)}
+                      min={EFFECT_MIN}
+                      max={EFFECT_MAX}
+                      step={EFFECT_STEP}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Number of Interim Looks</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={interimLooks}
+                      onChange={(e) => setInterimLooks(e.target.value)}
+                      min={INTERIM_LOOKS_MIN}
+                      max={INTERIM_LOOKS_MAX}
+                      step={1}
+                      aria-label="Interim looks"
+                    />
+                    <Form.Range
+                      value={interimLooks}
+                      onChange={(e) => setInterimLooks(e.target.value)}
+                      min={INTERIM_LOOKS_MIN}
+                      max={INTERIM_LOOKS_MAX}
+                      step={1}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Futility Threshold</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={futilityThreshold}
+                      onChange={(e) => setFutilityThreshold(e.target.value)}
+                      min={FUTILITY_THRESHOLD_MIN}
+                      max={FUTILITY_THRESHOLD_MAX}
+                      step={FUTILITY_THRESHOLD_STEP}
+                      aria-label="Futility threshold"
+                    />
+                    <Form.Range
+                      value={futilityThreshold}
+                      onChange={(e) => setFutilityThreshold(e.target.value)}
+                      min={FUTILITY_THRESHOLD_MIN}
+                      max={FUTILITY_THRESHOLD_MAX}
+                      step={FUTILITY_THRESHOLD_STEP}
                     />
                   </Form.Group>
                 </Col>
@@ -447,26 +511,39 @@ const ClinicalTrialSimulator = () => {
                     />
                     <Form.Range
                       value={confidenceLevel}
-                      onChange={(e) => setControlEvents(e.target.value)}
+                      onChange={(e) => setConfidenceLevel(e.target.value)}
                       min={CI_MIN}
                       max={CI_MAX}
                       step={CI_STEP}
                     />
                   </Form.Group>
                 </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Number of Simulations</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={numSimulations}
+                      onChange={(e) => setNumSimulations(e.target.value)}
+                      min={SIMULATIONS_MIN}
+                      max={SIMULATIONS_MAX}
+                      step={100}
+                      aria-label="Number of simulations"
+                    />
+                    <Form.Range
+                      value={numSimulations}
+                      onChange={(e) => setNumSimulations(e.target.value)}
+                      min={SIMULATIONS_MIN}
+                      max={SIMULATIONS_MAX}
+                      step={100}
+                    />
+                  </Form.Group>
+                </Col>
               </Row>
-              <Button
-                variant="primary"
-                onClick={runSimulation}
-                disabled={loading}
-                className="me-2"
-              >
+              <Button variant="primary" onClick={runSimulation} disabled={loading} className="me-2">
                 {loading ? 'Simulating...' : 'Run Simulation'}
               </Button>
-              <Button
-                variant="outline-secondary"
-                onClick={resetData}
-              >
+              <Button variant="outline-secondary" onClick={resetData}>
                 Reset
               </Button>
             </Form>
@@ -474,62 +551,32 @@ const ClinicalTrialSimulator = () => {
         </Card>
         <AnimatePresence>
           {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Alert variant="danger">{error}</Alert>
             </motion.div>
           )}
           {result && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
               <Card className="simulator-results-card">
                 <Card.Body>
-                  <h3 className="results-title">Experimental Results</h3>
+                  <h3 className="results-title">Simulation Results</h3>
                   <Row>
                     <Col md={6}>
                       <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Test Group Risk</Badge>
-                        <span>{result.testRisk.value.toFixed(2)}% ({result.testRisk.ci[0].toFixed(2)}-{result.testRisk.ci[1].toFixed(2)})</span>
+                        <Badge bg="primary" className="result-badge">Power (Treatment 1)</Badge>
+                        <span>{result.power.treatment1}%</span>
                       </div>
                       <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Control Group Risk</Badge>
-                        <span>{result.controlRisk.value.toFixed(2)}% ({result.controlRisk.ci[0].toFixed(2)}-{result.controlRisk.ci[1].toFixed(2)})</span>
+                        <Badge bg="primary" className="result-badge">Power (Treatment 2)</Badge>
+                        <span>{result.power.treatment2}%</span>
                       </div>
                       <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Overlap</Badge>
-                        <span>{result.overlap.length.toFixed(2)}% [{result.overlap.interval.map(x => x.toFixed(2)).join(', ')}]</span>
+                        <Badge bg="primary" className="result-badge">Type I Error</Badge>
+                        <span>{result.typeIError}%</span>
                       </div>
                       <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Overlap % Test</Badge>
-                        <span>{(result.overlap.length / (result.testRisk.ci[1] - result.testRisk.ci[0]) * 100).toFixed(2)}%</span>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Relative Risk</Badge>
-                        <span>{result.riskRatio.value.toFixed(2)} ({result.riskRatio.ci[0].toFixed(2)}-{result.riskRatio.ci[1].toFixed(2)})</span>
-                      </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">P-Value</Badge>
-                        <span>{result.pValue.value1}</span>
-                      </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">C-Value</Badge>
-                        <span>{result.cValue.value}</span>
-                      </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Highest CI</Badge>
-                        <span>{(result.cValue.highestCI * 100).toFixed(2)}%</span>
-                      </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Adverse Effects</Badge>
-                        <span>{result.adverseEffects.threshold.toFixed(2)}%</span>
+                        <Badge bg="primary" className="result-badge">Average Sample Size</Badge>
+                        <span>{result.avgSampleSize}</span>
                       </div>
                     </Col>
                   </Row>
@@ -549,14 +596,15 @@ const ClinicalTrialSimulator = () => {
                   </Button>
                   <div ref={chartRef} className="mt-4">
                     <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={result.chartData}>
+                      <LineChart data={result.chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="group" stroke="#333" />
-                        <YAxis domain={[0, data => Math.ceil(Math.max(...result.chartData.map(d => d.upper)) + PLOT_RANGE_DELTA)]} stroke="#333" />
+                        <XAxis dataKey="sampleSize" stroke="#333" label={{ value: 'Sample Size per Arm', position: 'insideBottom', offset: -5 }} />
+                        <YAxis domain={[0, 100]} stroke="#333" label={{ value: 'Power (%)', angle: -90, position: 'insideLeft' }} />
                         <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e0e0e0' }} />
                         <Legend />
-                        <Bar dataKey="value" fill="#007bff" radius={[4, 4, 0, 0]} />
-                      </BarChart>
+                        <Line type="monotone" dataKey="powerTreatment1" stroke="#007bff" name="Treatment 1 Power" />
+                        <Line type="monotone" dataKey="powerTreatment2" stroke="#28a745" name="Treatment 2 Power" />
+                      </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </Card.Body>
