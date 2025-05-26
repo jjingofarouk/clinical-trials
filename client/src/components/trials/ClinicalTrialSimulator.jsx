@@ -10,15 +10,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import './ClinicalTrialSimulator.css'; // Reuse existing CSS for styling consistency
 
-const ClinicalTrialSimulator = () => {
+const AdaptiveClinicalTrialSimulator = () => {
   const location = useLocation();
-  const auth = getAuth();
-  const db = getFirestore();
   const chartRef = useRef(null);
 
-  // Constants for input ranges
   const PLOT_RANGE_DELTA = 10;
-  const GROUPS = ['Control', 'Treatment 1', 'Treatment 2']; // Support multiple arms for platform trials
+  const GROUPS = ['Control', 'Treatment 1', 'Treatment 2'];
   const SAMPLE_MIN = 50;
   const SAMPLE_MAX = 10000;
   const SAMPLE_START = 500;
@@ -42,7 +39,6 @@ const ClinicalTrialSimulator = () => {
   const SIMULATIONS_MAX = 2000;
   const SIMULATIONS_START = 1000;
 
-  // State for inputs and results
   const [sampleSize, setSampleSize] = useState(SAMPLE_START);
   const [controlEffect, setControlEffect] = useState(EFFECT_START);
   const [treatment1Effect, setTreatment1Effect] = useState(EFFECT_START + 2);
@@ -55,7 +51,6 @@ const ClinicalTrialSimulator = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load saved results from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('simulatorResults');
     if (saved) {
@@ -67,7 +62,26 @@ const ClinicalTrialSimulator = () => {
     }
   }, []);
 
-  // Validate inputs
+  const binomialSample = (n, p) => {
+    let successes = 0;
+    for (let i = 0; i < n; i++) {
+      if (Math.random() < p) successes++;
+    }
+    return successes;
+  };
+
+  const betaMean = (alpha, beta) => {
+    return alpha / (alpha + beta);
+  };
+
+  const normalInv = (p, mean = 0, std = 1) => {
+    const a = [0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429];
+    const t = Math.sqrt(-2 * Math.log(p > 0.5 ? 1 - p : p));
+    let x = t - (a[0] + a[1] * t + a[2] * t ** 2 + a[3] * t ** 3 + a[4] * t ** 4) / (1 + a[0] * t + a[1] * t ** 2 + a[2] * t ** 3 + a[3] * t ** 4 + a[4] * t ** 5);
+    if (p > 0.5) x = -x;
+    return mean + std * x;
+  };
+
   const validateInputs = () => {
     setError(null);
     const parsedSampleSize = Number(sampleSize);
@@ -114,40 +128,34 @@ const ClinicalTrialSimulator = () => {
     return true;
   };
 
-  // Bayesian posterior probability for futility/superiority
   const computePosteriorProbability = (successes, trials, priorAlpha = 1, priorBeta = 1) => {
     const posteriorAlpha = priorAlpha + successes;
     const posteriorBeta = priorBeta + trials - successes;
-    return jStat.beta.mean(posteriorAlpha, posteriorBeta);
+    return betaMean(posteriorAlpha, posteriorBeta);
   };
 
-  // Simulate a single adaptive trial
   const simulateTrial = (sampleSize, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel) => {
     const interimSample = Math.floor(sampleSize / interimLooks);
     const results = { control: [], treatment1: [], treatment2: [], stoppedEarly: false, reason: null };
-    let activeArms = [true, true, true]; // [control, treatment1, treatment2]
+    let activeArms = [true, true, true];
     let currentSample = 0;
 
     for (let i = 0; i < interimLooks; i++) {
       currentSample += interimSample;
       if (currentSample > sampleSize) currentSample = sampleSize;
 
-      // Simulate outcomes for active arms
-      const controlSuccesses = activeArms[0] ? Math.round(jStat.binomial.sample(currentSample, controlEffect / 100)) : 0;
-      const treatment1Successes = activeArms[1] ? Math.round(jStat.binomial.sample(currentSample, treatmentEffects[0] / 100)) : 0;
-      const treatment2Successes = activeArms[2] ? Math.round(jStat.binomial.sample(currentSample, treatmentEffects[1] / 100)) : 0;
+      const controlSuccesses = activeArms[0] ? binomialSample(currentSample, controlEffect / 100) : 0;
+      const treatment1Successes = activeArms[1] ? binomialSample(currentSample, treatmentEffects[0] / 100) : 0;
+      const treatment2Successes = activeArms[2] ? binomialSample(currentSample, treatmentEffects[1] / 100) : 0;
 
-      // Compute posterior probabilities
       const controlProb = activeArms[0] ? computePosteriorProbability(controlSuccesses, currentSample) : 0;
       const treatment1Prob = activeArms[1] ? computePosteriorProbability(treatment1Successes, currentSample) : 0;
       const treatment2Prob = activeArms[2] ? computePosteriorProbability(treatment2Successes, currentSample) : 0;
 
-      // Store interim results
       results.control.push(controlProb * 100);
       results.treatment1.push(treatment1Prob * 100);
       results.treatment2.push(treatment2Prob * 100);
 
-      // Futility check: Drop arms with low posterior probability of beating control
       if (activeArms[1] && treatment1Prob < controlProb + futilityThreshold) {
         activeArms[1] = false;
         results.reason = `Treatment 1 dropped at look ${i + 1} (futility)`;
@@ -157,8 +165,7 @@ const ClinicalTrialSimulator = () => {
         results.reason = `Treatment 2 dropped at look ${i + 1} (futility)`;
       }
 
-      // Superiority check: Stop trial if any treatment significantly beats control
-      const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
+      const zValue = normalInv(1 - confidenceLevel / 100 / 2);
       if (activeArms[1]) {
         const diff = treatment1Prob - controlProb;
         const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob)) / currentSample + (controlProb * (1 - controlProb)) / currentSample);
@@ -188,7 +195,6 @@ const ClinicalTrialSimulator = () => {
     return { ...results, finalSampleSize: currentSample };
   };
 
-  // Run multiple simulations to estimate power and Type I error
   const runSimulation = async () => {
     if (!validateInputs()) return;
     setLoading(true);
@@ -202,16 +208,14 @@ const ClinicalTrialSimulator = () => {
       const sampleSizes = [];
       const chartData = [];
 
-      // Run simulations
       for (let i = 0; i < numSimulations; i++) {
         const trialResult = simulateTrial(sampleSize, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel);
         sampleSizes.push(trialResult.finalSampleSize);
 
-        // Check for significant results (power or Type I error)
         const controlProb = trialResult.control[trialResult.control.length - 1] / 100;
         const treatment1Prob = trialResult.treatment1[trialResult.treatment1.length - 1] / 100;
         const treatment2Prob = trialResult.treatment2[trialResult.treatment2.length - 1] / 100;
-        const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
+        const zValue = normalInv(1 - confidenceLevel / 100 / 2);
 
         if (treatment1Prob > controlProb) {
           const diff = treatment1Prob - controlProb;
@@ -224,14 +228,12 @@ const ClinicalTrialSimulator = () => {
           if (diff > zValue * se) powerTreatment2++;
         }
 
-        // Simulate null hypothesis for Type I error (all effects equal)
         const nullTrial = simulateTrial(sampleSize, controlEffect, [controlEffect, controlEffect], interimLooks, futilityThreshold, confidenceLevel);
         const nullTreatment1Prob = nullTrial.treatment1[nullTrial.treatment1.length - 1] / 100;
         const nullTreatment2Prob = nullTrial.treatment2[nullTrial.treatment2.length - 1] / 100;
         if (nullTreatment1Prob > controlProb || nullTreatment2Prob > controlProb) typeIError++;
       }
 
-      // Aggregate results
       const power = {
         treatment1: (powerTreatment1 / numSimulations * 100).toFixed(2),
         treatment2: (powerTreatment2 / numSimulations * 100).toFixed(2),
@@ -239,17 +241,16 @@ const ClinicalTrialSimulator = () => {
       const typeIErrorRate = (typeIError / numSimulations * 100).toFixed(2);
       const avgSampleSize = (sampleSizes.reduce((a, b) => a + b, 0) / numSimulations).toFixed(0);
 
-      // Generate chart data for power curves
       const sampleSizesRange = Array.from({ length: 5 }, (_, i) => SAMPLE_MIN + (i * (SAMPLE_MAX - SAMPLE_MIN)) / 4);
       for (const size of sampleSizesRange) {
         let tempPower1 = 0;
         let tempPower2 = 0;
-        for (let i = 0; i < 100; i++) { // Reduced simulations for chart
+        for (let i = 0; i < 100; i++) {
           const trial = simulateTrial(size, controlEffect, treatmentEffects, interimLooks, futilityThreshold, confidenceLevel);
           const controlProb = trial.control[trial.control.length - 1] / 100;
           const treatment1Prob = trial.treatment1[trial.treatment1.length - 1] / 100;
           const treatment2Prob = trial.treatment2[trial.treatment2.length - 1] / 100;
-          const zValue = jStat.normal.inv(1 - confidenceLevel / 100 / 2, 0, 1);
+          const zValue = normalInv(1 - confidenceLevel / 100 / 2);
           if (treatment1Prob > controlProb) {
             const diff = treatment1Prob - controlProb;
             const se = Math.sqrt((treatment1Prob * (1 - treatment1Prob) + controlProb * (1 - controlProb)) / trial.finalSampleSize);
@@ -280,21 +281,27 @@ const ClinicalTrialSimulator = () => {
       setResult(result);
       localStorage.setItem('simulatorResults', JSON.stringify(result));
 
-      const user = auth.currentUser;
-      if (user) {
-        await addDoc(collection(db, 'simulations'), {
-          userId: user.uid,
-          result,
-          timestamp: new Date(),
-        });
+      if (auth && db && auth.currentUser) {
+        try {
+          await addDoc(collection(db, 'simulations'), {
+            userId: auth.currentUser.uid,
+            result,
+            timestamp: new Date(),
+          });
+        } catch (err) {
+          console.error('Firebase save failed:', err);
+          setError('Failed to save simulation to Firebase.');
+        }
+      } else {
+        console.warn('Firebase not initialized or user not authenticated.');
       }
     } catch (err) {
       setError(`Simulation failed: ${err.message}`);
+      console.error('Simulation error:', err);
     }
     setLoading(false);
   };
 
-  // Reset inputs to default values
   const resetData = () => {
     setSampleSize(SAMPLE_START);
     setControlEffect(EFFECT_START);
@@ -307,7 +314,6 @@ const ClinicalTrialSimulator = () => {
     runSimulation();
   };
 
-  // Export results as CSV
   const exportCSV = () => {
     if (!result) {
       setError('No results to export.');
@@ -336,285 +342,335 @@ const ClinicalTrialSimulator = () => {
       link.click();
     } catch (err) {
       setError(`CSV export failed: ${err.message}`);
+      console.error('CSV export error:', err);
     }
   };
 
-  // Export chart as PNG
   const exportPNG = async () => {
     if (!chartRef.current) {
       setError('No chart available to export.');
       return;
     }
     try {
-      const canvas = await html2canvas(chartRef.current);
+      const canvas = await html2canvas(chartRef.current, { useCORS: true });
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
       link.download = 'adaptive_simulation_chart.png';
       link.click();
     } catch (err) {
       setError(`PNG export failed: ${err.message}`);
+      console.error('PNG export error:', err);
     }
   };
 
-  // Render the component
+  class ErrorBoundary extends React.Component {
+    state = { error: null };
+    static getDerivedStateFromError(error) {
+      return { error: error.message };
+    }
+    render() {
+      if (this.state.error) {
+        return (
+          <Container style={{ padding: '20px' }}>
+            <Alert variant="danger">Error: {this.state.error}</Alert>
+          </Container>
+        );
+      }
+      return this.props.children;
+    }
+  }
+
+  const fallbackStyles = `
+    .simulator-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .simulator-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .results-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .result-item {
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    .result-badge {
+      margin-right: 0.5rem;
+    }
+    .warning-badge {
+      margin-right: 0.5rem;
+      margin-top: 0.5rem;
+    }
+  `;
+
   return (
-    <Container className="simulator-container">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="simulator-title">Adaptive Clinical Trial Simulator</h2>
-        <Card className="simulator-card mb-4">
-          <Card.Body>
-            <Form>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Sample Size per Arm</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={sampleSize}
-                      onChange={(e) => setSampleSize(e.target.value)}
-                      min={SAMPLE_MIN}
-                      max={SAMPLE_MAX}
-                      step={SAMPLE_STEP}
-                      aria-label="Sample size per arm"
-                    />
-                    <Form.Range
-                      value={sampleSize}
-                      onChange={(e) => setSampleSize(e.target.value)}
-                      min={SAMPLE_MIN}
-                      max={SAMPLE_MAX}
-                      step={SAMPLE_STEP}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Control Effect (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={controlEffect}
-                      onChange={(e) => setControlEffect(e.target.value)}
-                      min={EFFECT_MIN}
-                      max={EFFECT_MAX}
-                      step={EFFECT_STEP}
-                      aria-label="Control effect"
-                    />
-                    <Form.Range
-                      value={controlEffect}
-                      onChange={(e) => setControlEffect(e.target.value)}
-                      min={EFFECT_MIN}
-                      max={EFFECT_MAX}
-                      step={EFFECT_STEP}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Treatment 1 Effect (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={treatment1Effect}
-                      onChange={(e) => setTreatment1Effect(e.target.value)}
-                      min={EFFECT_MIN}
-                      max={EFFECT_MAX}
-                      step={EFFECT_STEP}
-                      aria-label="Treatment 1 effect"
-                    />
-                    <Form.Range
-                      value={treatment1Effect}
-                      onChange={(e) => setTreatment1Effect(e.target.value)}
-                      min={EFFECT_MIN}
-                      max={EFFECT_MAX}
-                      step={EFFECT_STEP}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Treatment 2 Effect (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={treatment2Effect}
-                      onChange={(e) => setTreatment2Effect(e.target.value)}
-                      min={EFFECT_MIN}
-                      max={EFFECT_MAX}
-                      step={EFFECT_STEP}
-                      aria-label="Treatment 2 effect"
-                    />
-                    <Form.Range
-                      value={treatment2Effect}
-                      onChange={(e) => setTreatment2Effect(e.target.value)}
-                      min={EFFECT_MIN}
-                      max={EFFECT_MAX}
-                      step={EFFECT_STEP}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Number of Interim Looks</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={interimLooks}
-                      onChange={(e) => setInterimLooks(e.target.value)}
-                      min={INTERIM_LOOKS_MIN}
-                      max={INTERIM_LOOKS_MAX}
-                      step={1}
-                      aria-label="Interim looks"
-                    />
-                    <Form.Range
-                      value={interimLooks}
-                      onChange={(e) => setInterimLooks(e.target.value)}
-                      min={INTERIM_LOOKS_MIN}
-                      max={INTERIM_LOOKS_MAX}
-                      step={1}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Futility Threshold</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={futilityThreshold}
-                      onChange={(e) => setFutilityThreshold(e.target.value)}
-                      min={FUTILITY_THRESHOLD_MIN}
-                      max={FUTILITY_THRESHOLD_MAX}
-                      step={FUTILITY_THRESHOLD_STEP}
-                      aria-label="Futility threshold"
-                    />
-                    <Form.Range
-                      value={futilityThreshold}
-                      onChange={(e) => setFutilityThreshold(e.target.value)}
-                      min={FUTILITY_THRESHOLD_MIN}
-                      max={FUTILITY_THRESHOLD_MAX}
-                      step={FUTILITY_THRESHOLD_STEP}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Confidence Level (%)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={confidenceLevel}
-                      onChange={(e) => setConfidenceLevel(e.target.value)}
-                      min={CI_MIN}
-                      max={CI_MAX}
-                      step={CI_STEP}
-                      aria-label="Confidence level"
-                    />
-                    <Form.Range
-                      value={confidenceLevel}
-                      onChange={(e) => setConfidenceLevel(e.target.value)}
-                      min={CI_MIN}
-                      max={CI_MAX}
-                      step={CI_STEP}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Number of Simulations</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={numSimulations}
-                      onChange={(e) => setNumSimulations(e.target.value)}
-                      min={SIMULATIONS_MIN}
-                      max={SIMULATIONS_MAX}
-                      step={100}
-                      aria-label="Number of simulations"
-                    />
-                    <Form.Range
-                      value={numSimulations}
-                      onChange={(e) => setNumSimulations(e.target.value)}
-                      min={SIMULATIONS_MIN}
-                      max={SIMULATIONS_MAX}
-                      step={100}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Button variant="primary" onClick={runSimulation} disabled={loading} className="me-2">
-                {loading ? 'Simulating...' : 'Run Simulation'}
-              </Button>
-              <Button variant="outline-secondary" onClick={resetData}>
-                Reset
-              </Button>
-            </Form>
-          </Card.Body>
-        </Card>
-        <AnimatePresence>
-          {error && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Alert variant="danger">{error}</Alert>
-            </motion.div>
-          )}
-          {result && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
-              <Card className="simulator-results-card">
-                <Card.Body>
-                  <h3 className="results-title">Simulation Results</h3>
-                  <Row>
-                    <Col md={6}>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Power (Treatment 1)</Badge>
-                        <span>{result.power.treatment1}%</span>
+    <ErrorBoundary>
+      <Container className="simulator-container">
+        <style>{fallbackStyles}</style>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <h2 className="simulator-title">Adaptive Clinical Trial Simulator</h2>
+          <Card className="simulator-card mb-4">
+            <Card.Body>
+              <Form>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Sample Size per Arm</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={sampleSize}
+                        onChange={(e) => setSampleSize(e.target.value)}
+                        min={SAMPLE_MIN}
+                        max={SAMPLE_MAX}
+                        step={SAMPLE_STEP}
+                        aria-label="Sample size per arm"
+                      />
+                      <Form.Range
+                        value={sampleSize}
+                        onChange={(e) => setSampleSize(e.target.value)}
+                        min={SAMPLE_MIN}
+                        max={SAMPLE_MAX}
+                        step={SAMPLE_STEP}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Control Effect (%)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={controlEffect}
+                        onChange={(e) => setControlEffect(e.target.value)}
+                        min={EFFECT_MIN}
+                        max={EFFECT_MAX}
+                        step={EFFECT_STEP}
+                        aria-label="Control effect"
+                      />
+                      <Form.Range
+                        value={controlEffect}
+                        onChange={(e) => setControlEffect(e.target.value)}
+                        min={EFFECT_MIN}
+                        max={EFFECT_MAX}
+                        step={EFFECT_STEP}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Treatment 1 Effect (%)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={treatment1Effect}
+                        onChange={(e) => setTreatment1Effect(e.target.value)}
+                        min={EFFECT_MIN}
+                        max={EFFECT_MAX}
+                        step={EFFECT_STEP}
+                        aria-label="Treatment 1 effect"
+                      />
+                      <Form.Range
+                        value={treatment1Effect}
+                        onChange={(e) => setTreatment1Effect(e.target.value)}
+                        min={EFFECT_MIN}
+                        max={EFFECT_MAX}
+                        step={EFFECT_STEP}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Treatment 2 Effect (%)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={treatment2Effect}
+                        onChange={(e) => setTreatment2Effect(e.target.value)}
+                        min={EFFECT_MIN}
+                        max={EFFECT_MAX}
+                        step={EFFECT_STEP}
+                        aria-label="Treatment 2 effect"
+                      />
+                      <Form.Range
+                        value={treatment2Effect}
+                        onChange={(e) => setTreatment2Effect(e.target.value)}
+                        min={EFFECT_MIN}
+                        max={EFFECT_MAX}
+                        step={EFFECT_STEP}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Number of Interim Looks</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={interimLooks}
+                        onChange={(e) => setInterimLooks(e.target.value)}
+                        min={INTERIM_LOOKS_MIN}
+                        max={INTERIM_LOOKS_MAX}
+                        step={1}
+                        aria-label="Interim looks"
+                      />
+                      <Form.Range
+                        value={interimLooks}
+                        onChange={(e) => setInterimLooks(e.target.value)}
+                        min={INTERIM_LOOKS_MIN}
+                        max={INTERIM_LOOKS_MAX}
+                        step={1}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Futility Threshold</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={futilityThreshold}
+                        onChange={(e) => setFutilityThreshold(e.target.value)}
+                        min={FUTILITY_THRESHOLD_MIN}
+                        max={FUTILITY_THRESHOLD_MAX}
+                        step={FUTILITY_THRESHOLD_STEP}
+                        aria-label="Futility threshold"
+                      />
+                      <Form.Range
+                        value={futilityThreshold}
+                        onChange={(e) => setFutilityThreshold(e.target.value)}
+                        min={FUTILITY_THRESHOLD_MIN}
+                        max={FUTILITY_THRESHOLD_MAX}
+                        step={FUTILITY_THRESHOLD_STEP}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Confidence Level (%)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={confidenceLevel}
+                        onChange={(e) => setConfidenceLevel(e.target.value)}
+                        min={CI_MIN}
+                        max={CI_MAX}
+                        step={CI_STEP}
+                        aria-label="Confidence level"
+                      />
+                      <Form.Range
+                        value={confidenceLevel}
+                        onChange={(e) => setConfidenceLevel(e.target.value)}
+                        min={CI_MIN}
+                        max={CI_MAX}
+                        step={CI_STEP}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Number of Simulations</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={numSimulations}
+                        onChange={(e) => setNumSimulations(e.target.value)}
+                        min={SIMULATIONS_MIN}
+                        max={SIMULATIONS_MAX}
+                        step={100}
+                        aria-label="Number of simulations"
+                      />
+                      <Form.Range
+                        value={numSimulations}
+                        onChange={(e) => setNumSimulations(e.target.value)}
+                        min={SIMULATIONS_MIN}
+                        max={SIMULATIONS_MAX}
+                        step={100}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Button variant="primary" onClick={runSimulation} disabled={loading} className="me-2">
+                  {loading ? 'Simulating...' : 'Run Simulation'}
+                </Button>
+                <Button variant="outline-secondary" onClick={resetData}>
+                  Reset
+                </Button>
+              </Form>
+            </Card.Body>
+          </Card>
+          <AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <Alert variant="danger">{error}</Alert>
+              </motion.div>
+            )}
+            {result && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+                <Card className="simulator-results-card">
+                  <Card.Body>
+                    <h3 className="results-title">Simulation Results</h3>
+                    <Row>
+                      <Col md={6}>
+                        <div className="result-item">
+                          <Badge bg="primary" className="result-badge">Power (Treatment 1)</Badge>
+                          <span>{result.power.treatment1}%</span>
+                        </div>
+                        <div className="result-item">
+                          <Badge bg="primary" className="result-badge">Power (Treatment 2)</Badge>
+                          <span>{result.power.treatment2}%</span>
+                        </div>
+                        <div className="result-item">
+                          <Badge bg="primary" className="result-badge">Type I Error</Badge>
+                          <span>{result.typeIError}%</span>
+                        </div>
+                        <div className="result-item">
+                          <Badge bg="primary" className="result-badge">Average Sample Size</Badge>
+                          <span>{result.avgSampleSize}</span>
+                        </div>
+                      </Col>
+                    </Row>
+                    {result.warnings.length > 0 && (
+                      <div className="warnings mt-3">
+                        <h5>Warnings</h5>
+                        {result.warnings.map((warning, idx) => (
+                          <Badge key={idx} bg="warning" className="warning-badge">{warning}</Badge>
+                        ))}
                       </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Power (Treatment 2)</Badge>
-                        <span>{result.power.treatment2}%</span>
-                      </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Type I Error</Badge>
-                        <span>{result.typeIError}%</span>
-                      </div>
-                      <div className="result-item">
-                        <Badge bg="primary" className="result-badge">Average Sample Size</Badge>
-                        <span>{result.avgSampleSize}</span>
-                      </div>
-                    </Col>
-                  </Row>
-                  {result.warnings.length > 0 && (
-                    <div className="warnings mt-3">
-                      <h5>Warnings</h5>
-                      {result.warnings.map((warning, idx) => (
-                        <Badge key={idx} bg="warning" className="warning-badge">{warning}</Badge>
-                      ))}
+                    )}
+                    <Button variant="success" onClick={exportCSV} className="me-2 mt-3">
+                      Export CSV
+                    </Button>
+                    <Button variant="outline-primary" onClick={exportPNG} className="mt-3">
+                      Export PNG
+                    </Button>
+                    <div ref={chartRef} className="mt-4">
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={result.chartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="sampleSize" stroke="#333" label={{ value: 'Sample Size per Arm', position: 'insideBottom', offset: -5 }} />
+                          <YAxis domain={[0, 100]} stroke="#333" label={{ value: 'Power (%)', angle: -90, position: 'insideLeft' }} />
+                          <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e0e0e0' }} />
+                          <Legend />
+                          <Line type="monotone" dataKey="powerTreatment1" stroke="#007bff" name="Treatment 1 Power" />
+                          <Line type="monotone" dataKey="powerTreatment2" stroke="#28a745" name="Treatment 2 Power" />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
-                  )}
-                  <Button variant="success" onClick={exportCSV} className="me-2 mt-3">
-                    Export CSV
-                  </Button>
-                  <Button variant="outline-primary" onClick={exportPNG} className="mt-3">
-                    Export PNG
-                  </Button>
-                  <div ref={chartRef} className="mt-4">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <LineChart data={result.chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="sampleSize" stroke="#333" label={{ value: 'Sample Size per Arm', position: 'insideBottom', offset: -5 }} />
-                        <YAxis domain={[0, 100]} stroke="#333" label={{ value: 'Power (%)', angle: -90, position: 'insideLeft' }} />
-                        <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e0e0e0' }} />
-                        <Legend />
-                        <Line type="monotone" dataKey="powerTreatment1" stroke="#007bff" name="Treatment 1 Power" />
-                        <Line type="monotone" dataKey="powerTreatment2" stroke="#28a745" name="Treatment 2 Power" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card.Body>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </Container>
+                  </Card.Body>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </Container>
+    </ErrorBoundary>
   );
 };
 
-export default ClinicalTrialSimulator;
+export default AdaptiveClinicalTrialSimulator;
