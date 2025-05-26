@@ -14,6 +14,7 @@ import StudyDesign from './StudyDesign';
 import StudyDetails from './StudyDetails';
 import Button from 'react-bootstrap/Button';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './TrialDetailPage.css';
 
 const TrialDetailPage = () => {
   const { nctId } = useParams();
