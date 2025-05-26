@@ -1,0 +1,253 @@
+/* ForResearchers.css */
+
+/* Reuse variables from TrialCard.css, TrialDetailPage.css, and Navbars.css */
+:root {
+  --primary-color: #1e40af; /* Professional blue */
+  --secondary-color: #3b82f6; /* Lighter blue for accents */
+  --text-primary: #1f2937; /* Dark gray for text */
+  --text-secondary: #4b5563; /* Lighter gray for secondary text */
+  --background: #ffffff; /* White background */
+  --border-color: #e5e7eb; /* Light gray for borders */
+  --status-recruiting: #10b981; /* Green for recruiting status */
+  --status-active: #3b82f6; /* Blue for active status */
+  --status-completed: #6b7280; /* Gray for completed status */
+  --status-upcoming: #f59e0b; /* Yellow for upcoming status */
+  --status-terminated: #ef4444; /* Red for terminated status */
+  --status-suspended: #f97316; /* Orange for suspended status */
+  --status-default: #9ca3af; /* Neutral gray for default */
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.3s ease;
+  --cta-color: #FF8C00; /* Orange for buttons */
+  --cta-hover: #FF7000; /* Darker orange for hover */
+}
+
+/* Page container */
+.for-researchers-page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Back button */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  margin-bottom: 1.5rem;
+}
+
+.back-btn:hover {
+  background-color: var(--border-color);
+  color: var(--primary-color);
+}
+
+.back-btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Header */
+.researchers-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.researchers-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.researchers-header p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+}
+
+/* CTA button (override Bootstrap) */
+.cta-button {
+  background-color: var(--cta-color) !important;
+  border-color: var(--cta-color) !important;
+  color: var(--background) !important;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.cta-button:hover {
+  background-color: var(--cta-hover) !important;
+  border-color: var(--cta-hover) !important;
+  transform: translateY(-1px);
+}
+
+.cta-button:focus {
+  outline: 2px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+/* Content section */
+.researchers-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Resource card (override Bootstrap) */
+.resource-card {
+  background: var(--background) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.resource-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.1);
+}
+
+.resource-card .card-body {
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.resource-icon {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.card-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.resource-link {
+  color: var(--primary-color) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none !important;
+  transition: var(--transition);
+}
+
+.resource-link:hover {
+  color: var(--secondary-color) !important;
+  text-decoration: underline !important;
+}
+
+.resource-link:focus {
+  outline: 2px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 4rem auto;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animation for spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .for-researchers-page {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .researchers-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .researchers-header p {
+    font-size: 0.875rem;
+  }
+
+  .cta-button {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .researchers-content {
+    grid-template-columns: 1fr;
+  }
+
+  .resource-card .card-body {
+    padding: 1rem !important;
+  }
+
+  .card-title {
+    font-size: 1.125rem;
+  }
+
+  .card-text {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .back-btn {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .researchers-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .cta-button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Accessibility enhancements */
+.for-researchers-page:focus-within {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
