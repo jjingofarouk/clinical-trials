@@ -10,7 +10,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import './ClinicalTrialSimulator.css'; // Reuse existing CSS for styling consistency
 
-const AdaptiveClinicalTrialSimulator = () => {
+const ClinicalTrialSimulator = () => {
   const location = useLocation();
   const chartRef = useRef(null);
 
@@ -673,4 +673,4 @@ const AdaptiveClinicalTrialSimulator = () => {
   );
 };
 
-export default AdaptiveClinicalTrialSimulator;
+export default ClinicalTrialSimulator;
