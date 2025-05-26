@@ -113,7 +113,6 @@ const Navbars = () => {
             {[
               { text: 'Home', path: '/' },
               { text: 'Find Trials', path: '/trials' },
-              { text: 'Trial Simulator', path: '/trials/simulator' },
               { text: 'Saved Trials', path: '/savedtrials' },
               { text: 'For Researchers', path: '/researchers' },
               { text: 'About Us', path: '/about' },
