@@ -1,6 +1,6 @@
 /* App.css */
 
-/* Reuse variables from other components for consistency */
+/* Reuse variables for consistency */
 :root {
   --primary-color: #1e40af;
   --secondary-color: #3b82f6;
@@ -17,11 +17,11 @@
   --status-default: #9ca3af;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --transition: all 0.3s ease;
-  --cta-color: #FF8C00;
-  --cta-hover: #FF7000;
+  --cta-color: #ff8c00;
+  --cta-hover: #ff7000;
 }
 
-/* Global box-sizing */
+/* Reset default browser styles */
 *,
 *::before,
 *::after {
@@ -30,34 +30,80 @@
   padding: 0;
 }
 
+/* Ensure no white spaces at the root level */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 /* App container */
 .App {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Main content - no padding or margin */
+/* Navbar styling (assuming Navbars component has this class) */
+.navbar {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  box-shadow: var(--shadow);
+  z-index: 1000;
+}
+
+/* Main content */
 main {
   flex: 1;
   width: 100%;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container for main content (MUI Container) */
+.css-1oqqzyl-MuiContainer-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 1200px; /* Matches MUI maxWidth="lg" */
+}
+
+/* Footer styling (assuming Footer component has this class) */
+.footer {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Error state */
 .app-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
   text-align: center;
-  color: var(--status-terminated);
+  color: var(--text-primary);
   background: var(--background);
   border-radius: 12px;
   box-shadow: var(--shadow);
   width: 100%;
   max-width: 600px;
-  margin: auto;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 .app-error h1 {
@@ -98,6 +144,10 @@ main {
 
 /* 404 page */
 .not-found {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
   text-align: center;
   color: var(--text-primary);
   font-size: 1.25rem;
@@ -107,7 +157,8 @@ main {
   box-shadow: var(--shadow);
   width: 100%;
   max-width: 600px;
-  margin: auto;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 /* Responsive design */
@@ -130,6 +181,10 @@ main {
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
   }
+
+  .css-1oqqzyl-MuiContainer-root {
+    padding: 0 1rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -146,10 +201,16 @@ main {
     font-size: 0.75rem;
     padding: 0.5rem 0.75rem;
   }
+
+  .css-1oqqzyl-MuiContainer-root {
+    padding: 0 0.5rem;
+  }
 }
 
 /* Accessibility enhancements */
-.App:focus-within {
+.App:focus-within,
+.navbar:focus-within,
+.footer:focus-within {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
