@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { NavLink, Routes, Route } from 'react-router-dom';
 import { auth, db, collection, doc, setDoc, getDocs, query, where } from './firebase';
+import { Container, Box, Typography, Button, Skeleton, Alert } from '@mui/material';
 import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import TrialsSection from './TrialsSection';
@@ -185,27 +186,43 @@ const ClinicalTrials = () => {
 
   if (error && process.env.REACT_APP_DEBUG_MODE === 'true') {
     return (
-      <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-        <h1>Error</h1>
-        <p>{error}</p>
+      <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
+        <Typography variant="h4" color="error" gutterBottom>
+          Error
+        </Typography>
+        <Typography variant="body1" gutterBottom>
+          {error}
+        </Typography>
         {error.includes('sign in') && (
-          <NavLink to="/auth" style={{ color: '#3498DB', textDecoration: 'underline' }}>
-            Go to Sign In
+          <NavLink to="/auth">
+            <Button variant="contained" color="primary" sx={{ mt: 2 }}>
+              Go to Sign In
+            </Button>
           </NavLink>
         )}
-        <button onClick={() => searchTrials()} style={{ marginTop: '10px' }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => searchTrials()}
+          sx={{ mt: 2, ml: 2 }}
+        >
           Retry Search
-        </button>
-      </div>
+        </Button>
+      </Container>
     );
   }
 
   return (
-    <div className="clinical-trials-container">
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {user && userData && (
-        <div style={{ padding: '10px', textAlign: 'center', background: '#e6f3ff' }}>
-          <p>Welcome, {userData.name}! Explore your saved trials or <NavLink to="/trials/recommender" style={{ color: '#3498DB' }}>try the Trial Recommender</NavLink>.</p>
-        </div>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Welcome, {userData.name}! Explore your saved trials or{' '}
+          <NavLink to="/trials/recommender">
+            <Typography component="span" sx={{ color: 'primary.main', textDecoration: 'underline' }}>
+              try the Trial Recommender
+            </Typography>
+          </NavLink>.
+        </Alert>
       )}
       <Routes>
         <Route
@@ -218,7 +235,7 @@ const ClinicalTrials = () => {
                 searchTrials={searchTrials}
                 setShowFilters={setShowFilters}
               />
-              <div className="main-content">
+              <Box sx={{ display: 'flex', mt: 3 }}>
                 <AnimatePresence>
                   {showFilters && (
                     <FilterSidebar
@@ -229,38 +246,48 @@ const ClinicalTrials = () => {
                     />
                   )}
                 </AnimatePresence>
-                <main className="trials-content">
-                  {user && savedTrials.length > 0 && (
-                    <TrialsSection
-                      title="Saved Trials"
-                      trials={savedTrials}
-                      savedTrials={savedTrials}
-                      saveTrial={saveTrial}
-                    />
+                <Box sx={{ flex: 1, ml: { xs: 0, md: showFilters ? 2 : 0 } }}>
+                  {loading ? (
+                    <Box sx={{ display: 'grid', gap: 2 }}>
+                      {[...Array(5)].map((_, index) => (
+                        <Skeleton key={index} variant="rectangular" height={150} sx={{ borderRadius: 2 }} />
+                      ))}
+                    </Box>
+                  ) : (
+                    <>
+                      {user && savedTrials.length > 0 && (
+                        <TrialsSection
+                          title="Saved Trials"
+                          trials={savedTrials}
+                          savedTrials={savedTrials}
+                          saveTrial={saveTrial}
+                        />
+                      )}
+                      {user && recommendedTrials.length > 0 && (
+                        <TrialsSection
+                          title="Recommended Trials"
+                          trials={recommendedTrials}
+                          savedTrials={savedTrials}
+                          saveTrial={saveTrial}
+                        />
+                      )}
+                      <TrialsSection
+                        title="Search Results"
+                        trials={trials}
+                        savedTrials={savedTrials}
+                        saveTrial={saveTrial}
+                        loading={loading}
+                      />
+                    </>
                   )}
-                  {user && recommendedTrials.length > 0 && (
-                    <TrialsSection
-                      title="Recommended Trials"
-                      trials={recommendedTrials}
-                      savedTrials={savedTrials}
-                      saveTrial={saveTrial}
-                    />
-                  )}
-                  <TrialsSection
-                    title="Search Results"
-                    trials={trials}
-                    savedTrials={savedTrials}
-                    saveTrial={saveTrial}
-                    loading={loading}
-                  />
-                </main>
-              </div>
+                </Box>
+              </Box>
             </>
           }
         />
         <Route path="/recommender" element={<TrialRecommender user={user} />} />
       </Routes>
-    </div>
+    </Container>
   );
 };
 
