@@ -139,7 +139,7 @@ const TrialDetailPage = () => {
   const studyData = {
     title: protocolSection?.identificationModule?.briefTitle || 'No Title',
     type: protocolSection?.designModule?.studyType || 'Unknown',
-    phase: protocolosSection?.designModule?.phases?.join(', ') || 'N/A',
+    phase: protocolSection?.designModule?.phases?.join(', ') || 'N/A',
     description: protocolSection?.descriptionModule?.briefSummary || 'No Description',
     startDate: protocolSection?.statusModule?.startDateStruct?.date || 'N/A',
     completionDate: protocolSection?.statusModule?.completionDateStruct?.date || 'N/A',
