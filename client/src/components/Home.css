@@ -22,13 +22,19 @@ html {
   background-color: var(--background);
   margin: 0;
   padding: 0;
-  width: 100%;
+  width: 100vw;
+  min-width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
 }
 
 /* Full-width professional hero section */
 .hero {
   position: relative;
-  width: 100%;
+  width: 100vw;
   min-height: calc(100vh - 64px); /* Account for fixed navbar height */
   margin: 0;
   padding: 0;
@@ -126,7 +132,8 @@ html {
 
 /* Solutions section */
 .solutions {
-  padding: 4rem 2rem;
+  width: 100vw;
+  padding: 4rem 0;
   margin: 0;
   background-color: var(--background);
   text-align: center;
@@ -138,6 +145,7 @@ html {
   margin-bottom: 3rem;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  padding: 0 2rem;
 }
 
 .solutions-grid {
@@ -146,6 +154,7 @@ html {
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .solution-card {
@@ -208,7 +217,8 @@ html {
 
 /* Impact section */
 .impact {
-  padding: 4rem 2rem;
+  width: 100vw;
+  padding: 4rem 0;
   margin: 0;
   background-color: #f8fafc;
   text-align: center;
@@ -220,6 +230,7 @@ html {
   margin-bottom: 3rem;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  padding: 0 2rem;
 }
 
 .impact-grid {
@@ -228,6 +239,7 @@ html {
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .impact-card {
@@ -266,7 +278,8 @@ html {
 
 /* Testimonials section */
 .testimonials {
-  padding: 4rem 2rem;
+  width: 100vw;
+  padding: 4rem 0;
   margin: 0;
   background-color: var(--background);
   text-align: center;
@@ -278,6 +291,7 @@ html {
   margin-bottom: 3rem;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  padding: 0 2rem;
 }
 
 .testimonial-grid {
@@ -286,6 +300,7 @@ html {
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .testimonial-card {
@@ -340,11 +355,16 @@ html {
 
 /* CTA section */
 .cta-section {
-  padding: 4rem 2rem;
+  width: 100vw;
+  padding: 4rem 0;
   margin: 0;
   background-color: var(--text-primary);
   text-align: center;
   color: var(--background);
+}
+
+.cta-content {
+  padding: 0 2rem;
 }
 
 .cta-content h2 {
@@ -430,13 +450,24 @@ html {
   .impact,
   .testimonials,
   .cta-section {
-    padding: 3rem 1.5rem;
+    padding: 3rem 0;
+  }
+
+  .solutions h2,
+  .impact h2,
+  .testimonials h2 {
+    padding: 0 1.5rem;
+  }
+
+  .cta-content {
+    padding: 0 1.5rem;
   }
 
   .solutions-grid,
   .impact-grid,
   .testimonial-grid {
     grid-template-columns: 1fr;
+    padding: 0 1.5rem;
   }
 
   .solution-card,
@@ -493,6 +524,22 @@ html {
   .impact,
   .testimonials,
   .cta-section {
-    padding: 2rem 1rem;
+    padding: 2rem 0;
+  }
+
+  .solutions h2,
+  .impact h2,
+  .testimonials h2 {
+    padding: 0 1rem;
+  }
+
+  .cta-content {
+    padding: 0 1rem;
+  }
+
+  .solutions-grid,
+  .impact-grid,
+  .testimonial-grid {
+    padding: 0 1rem;
   }
 }
