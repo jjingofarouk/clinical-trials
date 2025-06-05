@@ -125,6 +125,7 @@ body, html {
 /* Solutions section */
 .solutions {
   padding: 6rem 2rem;
+  margin-top: 60px;
   background-color: #FFFFFF;
   text-align: center;
 }
@@ -206,6 +207,7 @@ body, html {
 /* Impact section */
 .impact {
   padding: 6rem 2rem;
+  margin-top: 60px;
   background-color: #F8FAFC;
   text-align: center;
 }
@@ -263,6 +265,7 @@ body, html {
 /* Testimonials section */
 .testimonials {
   padding: 6rem 2rem;
+  margin-top: 60px;
   background-color: #FFFFFF;
   text-align: center;
 }
@@ -336,6 +339,7 @@ body, html {
 /* CTA section */
 .cta-section {
   padding: 6rem 2rem;
+  margin-top: 60px;
   background-color: #0F172A;
   text-align: center;
   color: #FFFFFF;
