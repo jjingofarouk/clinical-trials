@@ -1,11 +1,5 @@
+Fully revise. Hero image must occupy whole width like a real hero should 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden;
-}
 
 .home {
   font-family: 'Inter', sans-serif;
@@ -13,34 +7,28 @@ body, html {
   background-color: #F9FAFB;
 }
 
-/* HERO SECTION */
 .hero {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url('images/trial-discovery.jpeg'); /* Replace with your image path */
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
+  overflow: hidden;
 }
 
-.hero::before {
-  content: '';
+.hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  height: 100%;
   width: 100%;
+  height: 100%;
   background: rgba(16, 24, 40, 0.8);
-  z-index: 0;
+  z-index: -1;
 }
 
 .hero-content {
-  position: relative;
-  z-index: 1;
   text-align: center;
   max-width: 1000px;
   padding: 2rem;
@@ -48,7 +36,7 @@ body, html {
 }
 
 .hero-content h1 {
-  font-size: 4rem;
+  font-size: 4.5rem;
   font-weight: 900;
   line-height: 1.1;
   margin-bottom: 1.5rem;
@@ -77,7 +65,6 @@ body, html {
   font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
-  display: inline-block;
 }
 
 .cta-button.primary {
@@ -106,7 +93,216 @@ body, html {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* === RESPONSIVENESS === */
+.solutions {
+  padding: 6rem 2rem;
+  background-color: #FFFFFF;
+  text-align: center;
+}
+
+.solutions h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  color: #101828;
+}
+
+.solutions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.solution-card {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.solution-card:hover {
+  transform: translateY(-5px);
+}
+
+.solution-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(16, 24, 40, 0.7);
+  z-index: 0;
+}
+
+.solution-content {
+  position: relative;
+  z-index: 1;
+  color: #FFFFFF;
+  padding: 2rem;
+  text-align: center;
+}
+
+.solution-icon {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.solution-content h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.solution-content p {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.impact {
+  padding: 6rem 2rem;
+  background-color: #F9FAFB;
+  text-align: center;
+}
+
+.impact h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  color: #101828;
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.impact-card {
+  background-color: #FFFFFF;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.impact-card:hover {
+  transform: translateY(-5px);
+}
+
+.impact-icon {
+  display: block;
+  margin-bottom: 1rem;
+  color: #F97316;
+}
+
+.impact-card h3 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: #101828;
+}
+
+.impact-card p {
+  font-size: 1rem;
+  color: #475467;
+}
+
+.testimonials {
+  padding: 6rem 2rem;
+  background-color: #FFFFFF;
+  text-align: center;
+}
+
+.testimonials h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  color: #101828;
+}
+
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.testimonial-card {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  padding: 2rem;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+}
+
+.testimonial-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(16, 24, 40, 0.7);
+  z-index: 0;
+}
+
+.testimonial-card .quote {
+  font-size: 1.25rem;
+  font-style: italic;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  z-index: 1;
+}
+
+.testimonial-card .author {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  z-index: 1;
+}
+
+.cta-section {
+  padding: 6rem 2rem;
+  background-color: #101828;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.cta-content h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+}
+
+.cta-content p {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 @media (min-width: 1280px) {
   .hero-content h1 {
     font-size: 5rem;
@@ -114,6 +310,13 @@ body, html {
 
   .hero-content p {
     font-size: 1.75rem;
+  }
+
+  .solutions h2,
+  .impact h2,
+  .testimonials h2,
+  .cta-content h2 {
+    font-size: 3.5rem;
   }
 }
 
@@ -130,6 +333,25 @@ body, html {
     padding: 0.875rem 2rem;
     font-size: 1rem;
   }
+
+  .solutions h2,
+  .impact h2,
+  .testimonials h2,
+  .cta-content h2 {
+    font-size: 2.5rem;
+  }
+
+  .solution-content h3 {
+    font-size: 1.5rem;
+  }
+
+  .solution-content p {
+    font-size: 0.875rem;
+  }
+
+  .impact-card h3 {
+    font-size: 1.75rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -145,6 +367,24 @@ body, html {
     flex-direction: column;
     gap: 1rem;
   }
+
+  .solutions,
+  .impact,
+  .testimonials,
+  .cta-section {
+    padding: 4rem 1.5rem;
+  }
+
+  .solutions-grid,
+  .impact-grid,
+  .testimonial-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .solution-card,
+  .testimonial-card {
+    min-height: 320px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -158,6 +398,29 @@ body, html {
 
   .cta-button {
     padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  .solutions h2,
+  .impact h2,
+  .testimonials h2,
+  .cta-content h2 {
+    font-size: 2rem;
+  }
+
+  .solution-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .solution-content p {
+    font-size: 0.75rem;
+  }
+
+  .testimonial-card .quote {
+    font-size: 1rem;
+  }
+
+  .testimonial-card .author {
     font-size: 0.875rem;
   }
 }
