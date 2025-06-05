@@ -40,7 +40,6 @@ html {
   background-position: center;
   background-repeat: no-repeat;
   overflow: hidden;
-  top: 64px; /* Offset for fixed navbar */
 }
 
 .hero-overlay {
