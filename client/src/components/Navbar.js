@@ -7,7 +7,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
 import logo from './logo.jpg';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './navbar.css'; // Import the external CSS file
+import './Navbar.css'; // Import the external CSS file
 
 const generateRandomId = () => 'ID-' + Math.random().toString(36).substr(2, 8);
 
