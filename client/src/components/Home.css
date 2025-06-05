@@ -1,20 +1,42 @@
-Fully revise. Hero image must occupy whole width like a real hero should 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
 
 .home {
   font-family: 'Inter', sans-serif;
   color: #101828;
   background-color: #F9FAFB;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
+/* Full-width professional hero section */
 .hero {
   position: relative;
+  width: 100vw;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #0F172A;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   overflow: hidden;
 }
 
@@ -24,22 +46,25 @@ Fully revise. Hero image must occupy whole width like a real hero should
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(16, 24, 40, 0.8);
-  z-index: -1;
+  background: rgba(15, 23, 42, 0.7);
+  z-index: 1;
 }
 
 .hero-content {
+  position: relative;
+  z-index: 2;
   text-align: center;
-  max-width: 1000px;
+  max-width: 1200px;
   padding: 2rem;
   color: #ffffff;
 }
 
 .hero-content h1 {
   font-size: 4.5rem;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.1;
   margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
 .hero-content p {
@@ -49,6 +74,8 @@ Fully revise. Hero image must occupy whole width like a real hero should
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .cta-buttons {
@@ -60,39 +87,42 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
 .cta-button {
   padding: 1rem 2.5rem;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 1.125rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
 .cta-button.primary {
-  background-color: #F97316;
+  background-color: #2563EB;
   color: #FFFFFF;
-  border: none;
 }
 
 .cta-button.primary:hover,
 .cta-button.primary:focus {
-  background-color: #EA580C;
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: #1D4ED8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
 }
 
 .cta-button.secondary {
   background-color: transparent;
   color: #FFFFFF;
-  border: 1px solid #FFFFFF;
+  border: 2px solid #FFFFFF;
 }
 
 .cta-button.secondary:hover,
 .cta-button.secondary:focus {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: #FFFFFF;
+  color: #0F172A;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
 }
 
+/* Solutions section */
 .solutions {
   padding: 6rem 2rem;
   background-color: #FFFFFF;
@@ -101,14 +131,15 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
 .solutions h2 {
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 3rem;
   color: #101828;
+  letter-spacing: -0.02em;
 }
 
 .solutions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
   max-width: 1280px;
   margin: 0 auto;
@@ -116,20 +147,23 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
 .solution-card {
   position: relative;
+  background-color: #F8FAFC;
   background-size: cover;
   background-position: center;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s ease;
 }
 
 .solution-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border-color: #CBD5E1;
 }
 
 .solution-overlay {
@@ -138,13 +172,13 @@ Fully revise. Hero image must occupy whole width like a real hero should
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(16, 24, 40, 0.7);
-  z-index: 0;
+  background: rgba(15, 23, 42, 0.8);
+  z-index: 1;
 }
 
 .solution-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   color: #FFFFFF;
   padding: 2rem;
   text-align: center;
@@ -153,35 +187,40 @@ Fully revise. Hero image must occupy whole width like a real hero should
 .solution-icon {
   display: block;
   margin-bottom: 1.5rem;
+  color: #60A5FA;
 }
 
 .solution-content h3 {
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 1rem;
+  letter-spacing: -0.01em;
 }
 
 .solution-content p {
   font-size: 1rem;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
 }
 
+/* Impact section */
 .impact {
   padding: 6rem 2rem;
-  background-color: #F9FAFB;
+  background-color: #F8FAFC;
   text-align: center;
 }
 
 .impact h2 {
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 3rem;
   color: #101828;
+  letter-spacing: -0.02em;
 }
 
 .impact-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 2rem;
   max-width: 1280px;
   margin: 0 auto;
@@ -189,34 +228,39 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
 .impact-card {
   background-color: #FFFFFF;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  padding: 2.5rem 2rem;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s ease;
 }
 
 .impact-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
 }
 
 .impact-icon {
   display: block;
-  margin-bottom: 1rem;
-  color: #F97316;
+  margin-bottom: 1.5rem;
+  color: #2563EB;
 }
 
 .impact-card h3 {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 2.5rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
   color: #101828;
+  letter-spacing: -0.02em;
 }
 
 .impact-card p {
   font-size: 1rem;
-  color: #475467;
+  color: #64748B;
+  font-weight: 500;
 }
 
+/* Testimonials section */
 .testimonials {
   padding: 6rem 2rem;
   background-color: #FFFFFF;
@@ -225,14 +269,15 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
 .testimonials h2 {
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 3rem;
   color: #101828;
+  letter-spacing: -0.02em;
 }
 
 .testimonial-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 2rem;
   max-width: 1280px;
   margin: 0 auto;
@@ -240,20 +285,23 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
 .testimonial-card {
   position: relative;
+  background-color: #F8FAFC;
   background-size: cover;
   background-position: center;
-  border-radius: 12px;
-  padding: 2rem;
+  border-radius: 8px;
+  padding: 2.5rem;
   min-height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s ease;
 }
 
 .testimonial-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
 }
 
 .testimonial-overlay {
@@ -262,50 +310,58 @@ Fully revise. Hero image must occupy whole width like a real hero should
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(16, 24, 40, 0.7);
-  z-index: 0;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 8px;
+  z-index: 1;
 }
 
 .testimonial-card .quote {
+  position: relative;
+  z-index: 2;
   font-size: 1.25rem;
   font-style: italic;
   color: #FFFFFF;
-  margin-bottom: 1rem;
-  line-height: 1.5;
-  z-index: 1;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
 }
 
 .testimonial-card .author {
+  position: relative;
+  z-index: 2;
   font-size: 1rem;
   font-weight: 600;
-  color: #FFFFFF;
-  z-index: 1;
+  color: #60A5FA;
 }
 
+/* CTA section */
 .cta-section {
   padding: 6rem 2rem;
-  background-color: #101828;
+  background-color: #0F172A;
   text-align: center;
   color: #FFFFFF;
 }
 
 .cta-content h2 {
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
 .cta-content p {
   font-size: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
 }
 
+/* Responsive design */
 @media (min-width: 1280px) {
   .hero-content h1 {
-    font-size: 5rem;
+    font-size: 5.5rem;
   }
 
   .hero-content p {
@@ -345,22 +401,18 @@ Fully revise. Hero image must occupy whole width like a real hero should
     font-size: 1.5rem;
   }
 
-  .solution-content p {
-    font-size: 0.875rem;
-  }
-
   .impact-card h3 {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 }
 
 @media (max-width: 768px) {
   .hero-content h1 {
-    font-size: 2.5rem;
+    font-size: 2.75rem;
   }
 
   .hero-content p {
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 
   .cta-buttons {
@@ -383,17 +435,28 @@ Fully revise. Hero image must occupy whole width like a real hero should
 
   .solution-card,
   .testimonial-card {
-    min-height: 320px;
+    min-height: 300px;
+  }
+
+  .solutions h2,
+  .impact h2,
+  .testimonials h2,
+  .cta-content h2 {
+    font-size: 2.25rem;
   }
 }
 
 @media (max-width: 480px) {
+  .hero-content {
+    padding: 1.5rem;
+  }
+
   .hero-content h1 {
-    font-size: 2rem;
+    font-size: 2.25rem;
   }
 
   .hero-content p {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
 
   .cta-button {
@@ -412,15 +475,18 @@ Fully revise. Hero image must occupy whole width like a real hero should
     font-size: 1.25rem;
   }
 
-  .solution-content p {
-    font-size: 0.75rem;
+  .impact-card h3 {
+    font-size: 1.75rem;
   }
 
   .testimonial-card .quote {
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 
-  .testimonial-card .author {
-    font-size: 0.875rem;
+  .solutions,
+  .impact,
+  .testimonials,
+  .cta-section {
+    padding: 3rem 1rem;
   }
 }
