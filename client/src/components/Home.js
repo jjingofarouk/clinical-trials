@@ -1,191 +1,272 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { auth, db, signOut, doc, getDoc } from './trials/firebase';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import Button from 'react-bootstrap/Button';
+import logo from './logo.jpg';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  Search, 
-  User, 
-  Users, 
-  Database, 
-  Heart, 
-  Stethoscope, 
-  FlaskConical 
-} from 'lucide-react';
-import HeroBg from './trial-discovery.jpeg';
-import './Home.css';
+const generateRandomId = () => 'ID-' + Math.random().toString(36).substr(2, 8);
 
-const Home = () => {
+const Navbars = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [prevScrollY, setPrevScrollY] = useState(0);
+  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [randomId, setRandomId] = useState(generateRandomId());
+  const [loading, setLoading] = useState(true);
+  const navbarRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      setLoading(true);
+      setUser(currentUser);
+      if (currentUser) {
+        try {
+          setRandomId(generateRandomId());
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          setUserData(userDoc.exists() ? userDoc.data() : { name: currentUser.displayName || 'User', email: currentUser.email });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setUserData({ name: currentUser.displayName || 'User', email: currentUser.email });
+        }
+      } else {
+        setUserData(null);
+        setRandomId(generateRandomId());
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      alert('Logout failed. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setVisible(!(currentScrollY > prevScrollY && currentScrollY > 50));
+      setPrevScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollY]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navbarRef.current && !navbarRef.current.contains(event.target) && expanded) {
+        setExpanded(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && expanded) setExpanded(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [expanded]);
+
   return (
-    <div className="home">
-      <section className="hero" style={{ backgroundImage: `url(${HeroBg})` }}>
-        <div className="hero-overlay" />
-        <motion.div
-          className="hero-content"
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-        >
-          <h1>Transforming Clinical Trials with Dwaliro</h1>
-          <p>Empowering researchers, clinicians, and patients with cutting-edge technology.</p>
-          <div className="cta-buttons">
-            <Link to="/trials" className="cta-button primary" aria-label="Discover Clinical Trials">
-              Discover Trials
-            </Link>
-            <Link to="/auth" className="cta-button secondary" aria-label="Join Dwaliro">
-              Join Now
-            </Link>
+    <Navbar
+      expand="lg"
+      className="navbar fixed-top"
+      style={{
+        backgroundColor: user ? 'var(--primary-color)' : 'var(--text-primary)',
+        boxShadow: 'var(--shadow)',
+        transition: 'top 0.3s ease-in-out',
+        top: visible ? '0' : '-64px',
+        height: '64px', // Fixed height
+        margin: 0,
+        padding: 0,
+        width: '100%',
+        zIndex: 1000,
+      }}
+      variant="dark"
+      expanded={expanded}
+      onToggle={() => setExpanded(!expanded)}
+      ref={navbarRef}
+    >
+      <Container
+        style={{
+          height: '100%',
+          margin: 0,
+          padding: '0 15px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <Navbar.Brand as={NavLink} to="/" style={{ display: 'flex', alignItems: 'center', margin: 0, padding: 0 }}>
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'var(--background)',
+              marginRight: '0.5rem',
+            }}
+          >
+            <img
+              src={logo}
+              alt="Dwaliro Logo"
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover' }}
+            />
           </div>
-        </motion.div>
-      </section>
-
-      <section className="solutions">
-        <motion.h2
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          Advanced Solutions
-        </motion.h2>
-        <div className="solutions-grid">
-          {[
-            {
-              title: 'AI-Powered Discovery',
-              description: 'Instantly find relevant trials with intelligent search tools.',
-              icon: <Search size={48} />,
-              bg: '/images/trial-discovery.jpeg',
-            },
-            {
-              title: 'Secure Profiles',
-              description: 'Manage research and patient data with enterprise-grade security.',
-              icon: <User size={48} />,
-              bg: '/images/secure-profiles.jpeg',
-            },
-            {
-              title: 'Global Collaboration',
-              description: 'Connect with international research networks seamlessly.',
-              icon: <Users size={48} />,
-              bg: '/images/collaboration.jpeg',
-            },
-            {
-              title: 'Verified Data',
-              description: 'Access trusted, real-time trial data for informed decisions.',
-              icon: <Database size={48} />,
-              bg: '/images/data-integrity.jpeg',
-            },
-          ].map((solution, idx) => (
-            <motion.div
-              key={idx}
-              className="solution-card"
-              style={{ backgroundImage: `url(${solution.bg})` }}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: idx * 0.2 }}
-              viewport={{ once: true }}
-            >
-              <div className="solution-overlay" />
-              <div className="solution-content">
-                <span className="solution-icon">{solution.icon}</span>
-                <h3>{solution.title}</h3>
-                <p>{solution.description}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section className="impact">
-        <motion.h2
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          Our Impact
-        </motion.h2>
-        <div className="impact-grid">
-          {[
-            { value: '50,000+', label: 'Trials Indexed', icon: <FlaskConical size={40} /> },
-            { value: '25,000+', label: 'Active Users', icon: <Heart size={40} /> },
-            { value: '500+', label: 'Research Partners', icon: <Stethoscope size={40} /> },
-          ].map((stat, idx) => (
-            <motion.div
-              key={idx}
-              className="impact-card"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: idx * 0.2 }}
-              viewport={{ once: true }}
-            >
-              <span className="impact-icon">{stat.icon}</span>
-              <h3>{stat.value}</h3>
-              <p>{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section className="testimonials">
-        <motion.h2
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          Voices of Excellence
-        </motion.h2>
-        <div className="testimonial-grid">
-          {[
-            {
-              quote: 'Dwaliro has redefined how we approach clinical trial discovery.',
-              author: 'Dr. Sophia Lee, Head Researcher',
-              bg: '/images/testimonial-1.jpeg',
-            },
-            {
-              quote: 'The platform’s tools have transformed our trial operations.',
-              author: 'Mark Thompson, Pharma Director',
-              bg: '/images/testimonial-2.jpeg',
-            },
-            {
-              quote: 'Dwaliro empowers patients with unparalleled trial access.',
-              author: 'Clara Evans, Patient Advocate',
-              bg: '/images/testimonial-3.jpeg',
-            },
-          ].map((testimonial, idx) => (
-            <motion.div
-              key={idx}
-              className="testimonial-card"
-              style={{ backgroundImage: `url(${testimonial.bg})` }}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: idx * 0.2 }}
-              viewport={{ once: true }}
-            >
-              <div className="testimonial-overlay" />
-              <p className="quote">“{testimonial.quote}”</p>
-              <p className="author">— {testimonial.author}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section className="cta-section">
-        <motion.div
-          className="cta-content"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <h2>Lead the Future of Medicine</h2>
-          <p>Join a global platform driving innovation in clinical research.</p>
-          <Link to="/auth" className="cta-button primary" aria-label="Get Started with Dwaliro">
-            Get Started
-          </Link>
-        </motion.div>
-      </section>
-    </div>
+          <span
+            style={{
+              color: 'var(--background)',
+              fontSize: '1.2rem',
+              fontWeight: 700,
+              letterSpacing: '1px',
+            }}
+          >
+            Dwaliro
+          </span>
+        </Navbar.Brand>
+        <Navbar.Toggle
+          aria-controls="basic-navbar-nav"
+          style={{ marginLeft: 'auto', borderColor: 'var(--border-color)' }}
+        />
+        <Navbar.Collapse id="basic-navbar-nav" style={{ backgroundColor: user ? 'var(--primary-color)' : 'var(--text-primary)' }}>
+          <Nav className="me-auto">
+            {[
+              { text: 'Home', path: '/' },
+              { text: 'Find Trials', path: '/trials' },
+              { text: 'Saved Trials', path: '/savedtrials' },
+              { text: 'For Researchers', path: '/researchers' },
+              { text: 'About Us', path: '/about' },
+              { text: 'Contact', path: '/contact' },
+            ].map(({ text, path }, idx) => (
+              <Nav.Link
+                key={idx}
+                as={NavLink}
+                to={path}
+                style={{
+                  color: 'var(--background)',
+                  fontSize: '1rem',
+                  display: user || text !== 'Saved Trials' ? 'block' : 'none',
+                  padding: '0.5rem 1rem',
+                }}
+                className="nav-link-custom"
+              >
+                {text}
+              </Nav.Link>
+            ))}
+          </Nav>
+          <Nav className="ms-auto align-items-center">
+            {loading ? (
+              <span
+                style={{
+                  color: 'var(--background)',
+                  fontSize: '0.9rem',
+                  backgroundColor: 'var(--status-recruiting)',
+                  padding: '5px 10px',
+                  borderRadius: '4px',
+                  marginRight: '10px',
+                }}
+              >
+                Loading...
+              </span>
+            ) : user && userData ? (
+              <>
+                <span
+                  style={{
+                    color: 'var(--background)',
+                    fontSize: '0.9rem',
+                    backgroundColor: 'var(--status-recruiting)',
+                    padding: '5px 10px',
+                    borderRadius: '4px',
+                    marginRight: '10px',
+                  }}
+                >
+                  {userData.name} ({randomId})
+                </span>
+                <Button
+                  onClick={handleLogout}
+                  style={{
+                    backgroundColor: 'var(--cta-color)',
+                    borderColor: 'var(--cta-color)',
+                    color: 'var(--background)',
+                    fontWeight: 600,
+                    padding: '0.5rem 1rem',
+                    transition: 'var(--transition)',
+                  }}
+                  className="cta-button-custom"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button
+                as={NavLink}
+                to="/auth"
+                style={{
+                  backgroundColor: 'var(--cta-color)',
+                  borderColor: 'var(--cta-color)',
+                  color: 'var(--background)',
+                  fontWeight: 600,
+                  padding: '0.5rem 1rem',
+                  transition: 'var(--transition)',
+                }}
+                className="cta-button-custom"
+              >
+                Login
+              </Button>
+            )}
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+      <style jsx>{`
+        .nav-link-custom:hover {
+          color: var(--secondary-color) !important;
+          transition: color 0.2s ease;
+        }
+        .nav-link-custom.active {
+          color: var(--background) !important;
+          font-weight: 600;
+          border-bottom: 2px solid var(--secondary-color);
+        }
+        .cta-button-custom {
+          background-color: var(--cta-color) !important;
+          border-color: var(--cta-color) !important;
+        }
+        .cta-button-custom:hover {
+          background-color: var(--cta-hover) !important;
+          border-color: var(--cta-hover) !important;
+          transform: scale(1.05);
+        }
+        .navbar-dark .navbar-toggler {
+          border-color: var(--border-color) !important;
+        }
+        @media (max-width: 991px) {
+          .navbar-collapse {
+            background-color: ${user ? 'var(--primary-color)' : 'var(--text-primary)'};
+            padding: 1rem;
+            margin: 0;
+          }
+        }
+      `}</style>
+    </Navbar>
   );
 };
 
-export default Home;
+export default Navbars;
