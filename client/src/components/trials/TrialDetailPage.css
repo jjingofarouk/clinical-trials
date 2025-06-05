@@ -1,6 +1,4 @@
-/* TrialDetailPage.css */
-
-/* Reuse variables from TrialCard.css for consistency */
+/* Reuse variables from original TrialDetailPage.css for consistency */
 :root {
   --primary-color: #1e40af; /* Professional blue */
   --secondary-color: #3b82f6; /* Lighter blue for accents */
@@ -21,35 +19,38 @@
 
 /* Base page styling */
 .trial-detail-page {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 1.5rem;
-  background: var(--background);
-  border-radius: 12px;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px;
+  margin: 0;
+  background: linear-gradient(135deg, var(--background) 0%, #f9fafb 100%);
+  border-radius: 8px;
   box-shadow: var(--shadow);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
 }
 
 /* Back button */
 .back-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   background: none;
   border: none;
   color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
+  padding: 8px;
   border-radius: 8px;
   transition: var(--transition);
-  margin-bottom: 1.5rem;
+  margin-bottom: 16px;
+  cursor: pointer;
 }
 
 .back-btn:hover {
   background-color: var(--border-color);
   color: var(--primary-color);
+  transform: scale(1.02);
 }
 
 .back-btn:focus {
@@ -57,32 +58,35 @@
   outline-offset: 2px;
 }
 
-/* Save trial button (override Bootstrap) */
-.btn {
+/* Save trial button */
+.save-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
+  padding: 8px 16px;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 8px;
   transition: var(--transition);
   border: none;
   box-shadow: var(--shadow);
+  background-color: var(--primary-color);
+  color: #ffffff;
+  margin-bottom: 16px;
 }
 
-.btn:disabled {
+.save-btn:disabled {
   background-color: var(--status-completed);
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.btn:not(:disabled):hover {
-  background-color: var(--primary-color);
-  transform: translateY(-1px);
+.save-btn:not(:disabled):hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-1px) scale(1.02);
 }
 
-.btn:not(:disabled):focus {
+.save-btn:not(:disabled):focus {
   outline: 2px solid var(--secondary-color);
   outline-offset: 2px;
 }
@@ -91,51 +95,58 @@
 .trial-detail-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 16px;
 }
 
-/* Loading spinner */
-.loading-spinner {
+/* Loading container */
+.loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 8px;
   color: var(--text-secondary);
+  margin: 32px auto;
+}
+
+.loading-container .spinner {
+  color: var(--primary-color);
+}
+
+.loading-container .loading-text {
   font-size: 0.875rem;
-  margin: 4rem auto;
 }
 
-.spinner {
-  width: 2rem;
-  height: 2rem;
-  border: 3px solid var(--border-color);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* Error message */
-.error-message {
+/* Error container */
+.error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 8px;
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin: 4rem auto;
+  margin: 32px auto;
   text-align: center;
 }
 
-.error-message .text-gray-400 {
+.error-container .error-icon {
   color: var(--text-secondary);
 }
 
-/* Sub-component styles (generalized for consistency) */
+.error-container .error-text {
+  font-size: 0.875rem;
+}
+
+/* Sub-component styles */
 .trial-detail-content > div {
   background: #f9fafb;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 16px;
   border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.trial-detail-content > div:hover {
+  transform: scale(1.01);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.15);
 }
 
 .trial-detail-content h2,
@@ -143,7 +154,7 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 8px;
 }
 
 .trial-detail-content p,
@@ -160,7 +171,7 @@
 }
 
 .trial-detail-content li {
-  padding: 0.5rem 0;
+  padding: 4px 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -168,16 +179,16 @@
   border-bottom: none;
 }
 
-/* Specific sub-component styling (example for tables, if used) */
+/* Table styles */
 .trial-detail-content table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  margin-top: 8px;
 }
 
 .trial-detail-content th,
 .trial-detail-content td {
-  padding: 0.75rem;
+  padding: 6px;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
 }
@@ -188,31 +199,32 @@
   background: var(--border-color);
 }
 
-/* Animation for spinner */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Fallback for sub-components */
+.trial-detail-content > div:empty::before {
+  content: 'No data available';
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-style: italic;
 }
 
 /* Responsive design */
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   .trial-detail-page {
-    margin: 1rem;
-    padding: 1rem;
+    padding: 4px;
   }
 
   .back-btn {
     font-size: 0.75rem;
-    padding: 0.5rem;
+    padding: 4px;
   }
 
-  .btn {
-    padding: 0.5rem 1rem;
+  .save-btn {
+    padding: 6px 12px;
     font-size: 0.75rem;
   }
 
   .trial-detail-content > div {
-    padding: 1rem;
+    padding: 8px;
   }
 
   .trial-detail-content h2,
@@ -224,10 +236,24 @@
   .trial-detail-content li {
     font-size: 0.75rem;
   }
+
+  .trial-detail-content table {
+    font-size: 0.75rem;
+  }
+
+  .trial-detail-content th,
+  .trial-detail-content td {
+    padding: 4px;
+  }
 }
 
 /* Accessibility enhancements */
 .trial-detail-page:focus-within {
   outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.trial-detail-content > div:focus-within {
+  outline: 2px solid var(--secondary-color);
   outline-offset: 2px;
 }
