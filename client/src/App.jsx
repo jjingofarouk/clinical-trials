@@ -31,31 +31,69 @@ function App() {
 
   if (error && process.env.REACT_APP_DEBUG_MODE === 'true') {
     return (
-      <Container maxWidth="sm" sx={{ textAlign: 'center', mt: 4 }}>
-        <Typography variant="h4" color="error" gutterBottom>
-          App Error
-        </Typography>
-        <Typography variant="body1" gutterBottom>
-          {error}
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => window.location.reload()}
-          sx={{ mt: 2 }}
-        >
-          Reload Page
-        </Button>
-      </Container>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          bgcolor: 'background.default',
+          p: 2,
+        }}
+      >
+        <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
+          <Typography variant="h4" color="error" gutterBottom>
+            App Error
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            {error}
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2 }}
+          >
+            Reload Page
+          </Button>
+        </Container>
+      </Box>
     );
   }
 
   return (
     <Router>
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          m: 0,
+          p: 0,
+          bgcolor: 'background.default',
+        }}
+      >
         <Navbars />
-        <Box component="main" sx={{ flex: 1, py: 3 }}>
-          <Container maxWidth="lg">
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            m: 0,
+            p: 0,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Container
+            maxWidth="lg"
+            sx={{
+              flex: 1,
+              py: { xs: 2, md: 3 },
+              px: { xs: 1, md: 2 },
+              m: 0,
+            }}
+          >
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/trials/*" element={<ClinicalTrials />} />
@@ -66,21 +104,15 @@ function App() {
               <Route path="/researchers" element={<ForResearchers />} />
               <Route
                 path="/researchers/publish"
-                element={
-                  <Typography variant="h5">Publish Trials (Placeholder)</Typography>
-                }
+                element={<Typography variant="h5">Publish Trials (Placeholder)</Typography>}
               />
               <Route
                 path="/researchers/analytics"
-                element={
-                  <Typography variant="h5">Analytics (Placeholder)</Typography>
-                }
+                element={<Typography variant="h5">Analytics (Placeholder)</Typography>}
               />
               <Route
                 path="/researchers/manage"
-                element={
-                  <Typography variant="h5">Manage Trials (Placeholder)</Typography>
-                }
+                element={<Typography variant="h5">Manage Trials (Placeholder)</Typography>}
               />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
